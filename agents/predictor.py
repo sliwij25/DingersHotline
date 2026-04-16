@@ -735,6 +735,20 @@ _TEAM_VENUE: dict[str, str] = {
 }
 
 
+# Stadiums with fixed or retractable roofs — skip temp/wind display, show "Dome" instead
+_DOME_STADIUMS: frozenset[str] = frozenset({
+    "tropicana field",           # Tampa Bay Rays (fixed dome)
+    "rogers centre",             # Toronto Blue Jays (retractable)
+    "american family field",     # Milwaukee Brewers (retractable)
+    "chase field",               # Arizona Diamondbacks (retractable)
+    "minute maid park",          # Houston Astros (retractable)
+    "daikin park",               # Houston Astros (renamed from Minute Maid)
+    "loandepot park",            # Miami Marlins (retractable)
+    "t-mobile park",             # Seattle Mariners (retractable)
+    "globe life field",          # Texas Rangers (retractable)
+})
+
+
 # Venue → OWM city query string (used to fetch wind direction when BPP doesn't provide degrees)
 _VENUE_CITY: dict[str, str] = {
     "yankee stadium":           "New York,US",
@@ -2845,21 +2859,24 @@ class Homer:
                 lines.append(f"   HR/FB:   {_fmt(hr_fb, suffix='%'):<12}  Form 14d: {_fmt(form, 'd', ' HR')}")
 
             # ── Park / weather ─────────────────────────────────────────
-            park_hr  = sig.get("park_hr_factor")
-            temp     = sig.get("temp_f")
-            wind     = sig.get("wind_mph")
-            wind_dir = sig.get("wind_dir", "")
-            whr      = sig.get("weather_hr_factor")
-            env_parts = []
+            park_hr    = sig.get("park_hr_factor")
+            temp       = sig.get("temp_f")
+            wind       = sig.get("wind_mph")
+            whr        = sig.get("weather_hr_factor")
+            is_dome    = venue.lower() in _DOME_STADIUMS
+            env_parts  = []
             if park_hr is not None:
                 park_label = "HR-friendly" if park_hr >= 110 else ("HR-suppressor" if park_hr <= 90 else "neutral")
                 env_parts.append(f"Park {park_hr:.0f}% ({park_label})")
-            if temp    is not None: env_parts.append(f"{temp:.0f}°F")
-            if wind    is not None:
-                wind_deg = sig.get("wind_deg")
-                arrow = f" {Homer._deg_to_arrow(wind_deg)}" if wind_deg is not None else ""
-                env_parts.append(f"wind {wind:.0f}mph{arrow}")
-            if whr     is not None and whr != 100: env_parts.append(f"weather {whr:.0f}% HR factor")
+            if is_dome:
+                env_parts.append("Dome")
+            else:
+                if temp is not None: env_parts.append(f"{temp:.0f}°F")
+                if wind is not None:
+                    wind_deg = sig.get("wind_deg")
+                    arrow = f" {Homer._deg_to_arrow(wind_deg)}" if wind_deg is not None else ""
+                    env_parts.append(f"wind {wind:.0f}mph{arrow}")
+                if whr is not None and whr != 100: env_parts.append(f"weather {whr:.0f}% HR factor")
             if env_parts:
                 lines.append(f"   {' | '.join(env_parts)}")
 
