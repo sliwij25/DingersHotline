@@ -2488,7 +2488,7 @@ class Homer:
 
         return round(score, 1)
 
-    def _rank_picks_python(self, player_signals: dict, top_n: int = 8) -> list:
+    def _rank_picks_python(self, player_signals: dict, top_n: int = 8, verbose: bool = False) -> list:
         """
         Score every player (confirmed and roster) and return the top_n as a list of dicts.
         Each dict has: player, matchup, confidence, score, reasoning, signals.
@@ -2600,21 +2600,21 @@ class Homer:
         # Pure score sort — best picks first regardless of game
         scored.sort(key=lambda x: x["score"], reverse=True)
 
-        # Debug: show score breakdown
-        print(f"\n  [SCORING DEBUG] Total players scored: {len(player_signals)}")
-        print("  [SCORING DEBUG] Top 20 players by score:")
-        for i, pick in enumerate(scored[:20], 1):
-            status = pick["signals"].get("status", "unknown").upper()
-            print(f"    {i:2}. [{status}] {pick['player']:<24} {pick['matchup']:<25} score={pick['score']:6.1f}")
+        if verbose:
+            print(f"\n  [SCORING DEBUG] Total players scored: {len(player_signals)}")
+            print("  [SCORING DEBUG] Top 20 players by score:")
+            for i, pick in enumerate(scored[:20], 1):
+                status = pick["signals"].get("status", "unknown").upper()
+                print(f"    {i:2}. [{status}] {pick['player']:<24} {pick['matchup']:<25} score={pick['score']:6.1f}")
 
-        status_counts = {}
-        for p in scored[:top_n]:
-            status = p["signals"].get("status", "unknown")
-            status_counts[status] = status_counts.get(status, 0) + 1
+            status_counts = {}
+            for p in scored[:top_n]:
+                status = p["signals"].get("status", "unknown")
+                status_counts[status] = status_counts.get(status, 0) + 1
 
-        games_in_top8 = len(set(p["matchup"] for p in scored[:top_n]))
-        status_summary = ", ".join(f"{count} {status}" for status, count in status_counts.items())
-        print(f"\n  Top {top_n}: {status_summary}, {games_in_top8} different games")
+            games_in_top8 = len(set(p["matchup"] for p in scored[:top_n]))
+            status_summary = ", ".join(f"{count} {status}" for status, count in status_counts.items())
+            print(f"\n  Top {top_n}: {status_summary}, {games_in_top8} different games")
         
         return scored[:top_n]
 

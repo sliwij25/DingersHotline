@@ -219,7 +219,7 @@ else:
     # Save ALL ranked players (not just top 8) for unbiased ML training data.
     # The model needs to see who didn't homer just as much as who did.
     player_signals = homer._context.get("player_signals", {})
-    all_ranked = homer._rank_picks_python(player_signals, top_n=20)
+    all_ranked = homer._rank_picks_python(player_signals, top_n=20, verbose=True)
     saved = 0
     for rank_i, p in enumerate(all_ranked, 1):
         if p.get("signals"):
@@ -333,20 +333,46 @@ if not args.use_cache:
     except Exception as e:
         print(f"  [GitHub] Push skipped: {e}")
 
-# ── iMessage notification ──────────────────────────────────────────────────────
+# ── Notifications (Telegram primary, iMessage fallback) ────────────────────────
 
 if not args.use_cache:
+    import subprocess as _nsp, urllib.request as _ur, urllib.parse as _up
+    _top = picks[:3] if picks else []
+    _names = ", ".join(p.get("player", "?") for p in _top) if _top else "no picks"
+    _msg = f"HomeRunBets {TODAY}: picks ready.\nTop 3: {_names}\nRun: python bets.py log"
+
+    # 1. Telegram (primary)
+    _tg_sent = False
     try:
-        import subprocess as _isp
-        _top = picks[:3] if picks else []
-        _names = ", ".join(p.get("player", "?") for p in _top) if _top else "no picks"
-        _msg = f"HomeRunBets {TODAY}: picks ready. Top 3 — {_names}. Run: python bets.py log"
-        _isp.run(
-            ["osascript", "-e",
-             f'tell application "Messages" to send "{_msg}" '
-             f'to buddy "sliwij25@gmail.com" of service "iMessage"'],
-            capture_output=True, timeout=10
-        )
-        print("  [iMessage] Notification sent.")
-    except Exception as e:
-        print(f"  [iMessage] Notification skipped: {e}")
+        _tg_token = os.getenv("TELEGRAM_BOT_TOKEN") or ""
+        if not _tg_token:
+            _env_path = os.path.join(os.path.expanduser("~"), ".claude", "channels", "telegram", ".env")
+            if os.path.exists(_env_path):
+                with open(_env_path) as _f:
+                    for _line in _f:
+                        if _line.startswith("TELEGRAM_BOT_TOKEN="):
+                            _tg_token = _line.strip().split("=", 1)[1]
+        if _tg_token:
+            _tg_url = f"https://api.telegram.org/bot{_tg_token}/sendMessage"
+            _tg_data = _up.urlencode({"chat_id": "6624347634", "text": _msg}).encode()
+            _tg_resp = _ur.urlopen(_ur.Request(_tg_url, _tg_data), timeout=10)
+            if _tg_resp.status == 200:
+                _tg_sent = True
+                print("  [Telegram] Notification sent.")
+    except Exception as _e:
+        print(f"  [Telegram] Skipped: {_e}")
+
+    # 2. iMessage (fallback — only if Telegram failed)
+    if not _tg_sent:
+        try:
+            _imsg = _msg.replace("\n", " ")
+            _script = (
+                f'tell application "Messages"\n'
+                f'  set s to 1st service whose service type is iMessage\n'
+                f'  send "{_imsg}" to buddy "+14148811460" of s\n'
+                f'end tell'
+            )
+            _nsp.run(["osascript", "-e", _script], capture_output=True, timeout=30)
+            print("  [iMessage] Notification sent (Telegram fallback).")
+        except Exception as _e:
+            print(f"  [iMessage] Skipped: {_e}")
