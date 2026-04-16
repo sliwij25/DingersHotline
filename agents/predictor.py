@@ -1916,7 +1916,7 @@ class Homer:
         print("  [3/9] Fetching full Statcast batter leaderboard...")
         batter_stats = self._fetch_full_statcast(
             "batter",
-            "barrel_batted_rate,hard_hit_percent,hr_flyballs_rate_batter,"
+            "pa,barrel_batted_rate,hard_hit_percent,hr_flyballs_rate_batter,"
             "pull_percent,exit_velocity_avg,sweet_spot_percent,xiso,xslg,xhrs,"
             "flyballs_percent,launch_angle_avg,home_run"
         )
