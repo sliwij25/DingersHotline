@@ -6,26 +6,28 @@
 <title>HomeRunBets — 2026-04-16</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:         #090C0A;
-    --surface:    #111814;
-    --surface2:   #182018;
-    --border:     #1F2B1F;
-    --amber:      #F59E0B;
-    --amber-dim:  #92610A;
-    --green:      #34D399;
-    --green-dim:  #064E3B;
-    --red:        #F87171;
-    --red-dim:    #7F1D1D;
-    --blue:       #60A5FA;
-    --gold:       #FBBF24;
-    --gold-dim:   #78350F;
-    --text:       #E2EBE0;
-    --text-sub:   #4B5E49;
-    --text-dim:   #2D3B2C;
-    --silver:     #94A3B8;
+    --bg:         #FAFAF7;
+    --surface:    #FFFFFF;
+    --surface2:   #F3F2EE;
+    --border:     #E2DED6;
+    --border-dark:#C8C2B8;
+    --navy:       #1B2A4A;
+    --navy-mid:   #2D4070;
+    --red:        #C8102E;
+    --red-dim:    #F9E5E8;
+    --gold:       #D4A017;
+    --gold-dim:   #FDF5DC;
+    --green:      #1A6B3C;
+    --green-dim:  #E4F2EB;
+    --amber:      #B45309;
+    --amber-dim:  #FEF3C7;
+    --text:       #1A1A1A;
+    --text-sub:   #6B6560;
+    --text-dim:   #A8A29E;
+    --grass:      #2D5A27;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,59 +35,68 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Barlow', sans-serif;
+    font-family: 'Source Serif 4', Georgia, serif;
     font-size: 14px;
     line-height: 1.5;
     min-height: 100vh;
   }
 
-  /* ─── Background texture ─── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      repeating-linear-gradient(0deg, transparent, transparent 39px, var(--text-dim) 39px, var(--text-dim) 40px),
-      repeating-linear-gradient(90deg, transparent, transparent 39px, var(--text-dim) 39px, var(--text-dim) 40px);
-    opacity: 0.04;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ─── Header ─── */
+  /* ─── Pinstripe header ─── */
   .site-header {
-    position: relative;
-    z-index: 1;
-    border-bottom: 1px solid var(--border);
-    padding: 24px 32px 20px;
+    background: var(--navy);
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 47px,
+      rgba(255,255,255,0.04) 47px,
+      rgba(255,255,255,0.04) 48px
+    );
+    color: #fff;
+    padding: 28px 36px 24px;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 20px;
+    border-bottom: 4px solid var(--red);
   }
 
   .header-left {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
 
   .site-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: clamp(28px, 5vw, 48px);
-    letter-spacing: 0.02em;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(30px, 5vw, 52px);
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--amber);
+    color: #FFFFFF;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .title-ball {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    background: radial-gradient(circle at 38% 35%, #fff 0%, #f5f0e8 60%, #e8ddd0 100%);
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    position: relative;
+    flex-shrink: 0;
+    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2);
   }
 
   .site-date {
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
-    color: var(--text-sub);
-    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
@@ -100,38 +111,55 @@
   .chip {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: 3px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-sub);
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.7);
+    white-space: nowrap;
+  }
+  .chip.chip-auc { color: #FBBF24; border-color: rgba(251,191,36,0.4); }
+
+  /* ─── Tier section ─── */
+  .tier-section {
+    padding: 28px 36px 8px;
+  }
+
+  .tier-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .tier-stars {
+    font-size: 16px;
+    letter-spacing: 2px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .star-filled { color: var(--gold); }
+  .star-empty  { color: var(--border-dark); }
+
+  .tier-label {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--navy);
     white-space: nowrap;
   }
 
-  .chip.chip-pnl { color: var(--green); border-color: var(--green-dim); }
-  .chip.chip-neg { color: var(--red);   border-color: var(--red-dim); }
-  .chip.chip-auc { color: var(--amber); border-color: var(--amber-dim); }
-
-  /* ─── Pick count subheader ─── */
-  .picks-header {
-    position: relative;
-    z-index: 1;
-    padding: 20px 32px 0;
-    display: flex;
-    align-items: center;
-    gap: 16px;
+  .tier-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
   }
 
-  .picks-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-sub);
-  }
-
-  .picks-divider {
+  .tier-rule {
     flex: 1;
     height: 1px;
     background: var(--border);
@@ -139,40 +167,33 @@
 
   /* ─── Cards grid ─── */
   .picks-grid {
-    position: relative;
-    z-index: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 540px), 1fr));
-    gap: 12px;
-    padding: 16px 32px 48px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
   }
 
   /* ─── Card ─── */
   .pick-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-left-width: 3px;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 16px;
     display: flex;
     gap: 14px;
     opacity: 0;
-    transform: translateY(12px);
-    animation: reveal 0.4s ease forwards;
+    transform: translateY(10px);
+    animation: reveal 0.35s ease forwards;
+    transition: box-shadow 0.15s, border-color 0.15s;
   }
 
   @keyframes reveal {
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .border-gold   { border-left-color: var(--gold); }
-  .border-silver { border-left-color: var(--silver); }
-  .border-dim    { border-left-color: var(--border); }
-
   .pick-card:hover {
-    background: var(--surface2);
-    border-color: var(--text-dim);
-    border-left-color: inherit;
+    border-color: var(--navy);
+    box-shadow: 0 2px 12px rgba(27,42,74,0.10);
   }
 
   /* ─── Rank column ─── */
@@ -180,17 +201,17 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    min-width: 36px;
+    gap: 5px;
+    min-width: 40px;
     padding-top: 2px;
   }
 
   .rank-num {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 22px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
     line-height: 1;
-    color: var(--amber);
+    color: var(--navy);
   }
 
   .stars {
@@ -199,19 +220,19 @@
     line-height: 1;
   }
 
-  .star-filled { color: var(--gold); }
-  .star-empty  { color: var(--text-dim); }
-
   .badge-waiting {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 8px;
-    letter-spacing: 0.05em;
-    color: var(--amber-dim);
-    border: 1px solid var(--amber-dim);
-    padding: 1px 4px;
+    font-size: 7px;
+    letter-spacing: 0.04em;
+    color: var(--amber);
+    border: 1px solid #D97706;
+    background: var(--amber-dim);
+    padding: 2px 4px;
     border-radius: 2px;
     text-align: center;
     line-height: 1.4;
+    white-space: nowrap;
+    margin-top: 2px;
   }
 
   /* ─── Card body ─── */
@@ -231,10 +252,10 @@
   }
 
   .player-name {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 18px;
-    color: var(--text);
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+    color: var(--navy);
     letter-spacing: 0.02em;
     flex: 1;
     min-width: 0;
@@ -250,9 +271,9 @@
     text-transform: uppercase;
   }
 
-  .conf-high { background: var(--green-dim);  color: var(--green); }
-  .conf-med  { background: var(--amber-dim);  color: var(--amber); }
-  .conf-low  { background: var(--text-dim);   color: var(--text-sub); }
+  .conf-high { background: var(--green-dim);  color: var(--green);  border: 1px solid #A7D7B8; }
+  .conf-med  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid #FCD34D; }
+  .conf-low  { background: var(--surface2);   color: var(--text-dim); border: 1px solid var(--border); }
 
   .score-badge {
     font-family: 'JetBrains Mono', monospace;
@@ -262,9 +283,9 @@
     border-radius: 2px;
   }
 
-  .score-high { color: var(--amber); border: 1px solid var(--amber-dim); }
-  .score-mid  { color: var(--silver); border: 1px solid var(--border); }
-  .score-low  { color: var(--text-sub); border: 1px solid var(--text-dim); }
+  .score-high { color: var(--red);     background: var(--red-dim);    border: 1px solid #F9A8B4; }
+  .score-mid  { color: var(--navy);    background: #EEF1F8;           border: 1px solid #C5CDE8; }
+  .score-low  { color: var(--text-sub); background: var(--surface2);  border: 1px solid var(--border); }
 
   .matchup-line {
     font-size: 12px;
@@ -272,6 +293,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-family: 'Source Serif 4', serif;
   }
 
   .pitcher-line {
@@ -290,11 +312,11 @@
   .stat {
     display: flex;
     flex-direction: column;
-    background: var(--bg);
+    background: var(--surface2);
     border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 4px 8px;
-    min-width: 60px;
+    border-radius: 4px;
+    padding: 4px 9px;
+    min-width: 64px;
   }
 
   .stat-label {
@@ -302,7 +324,7 @@
     font-size: 8px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--text-sub);
+    color: var(--text-dim);
     line-height: 1;
     margin-bottom: 2px;
   }
@@ -311,7 +333,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     font-weight: 700;
-    color: var(--text);
+    color: var(--navy);
     line-height: 1;
   }
 
@@ -327,22 +349,24 @@
     font-size: 10px;
     font-weight: 500;
     padding: 2px 7px;
-    border-radius: 2px;
+    border-radius: 3px;
     border: 1px solid transparent;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
   }
 
-  .tag-green { color: var(--green);    background: rgba(52, 211, 153, 0.08);  border-color: var(--green-dim); }
-  .tag-red   { color: var(--red);      background: rgba(248, 113, 113, 0.08); border-color: var(--red-dim); }
-  .tag-amber { color: var(--amber);    background: rgba(245, 158, 11, 0.08);  border-color: var(--amber-dim); }
-  .tag-dim   { color: var(--text-sub); background: transparent;               border-color: var(--border); }
-  .tag-warn  { color: #FB923C;         background: rgba(251, 146, 60, 0.08);  border-color: #7C2D12; }
+  .tag-green { color: var(--green);  background: var(--green-dim);  border-color: #A7D7B8; }
+  .tag-red   { color: var(--red);    background: var(--red-dim);    border-color: #F9A8B4; }
+  .tag-amber { color: var(--amber);  background: var(--amber-dim);  border-color: #FCD34D; }
+  .tag-dim   { color: var(--text-sub); background: var(--surface2); border-color: var(--border); }
+  .tag-warn  { color: #92400E;       background: #FEF3C7;           border-color: #FCD34D; }
 
   /* ─── Why line ─── */
   .why-line {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-sub);
     line-height: 1.4;
+    font-family: 'Source Serif 4', serif;
+    font-style: italic;
   }
 
   .why-label {
@@ -353,31 +377,32 @@
     text-transform: uppercase;
     color: var(--text-dim);
     margin-right: 4px;
+    font-style: normal;
   }
 
   /* ─── Footer ─── */
   .site-footer {
-    position: relative;
-    z-index: 1;
-    border-top: 1px solid var(--border);
-    padding: 16px 32px;
+    background: var(--navy);
+    border-top: 3px solid var(--red);
+    padding: 14px 36px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    color: var(--text-sub);
-    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.06em;
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px;
+    margin-top: 24px;
   }
 
   /* ─── Responsive ─── */
   @media (max-width: 600px) {
-    .site-header  { padding: 16px; }
-    .picks-header { padding: 16px 16px 0; }
-    .picks-grid   { padding: 12px 16px 32px; gap: 8px; }
-    .site-footer  { padding: 12px 16px; }
-    .stat         { min-width: 52px; }
+    .site-header   { padding: 18px; }
+    .tier-section  { padding: 20px 16px 4px; }
+    .picks-grid    { gap: 8px; }
+    .site-footer   { padding: 12px 16px; }
+    .stat          { min-width: 54px; }
   }
 </style>
 </head>
@@ -385,26 +410,31 @@
 
 <header class="site-header">
   <div class="header-left">
-    <div class="site-title">⚾ HomeRunBets</div>
-    <div class="site-date">2026-04-16 &nbsp;·&nbsp; Top 20 Picks</div>
+    <div class="site-title">
+      <span class="title-ball"></span>
+      HomeRunBets
+    </div>
+    <div class="site-date">Latest Update: 2026-04-16 &nbsp;·&nbsp; 20 Picks</div>
   </div>
   <div class="model-chips">
     <div class="chip chip-auc">Model AUC 0.634</div>
     <div class="chip chip-auc">ML Weight 34%</div>
-    <div class="chip chip-pnl">P&amp;L +$152.00</div>
-    <div class="chip chip-pnl">ROI +54.3%</div>
-    <div class="chip">10W-18L</div>
   </div>
 </header>
 
-<div class="picks-header">
-  <span class="picks-title">Today's Ranked Picks</span>
-  <div class="picks-divider"></div>
-</div>
 
-<div class="picks-grid">
+    <section class="tier-section">
+        <div class="tier-header">
+            <span class="tier-stars">
+                <span class="star-filled">★★★★</span><span class="star-empty">☆</span>
+            </span>
+            <span class="tier-label">Strong Plays</span>
+            <span class="tier-count">7 picks</span>
+            <div class="tier-rule"></div>
+        </div>
+        <div class="picks-grid">
 
-        <div class="pick-card border-gold" style="animation-delay: 0.00s">
+        <div class="pick-card" style="animation-delay:0.00s">
             <div class="card-rank">
                 <span class="rank-num">#1</span>
                 <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
@@ -423,7 +453,7 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.400, PLATOON+, barrel 28.3%, park 116%, 90°F, weather 112% HR factor, short left porch</div>
             </div>
         </div>
-        <div class="pick-card border-gold" style="animation-delay: 0.05s">
+        <div class="pick-card" style="animation-delay:0.04s">
             <div class="card-rank">
                 <span class="rank-num">#2</span>
                 <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
@@ -442,11 +472,11 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.460, PLATOON+, barrel 28.6%, park 116%, 90°F, weather 112% HR factor, short left porch</div>
             </div>
         </div>
-        <div class="pick-card border-gold" style="animation-delay: 0.10s">
+        <div class="pick-card" style="animation-delay:0.08s">
             <div class="card-rank">
                 <span class="rank-num">#3</span>
                 <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
-                <span class="badge-waiting">WAITING</span>
+                <span class="badge-waiting">LINEUP PENDING</span>
             </div>
             <div class="card-body">
                 <div class="player-row">
@@ -461,7 +491,7 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.290, barrel 15.6%</div>
             </div>
         </div>
-        <div class="pick-card border-gold" style="animation-delay: 0.15s">
+        <div class="pick-card" style="animation-delay:0.12s">
             <div class="card-rank">
                 <span class="rank-num">#4</span>
                 <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
@@ -480,7 +510,7 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.340, barrel 24.0%, 81°F, Small outfield</div>
             </div>
         </div>
-        <div class="pick-card border-gold" style="animation-delay: 0.20s">
+        <div class="pick-card" style="animation-delay:0.16s">
             <div class="card-rank">
                 <span class="rank-num">#5</span>
                 <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
@@ -499,7 +529,7 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.350, barrel 20.6%, park 116%, 90°F, weather 112% HR factor, short right porch</div>
             </div>
         </div>
-        <div class="pick-card border-gold" style="animation-delay: 0.25s">
+        <div class="pick-card" style="animation-delay:0.20s">
             <div class="card-rank">
                 <span class="rank-num">#6</span>
                 <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
@@ -518,7 +548,7 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.300, barrel 20.6%, park 119%, weather 116% HR factor, Small outfield</div>
             </div>
         </div>
-        <div class="pick-card border-gold" style="animation-delay: 0.30s">
+        <div class="pick-card" style="animation-delay:0.24s">
             <div class="card-rank">
                 <span class="rank-num">#7</span>
                 <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
@@ -537,7 +567,20 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.270, PLATOON+, barrel 19.6%, 81°F, Small outfield</div>
             </div>
         </div>
-        <div class="pick-card border-silver" style="animation-delay: 0.35s">
+        </div>
+    </section>
+    <section class="tier-section">
+        <div class="tier-header">
+            <span class="tier-stars">
+                <span class="star-filled">★★★</span><span class="star-empty">☆☆</span>
+            </span>
+            <span class="tier-label">Solid Looks</span>
+            <span class="tier-count">5 picks</span>
+            <div class="tier-rule"></div>
+        </div>
+        <div class="picks-grid">
+
+        <div class="pick-card" style="animation-delay:0.28s">
             <div class="card-rank">
                 <span class="rank-num">#8</span>
                 <span class="stars"><span class="star-filled">★★★</span><span class="star-empty">☆☆</span></span>
@@ -556,11 +599,11 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.230, PLATOON+, pitcher L3: 4.5HR/9, barrel 15.8%</div>
             </div>
         </div>
-        <div class="pick-card border-silver" style="animation-delay: 0.40s">
+        <div class="pick-card" style="animation-delay:0.32s">
             <div class="card-rank">
                 <span class="rank-num">#9</span>
                 <span class="stars"><span class="star-filled">★★★</span><span class="star-empty">☆☆</span></span>
-                <span class="badge-waiting">WAITING</span>
+                <span class="badge-waiting">LINEUP PENDING</span>
             </div>
             <div class="card-body">
                 <div class="player-row">
@@ -575,7 +618,7 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.280, barrel 16.7%, weather 112% HR factor, Small outfield</div>
             </div>
         </div>
-        <div class="pick-card border-silver" style="animation-delay: 0.45s">
+        <div class="pick-card" style="animation-delay:0.36s">
             <div class="card-rank">
                 <span class="rank-num">#10</span>
                 <span class="stars"><span class="star-filled">★★★</span><span class="star-empty">☆☆</span></span>
@@ -594,7 +637,7 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.300, PLATOON+, pitcher L3: 1.0HR/9, barrel 15.8%, weather 110% HR factor</div>
             </div>
         </div>
-        <div class="pick-card border-silver" style="animation-delay: 0.50s">
+        <div class="pick-card" style="animation-delay:0.40s">
             <div class="card-rank">
                 <span class="rank-num">#11</span>
                 <span class="stars"><span class="star-filled">★★★</span><span class="star-empty">☆☆</span></span>
@@ -613,11 +656,11 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.260, pitcher L3: 4.5HR/9</div>
             </div>
         </div>
-        <div class="pick-card border-silver" style="animation-delay: 0.55s">
+        <div class="pick-card" style="animation-delay:0.44s">
             <div class="card-rank">
                 <span class="rank-num">#12</span>
                 <span class="stars"><span class="star-filled">★★★</span><span class="star-empty">☆☆</span></span>
-                <span class="badge-waiting">WAITING</span>
+                <span class="badge-waiting">LINEUP PENDING</span>
             </div>
             <div class="card-body">
                 <div class="player-row">
@@ -632,7 +675,20 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.400, barrel 22.9%</div>
             </div>
         </div>
-        <div class="pick-card border-dim" style="animation-delay: 0.60s">
+        </div>
+    </section>
+    <section class="tier-section">
+        <div class="tier-header">
+            <span class="tier-stars">
+                <span class="star-filled">★★</span><span class="star-empty">☆☆☆</span>
+            </span>
+            <span class="tier-label">Worth Watching</span>
+            <span class="tier-count">4 picks</span>
+            <div class="tier-rule"></div>
+        </div>
+        <div class="picks-grid">
+
+        <div class="pick-card" style="animation-delay:0.48s">
             <div class="card-rank">
                 <span class="rank-num">#13</span>
                 <span class="stars"><span class="star-filled">★★</span><span class="star-empty">☆☆☆</span></span>
@@ -651,7 +707,7 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.260, PLATOON+, barrel 13.7%, 82°F</div>
             </div>
         </div>
-        <div class="pick-card border-dim" style="animation-delay: 0.65s">
+        <div class="pick-card" style="animation-delay:0.52s">
             <div class="card-rank">
                 <span class="rank-num">#14</span>
                 <span class="stars"><span class="star-filled">★★</span><span class="star-empty">☆☆☆</span></span>
@@ -670,7 +726,7 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.200, barrel 11.9%, park 116%, 90°F, weather 112% HR factor, short right porch</div>
             </div>
         </div>
-        <div class="pick-card border-dim" style="animation-delay: 0.70s">
+        <div class="pick-card" style="animation-delay:0.56s">
             <div class="card-rank">
                 <span class="rank-num">#15</span>
                 <span class="stars"><span class="star-filled">★★</span><span class="star-empty">☆☆☆</span></span>
@@ -685,11 +741,11 @@
                 <div class="matchup-line">Los Angeles Angels @ New York Yankees &nbsp;·&nbsp; Yankee Stadium &nbsp;·&nbsp; Home &nbsp;·&nbsp; #6 in order</div>
                 <div class="pitcher-line">RHB vs Brent Suter (L)</div>
                 <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.350</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">16.0%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">40.0%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">90.0 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">40.0%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">36.0%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">2</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">PLATOON+</span><span class="tag tag-green">Park 116%</span><span class="tag tag-green">90°F</span><span class="tag tag-dim">Wind 12mph ↑</span><span class="tag tag-dim">Pitcher L3: 0.0 HR/9</span><span class="tag tag-warn">33 PA (small sample)</span></div>
+                <div class="tags-row"><span class="tag tag-green">PLATOON+</span><span class="tag tag-green">Park 116%</span><span class="tag tag-green">90°F</span><span class="tag tag-dim">Wind 12mph ↑</span><span class="tag tag-dim">Pitcher L3: 0.0 HR/9</span><span class="tag tag-warn">33 PA — small sample</span></div>
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.350, PLATOON+, barrel 16.0%, park 116%, 90°F, weather 112% HR factor, short left porch</div>
             </div>
         </div>
-        <div class="pick-card border-dim" style="animation-delay: 0.75s">
+        <div class="pick-card" style="animation-delay:0.60s">
             <div class="card-rank">
                 <span class="rank-num">#16</span>
                 <span class="stars"><span class="star-filled">★★</span><span class="star-empty">☆☆☆</span></span>
@@ -704,15 +760,28 @@
                 <div class="matchup-line">Tampa Bay Rays @ Chicago White Sox &nbsp;·&nbsp; Rate Field &nbsp;·&nbsp; Home &nbsp;·&nbsp; #4 in order</div>
                 <div class="pitcher-line">RHB vs Steven Matz (L)</div>
                 <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.370</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">27.3%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">54.5%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">93.6 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">63.6%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">36.4%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">2</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">PLATOON+</span><span class="tag tag-green">Park 119%</span><span class="tag tag-dim">66°F</span><span class="tag tag-dim">Wind 8mph →</span><span class="tag tag-dim">Pitcher L3: 0.6 HR/9</span><span class="tag tag-warn">21 PA (small sample)</span></div>
+                <div class="tags-row"><span class="tag tag-green">PLATOON+</span><span class="tag tag-green">Park 119%</span><span class="tag tag-dim">66°F</span><span class="tag tag-dim">Wind 8mph →</span><span class="tag tag-dim">Pitcher L3: 0.6 HR/9</span><span class="tag tag-warn">21 PA — small sample</span></div>
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.370, PLATOON+, barrel 27.3%, park 119%, weather 116% HR factor, Small outfield</div>
             </div>
         </div>
-        <div class="pick-card border-dim" style="animation-delay: 0.80s">
+        </div>
+    </section>
+    <section class="tier-section">
+        <div class="tier-header">
+            <span class="tier-stars">
+                <span class="star-filled">★</span><span class="star-empty">☆☆☆☆</span>
+            </span>
+            <span class="tier-label">Speculative</span>
+            <span class="tier-count">4 picks</span>
+            <div class="tier-rule"></div>
+        </div>
+        <div class="picks-grid">
+
+        <div class="pick-card" style="animation-delay:0.64s">
             <div class="card-rank">
                 <span class="rank-num">#17</span>
                 <span class="stars"><span class="star-filled">★</span><span class="star-empty">☆☆☆☆</span></span>
-                <span class="badge-waiting">WAITING</span>
+                <span class="badge-waiting">LINEUP PENDING</span>
             </div>
             <div class="card-body">
                 <div class="player-row">
@@ -727,11 +796,11 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.310, barrel 18.0%</div>
             </div>
         </div>
-        <div class="pick-card border-dim" style="animation-delay: 0.85s">
+        <div class="pick-card" style="animation-delay:0.68s">
             <div class="card-rank">
                 <span class="rank-num">#18</span>
                 <span class="stars"><span class="star-filled">★</span><span class="star-empty">☆☆☆☆</span></span>
-                <span class="badge-waiting">WAITING</span>
+                <span class="badge-waiting">LINEUP PENDING</span>
             </div>
             <div class="card-body">
                 <div class="player-row">
@@ -746,11 +815,11 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.340, barrel 22.2%</div>
             </div>
         </div>
-        <div class="pick-card border-dim" style="animation-delay: 0.90s">
+        <div class="pick-card" style="animation-delay:0.72s">
             <div class="card-rank">
                 <span class="rank-num">#19</span>
                 <span class="stars"><span class="star-filled">★</span><span class="star-empty">☆☆☆☆</span></span>
-                <span class="badge-waiting">WAITING</span>
+                <span class="badge-waiting">LINEUP PENDING</span>
             </div>
             <div class="card-body">
                 <div class="player-row">
@@ -765,11 +834,11 @@
                 <div class="why-line"><span class="why-label">Why:</span> barrel 11.1%, 81°F, Small outfield</div>
             </div>
         </div>
-        <div class="pick-card border-dim" style="animation-delay: 0.95s">
+        <div class="pick-card" style="animation-delay:0.76s">
             <div class="card-rank">
                 <span class="rank-num">#20</span>
                 <span class="stars"><span class="star-filled">★</span><span class="star-empty">☆☆☆☆</span></span>
-                <span class="badge-waiting">WAITING</span>
+                <span class="badge-waiting">LINEUP PENDING</span>
             </div>
             <div class="card-body">
                 <div class="player-row">
@@ -784,11 +853,12 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.220, park 119%, weather 116% HR factor, Small outfield</div>
             </div>
         </div>
-</div>
+        </div>
+    </section>
 
 <footer class="site-footer">
-  <span>HomeRunBets · github.com/sliwij25/HomeRunBets</span>
-  <span>Generated 2026-04-16 · AUC 0.634</span>
+  <span>HomeRunBets &nbsp;·&nbsp; github.com/sliwij25/HomeRunBets</span>
+  <span>Generated 2026-04-16 &nbsp;·&nbsp; Model AUC 0.634</span>
 </footer>
 
 </body>
