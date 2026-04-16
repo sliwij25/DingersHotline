@@ -50,6 +50,7 @@ print("=" * 60)
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
 from agents.bet_tracker import save_pick_factors, model_performance_report
+from generate_html import generate_picks_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
 # Labels yesterday's pick_factors with actual HR results, refreshes 2026 training
@@ -224,6 +225,7 @@ print("  BET SLIPS — fill in odds + potential_payout from your platform")
 print("=" * 60)
 
 picks = homer.get_picks_json(top_n=20)
+_all_ranked: list[dict] = []  # filled below; used for HTML generation
 
 if not picks:
     print("\nCould not generate structured bet slip.")
@@ -233,6 +235,7 @@ else:
     # The model needs to see who didn't homer just as much as who did.
     player_signals = homer._context.get("player_signals", {})
     all_ranked = homer._rank_picks_python(player_signals, top_n=20, verbose=True)
+    _all_ranked = all_ranked
     saved = 0
     for rank_i, p in enumerate(all_ranked, 1):
         if p.get("signals"):
@@ -321,6 +324,64 @@ try:
 except Exception as e:
     print(f"  [Model dashboard unavailable: {e}]")
 
+# ── Generate HTML for GitHub Pages ────────────────────────────────────────────
+
+try:
+        import sqlite3 as _sq, json as _js
+        # AUC + ML influence from weights file
+        _wp = Path(__file__).parent / "ml_weights.json"
+        _auc, _ml_influence = 0.0, 0.0
+        if _wp.exists():
+            with open(_wp) as _wf:
+                _wj = _js.load(_wf)
+            _auc = _wj.get("cv_auc_mean", 0.0)
+            _ml_influence = min(0.7, max(0.0, (_auc - 0.5) * 2.5))
+
+        # P&L + record from bets.db
+        _net_pnl, _roi, _record, _win_rate = 0.0, 0.0, "—", "—"
+        try:
+            _conn = _sq.connect(Path(__file__).parent / "data" / "bets.db")
+            _rows = _conn.execute(
+                "SELECT result, wager, payout FROM singles WHERE result IS NOT NULL"
+            ).fetchall()
+            _conn.close()
+            if _rows:
+                _wins   = sum(1 for r in _rows if r[0] == "win")
+                _losses = sum(1 for r in _rows if r[0] == "loss")
+                _wagered = sum(r[1] for r in _rows)
+                _returned = sum(r[2] or 0 for r in _rows if r[0] == "win")
+                _net_pnl = _returned - _wagered
+                _roi = (_net_pnl / _wagered * 100) if _wagered else 0.0
+                _record = f"{_wins}W-{_losses}L"
+                _win_rate = f"{_wins/len(_rows)*100:.0f}%"
+        except Exception:
+            pass
+
+        _html_str = generate_picks_html(
+            _all_ranked or picks,
+            today=TODAY,
+            auc=_auc,
+            ml_influence=_ml_influence,
+            win_rate=_win_rate,
+            net_pnl=_net_pnl,
+            roi=_roi,
+            record=_record,
+        )
+
+        # Save dated copy
+        _html_dated = Path(__file__).parent / "picks" / f"picks_{TODAY}.html"
+        with open(_html_dated, "w", encoding="utf-8") as _hf:
+            _hf.write(_html_str)
+
+        # Save to docs/ for GitHub Pages (always overwrites → latest picks)
+        _html_pages = Path(__file__).parent / "docs" / "index.html"
+        with open(_html_pages, "w", encoding="utf-8") as _hf:
+            _hf.write(_html_str)
+
+        print(f"  [HTML] GitHub Pages updated → docs/index.html")
+except Exception as _he:
+    print(f"  [HTML] Skipped: {_he}")
+
 # ── Auto-commit + push to GitHub ───────────────────────────────────────────────
 
 if not args.use_cache:
@@ -331,7 +392,8 @@ if not args.use_cache:
                  "ml_weights.json", "agents/predictor.py",
                  "agents/bet_tracker.py", "daily_picks.py",
                  "optimize_weights.py", "fetch_actual_results.py",
-                 "build_historical_dataset.py", "README.md", "requirements.txt"],
+                 "build_historical_dataset.py", "README.md", "requirements.txt",
+                 "generate_html.py", "docs/index.html"],
                 capture_output=True)
         _result = _sp.run(
             ["/usr/bin/git", "-C", _repo, "commit", "-m",
