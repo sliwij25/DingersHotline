@@ -413,13 +413,12 @@ if not args.use_cache:
 if not args.use_cache:
     import subprocess as _nsp, requests as _req
     _top = picks[:3] if picks else []
-    _top3_lines = "\n".join(
-        f"  #{i+1} {p.get('stars','')} {p.get('player','?')}  — {p.get('reasoning','')}"
-        for i, p in enumerate(_top)
+    _top3_names = "\n".join(
+        f"{i+1}. {p.get('player','?')}" for i, p in enumerate(_top)
     ) if _top else "  no picks yet"
-    _caption = f"Dingers Hotline {TODAY}\n\nTop 3:\n{_top3_lines}\n\nFull 20 picks in the file."
+    _caption = f"⚾ Dingers Hotline — {TODAY}\n\nTop 3:\n{_top3_names}\n\nFull picks → dingershotline.com"
 
-    # 1. Telegram (primary) — send .txt file with top-3 caption
+    # 1. Telegram (primary) — send message with top-3 names + URL
     _tg_sent = False
     try:
         _tg_token = os.getenv("TELEGRAM_BOT_TOKEN") or ""
@@ -432,31 +431,16 @@ if not args.use_cache:
                             _tg_token = _line.strip().split("=", 1)[1]
         if _tg_token:
             _tg_chat = "-1003940624182"  # Dingers Hotline group
-            _txt_path = Path(__file__).parent / "picks" / f"picks_{TODAY}.txt"
-            if _txt_path.exists():
-                # Send as document so recipient can tap to open full list
-                with open(_txt_path, "rb") as _tf:
-                    _resp = _req.post(
-                        f"https://api.telegram.org/bot{_tg_token}/sendDocument",
-                        data={"chat_id": _tg_chat, "caption": _caption},
-                        files={"document": (_txt_path.name, _tf, "text/plain")},
-                        timeout=20,
-                    )
-                if _resp.status_code == 200:
-                    _tg_sent = True
-                    print("  [Telegram] Picks file sent.")
-                else:
-                    raise RuntimeError(_resp.text[:200])
+            _resp = _req.post(
+                f"https://api.telegram.org/bot{_tg_token}/sendMessage",
+                data={"chat_id": _tg_chat, "text": _caption},
+                timeout=10,
+            )
+            if _resp.status_code == 200:
+                _tg_sent = True
+                print("  [Telegram] Notification sent.")
             else:
-                # No .txt yet — fall back to plain text message
-                _resp = _req.post(
-                    f"https://api.telegram.org/bot{_tg_token}/sendMessage",
-                    data={"chat_id": _tg_chat, "text": _caption},
-                    timeout=10,
-                )
-                if _resp.status_code == 200:
-                    _tg_sent = True
-                    print("  [Telegram] Notification sent (no file).")
+                raise RuntimeError(_resp.text[:200])
     except Exception as _e:
         print(f"  [Telegram] Skipped: {_e}")
 
