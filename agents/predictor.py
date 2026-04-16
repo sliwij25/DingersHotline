@@ -546,11 +546,7 @@ def fetch_confirmed_lineups(game_date: str = None) -> str:
                     continue
 
                 # Skip pitchers — not HR candidates
-                try:
-                    pos_type = player_entry["position"]["type"]["code"]
-                except (KeyError, TypeError):
-                    pos_type = ""
-                if pos_type == "P":
+                if (player_entry.get("position") or {}).get("type") == "Pitcher":
                     continue
 
                 # bat_side is available from the roster API even for non-lineup players
@@ -2197,9 +2193,8 @@ class Homer:
 
                 # Add roster batters to player_signals if not already there
                 for player_entry in roster_data.get("roster", []):
-                    pos_abbrev = (player_entry.get("position") or {}).get("abbreviation", "")
                     # Skip pitchers — they are not HR candidates
-                    if pos_abbrev in ("P", "SP", "RP", "CP"):
+                    if (player_entry.get("position") or {}).get("type") == "Pitcher":
                         continue
 
                     player_info = player_entry.get("person", {})
