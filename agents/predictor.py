@@ -529,17 +529,31 @@ def fetch_confirmed_lineups(game_date: str = None) -> str:
             
             # Add roster players not in confirmed lineup
             for player_entry in roster:
+                if not isinstance(player_entry, dict):
+                    continue
+
                 player_info = player_entry.get("person", {})
-                player_id = player_info.get("id")
+                player_id   = player_info.get("id")
                 player_name = player_info.get("fullName")
-                
+
                 if not player_name or player_id in confirmed_ids:
                     continue
-                    
+
+                # Skip pitchers — not HR candidates
+                try:
+                    pos_type = player_entry["position"]["type"]["code"]
+                except (KeyError, TypeError):
+                    pos_type = ""
+                if pos_type == "P":
+                    continue
+
+                # bat_side is available from the roster API even for non-lineup players
+                bat_side = (player_info.get("batSide") or {}).get("code", "?")
+
                 all_players.append({
                     "id":       player_id,
                     "name":     player_name,
-                    "bat_side": "?",  # Unknown until lineup confirmed
+                    "bat_side": bat_side,
                     "status":   "waiting",  # On roster, waiting for lineup confirmation
                 })
 
@@ -995,7 +1009,7 @@ def fetch_park_factors_fallback() -> str:
                     "temp_f":      round(w["main"]["temp"]),
                     "humidity":    w["main"]["humidity"],
                     "wind_mph":    round(w["wind"]["speed"]),
-                    "wind_deg":    w["wind"].get("deg"),
+                    "wind_deg":    w["wind"].get("deg"),    # 0–360 degrees for arrow display
                     "description": w["weather"][0]["description"],
                 }
             except Exception:
@@ -1993,6 +2007,7 @@ class Homer:
                         "park_hr_factor": hr_factor,
                         "temp_f":         _safe_float(temp_str),
                         "wind_mph":       _safe_float(wind_str),
+                        "wind_deg":       None,  # Not provided by BallparkPal
                         "wind_receptiveness": wind_receptiveness,  # Med-High, Low, etc.
                         "weather_hr_factor": weather_hr_factor,    # Weather impact on HRs
                         "outfield_size": outfield_size,            # Variable, Small, Large, etc.
@@ -2046,6 +2061,7 @@ class Homer:
                     signals["park_hr_factor"] = pk["park_hr_factor"]
                     signals["temp_f"]         = pk["temp_f"]
                     signals["wind_mph"]       = pk["wind_mph"]
+                    signals["wind_deg"]       = pk.get("wind_deg")   # degrees 0–360 for arrow
                     signals["wind_receptiveness"] = pk.get("wind_receptiveness")
                     signals["weather_hr_factor"] = pk.get("weather_hr_factor")
                     signals["outfield_size"] = pk.get("outfield_size")
@@ -2494,6 +2510,13 @@ class Homer:
         return round(score, 1)
 
     @staticmethod
+    def _deg_to_arrow(deg: float) -> str:
+        """Convert wind degrees (0–360) to a directional arrow. 0/360 = N (↑)."""
+        arrows = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"]
+        idx = round(deg / 45) % 8
+        return arrows[idx]
+
+    @staticmethod
     def _star_rating(rank: int, auc: float) -> str:
         """
         Combine rank-within-pool and model accuracy (AUC) into a 1–5 star rating.
@@ -2755,8 +2778,9 @@ class Homer:
                 env_parts.append(f"Park {park_hr:.0f}% ({park_label})")
             if temp    is not None: env_parts.append(f"{temp:.0f}°F")
             if wind    is not None:
-                dir_str = f" {wind_dir}" if wind_dir else ""
-                env_parts.append(f"wind {wind:.0f}mph{dir_str}")
+                wind_deg = sig.get("wind_deg")
+                arrow = f" {Homer._deg_to_arrow(wind_deg)}" if wind_deg is not None else ""
+                env_parts.append(f"wind {wind:.0f}mph{arrow}")
             if whr     is not None and whr != 100: env_parts.append(f"weather {whr:.0f}% HR factor")
             if env_parts:
                 lines.append(f"   {' | '.join(env_parts)}")
