@@ -1,0 +1,13 @@
+jupyter
+pandas
+SQLAlchemy
+requests
+beautifulsoup4
+lxml
+matplotlib
+seaborn
+ipywidgets
+python-dotenv
+numpy
+scikit-learn
+scipy
