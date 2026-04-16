@@ -40,7 +40,7 @@ parser.add_argument("--use-cache", action="store_true",
 args = parser.parse_args()
 
 print("=" * 60)
-print(f"  HOME RUN PICKS — {TODAY}")
+print(f"  DINGERS HOTLINE — {TODAY}")
 if args.use_cache:
     print("  (using cached data — development mode)")
 print("=" * 60)
@@ -210,7 +210,7 @@ if not args.use_cache:
     try:
         txt_path = Path(__file__).parent / "picks" / f"picks_{TODAY}.txt"
         with open(txt_path, "w", encoding="utf-8") as _f:
-            _f.write(f"HomeRunBets — {TODAY}\n")
+            _f.write(f"Dingers Hotline — {TODAY}\n")
             _f.write("=" * 62 + "\n\n")
             _f.write(narrative)
             _f.write("\n")
@@ -404,7 +404,7 @@ if not args.use_cache:
             print("  [GitHub] No changes to commit.")
         else:
             _sp.run(["/usr/bin/git", "-C", _repo, "push"], capture_output=True)
-            print("  [GitHub] Changes pushed to github.com/sliwij25/HomeRunBets")
+            print("  [GitHub] Changes pushed to github.com/sliwij25/DingersHotline")
     except Exception as e:
         print(f"  [GitHub] Push skipped: {e}")
 
@@ -417,7 +417,7 @@ if not args.use_cache:
         f"  #{i+1} {p.get('stars','')} {p.get('player','?')}  — {p.get('reasoning','')}"
         for i, p in enumerate(_top)
     ) if _top else "  no picks yet"
-    _caption = f"HomeRunBets {TODAY}\n\nTop 3:\n{_top3_lines}\n\nFull 20 picks in the file."
+    _caption = f"Dingers Hotline {TODAY}\n\nTop 3:\n{_top3_lines}\n\nFull 20 picks in the file."
 
     # 1. Telegram (primary) — send .txt file with top-3 caption
     _tg_sent = False

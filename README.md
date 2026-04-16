@@ -1,4 +1,4 @@
-# Home Run Bets
+# Dingers Hotline
 
 A home run betting tracker and AI prediction system for ProphetX and Novig.
 
@@ -16,7 +16,7 @@ A home run betting tracker and AI prediction system for ProphetX and Novig.
 ## Project Structure
 
 ```
-HomeRunBets/
+DingersHotline/
 ├── daily_picks.py              ← Run this every morning (--use-cache for testing)
 ├── test_homer_prompt.py        ← Test pick logic without re-fetching data
 ├── record_results.py           ← Record tonight's game results + model post-mortem
@@ -24,7 +24,7 @@ HomeRunBets/
 ├── build_historical_dataset.py ← Bootstrap 2015–present historical data (188k rows)
 ├── optimize_weights.py         ← Train logistic regression on labeled picks → ml_weights.json
 ├── cache_data.py               ← Save today's data for offline testing
-├── HomeRunBets.ipynb           ← Notebook for logging bets, recording results, P&L charts
+├── DingersHotline.ipynb           ← Notebook for logging bets, recording results, P&L charts
 ├── requirements.txt            ← Python dependencies
 ├── ml_weights.json             ← Auto-generated ML model (created after enough training data)
 ├── data/
@@ -48,7 +48,7 @@ HomeRunBets/
 ## First-Time Setup
 
 ### 1. Install Python dependencies
-Open Terminal in the HomeRunBets folder and run:
+Open Terminal in the DingersHotline folder and run:
 ```
 pip install -r requirements.txt
 pip install scikit-learn scipy   # required for ML weight training
@@ -90,7 +90,7 @@ Open ProphetX or Novig, find the HR prop for each recommended player, and note:
 - The **potential payout** shown on the platform
 
 ### Log Your Bets (Jupyter Notebook)
-Open `HomeRunBets.ipynb` in Spyder or Jupyter. In **Section 2 (Log Today's Bets)**, fill in and run `log_singles()`:
+Open `DingersHotline.ipynb` in Spyder or Jupyter. In **Section 2 (Log Today's Bets)**, fill in and run `log_singles()`:
 
 ```python
 log_singles('2026-04-15', 'prophetx', [
@@ -394,7 +394,7 @@ python test_homer_prompt.py --top 20             # show top 20 picks
 ## GitHub & Automation
 
 ### Repository
-`https://github.com/sliwij25/HomeRunBets` (private)
+`https://github.com/sliwij25/DingersHotline` (private)
 
 ### Auto-commit
 Every morning when `daily_picks.py` runs it automatically commits and pushes changes to GitHub — updated ML weights, any code edits, etc. No manual git steps required.
@@ -411,7 +411,7 @@ sudo pmset repeat wakeorpoweron MTWRFSU 10:55:00
 
 **On demand via Claude Dispatch:**
 Open the Claude mobile app → Dispatch tab → send:
-> Run `~/AIProjects/HomeRunBets/run-picks.sh` and show me today's top HR picks and model stats
+> Run `~/AIProjects/DingersHotline/run-picks.sh` and show me today's top HR picks and model stats
 
 **On demand via remote trigger:**
 The routine `trig_01HWF4ucuuE1fofLn6M2GcgD` is set up at claude.ai/code/routines.
@@ -428,8 +428,8 @@ Just say "run daily picks" and Claude will execute it directly in the session.
 
 ### Re-cloning on a new machine
 ```bash
-git clone https://github.com/sliwij25/HomeRunBets.git
-cd HomeRunBets
+git clone https://github.com/sliwij25/DingersHotline.git
+cd DingersHotline
 pip install -r requirements.txt
 pip install scikit-learn scipy
 cp api/.env.example api/.env   # then fill in your API keys

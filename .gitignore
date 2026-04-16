@@ -1,5 +1,7 @@
-# API keys — never commit
+# API keys and credentials — never commit
 api/.env
+api/*.rtf
+*.rtf
 
 # Local database — personal betting data
 data/bets.db
@@ -24,3 +26,6 @@ __pycache__/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Hookify rules — local/personal, not shared
+.claude/*.local.md

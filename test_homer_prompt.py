@@ -114,6 +114,10 @@ def cmd_debug_player(context: dict, name: str):
             print(f"  {label:<28} {str(val):<15} {populated}")
 
         # Score contribution breakdown
+        pa = sig.get("pa")
+        if pa is not None and pa < 40:
+            pa_scale = 0.5 if pa >= 20 else 0.0
+            print(f"\n  ⚠ PA={pa} — Statcast metrics scaled to {pa_scale:.0%} weight (need 40+ for full credit)")
         print(f"\n  Score breakdown:")
         status = sig.get("status", "unknown")
         if status == "waiting":  print(f"    status=waiting         -1.0")

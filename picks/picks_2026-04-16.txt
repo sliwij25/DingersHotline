@@ -1,0 +1,245 @@
+HomeRunBets — 2026-04-16
+==============================================================
+
+TOP HR PICKS — 2026-04-16
+==============================================================
+
+──────────────────────────────────────────────────────────────
+#1  Aaron Judge  ★★★★☆
+   Los Angeles Angels @ New York Yankees
+   RHB vs Brent Suter (L)  •  Yankee Stadium  •  Home  ✓ PLATOON+
+
+   Season:  7 HR          Lineup:  #2 in order
+   Barrel:  28.3%         Hard Hit: 50.0%         xISO: 0.400
+   EV avg:  91.0          Sweet Sp: 34.8%         FB%:  30.4%
+   Park 116% (HR-friendly) | 90°F | wind 12mph ↑ | weather 112% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #58
+   Why: xISO 0.400, PLATOON+, barrel 28.3%, park 116%, 90°F, weather 112% HR factor, short left porch
+
+──────────────────────────────────────────────────────────────
+#2  Mike Trout  ★★★★☆
+   Los Angeles Angels @ New York Yankees
+   RHB vs Max Fried (L)  •  Yankee Stadium  •  Away  ✓ PLATOON+
+
+   Season:  6 HR          Lineup:  #2 in order
+   Barrel:  28.6%         Hard Hit: 49.0%         xISO: 0.460
+   EV avg:  93.5          Sweet Sp: 36.7%         FB%:  42.9%
+   Park 116% (HR-friendly) | 90°F | wind 12mph ↑ | weather 112% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #57
+   Why: xISO 0.460, PLATOON+, barrel 28.6%, park 116%, 90°F, weather 112% HR factor, short left porch
+
+──────────────────────────────────────────────────────────────
+#3  Dominic Canzone  [WAITING]  ★★★★☆
+   Seattle Mariners @ San Diego Padres
+   ? vs Walker Buehler (R)  •  Petco Park  •  Away
+
+   Season:  2 HR          Lineup:  #5 in order
+   Barrel:  15.6%         Hard Hit: 46.9%         xISO: 0.290
+   EV avg:  94.7          Sweet Sp: 43.8%         FB%:  46.9%
+   Park 95% (neutral) | 66°F | wind 9mph ↗ | weather 99% HR factor
+   Pitcher L3: 0.9 HR/9 | H2H: 0 HR / — AB | BPP rank #24
+   Why: xISO 0.290, barrel 15.6%
+
+──────────────────────────────────────────────────────────────
+#4  Sal Stewart  ★★★★☆
+   San Francisco Giants @ Cincinnati Reds
+   RHB vs Landen Roupp (R)  •  Great American Ball Park  •  Home  ✗ platoon-
+
+   Season:  7 HR          Lineup:  #4 in order
+   Barrel:  24.0%         Hard Hit: 52.0%         xISO: 0.340
+   EV avg:  93.3          Sweet Sp: 42.0%         FB%:  38.0%
+   Park 114% (HR-friendly) | 81°F | wind 13mph ↓
+   Pitcher L3: 0.0 HR/9
+   Why: xISO 0.340, barrel 24.0%, 81°F, Small outfield
+
+──────────────────────────────────────────────────────────────
+#5  Ben Rice  ★★★★☆
+   Los Angeles Angels @ New York Yankees
+   LHB vs Brent Suter (L)  •  Yankee Stadium  •  Home  ✗ platoon-
+
+   Season:  4 HR          Lineup:  #5 in order
+   Barrel:  20.6%         Hard Hit: 64.7%         xISO: 0.350
+   EV avg:  95.7          Sweet Sp: 41.2%         FB%:  26.5%
+   Park 116% (HR-friendly) | 90°F | wind 12mph ↑ | weather 112% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #77
+   Why: xISO 0.350, barrel 20.6%, park 116%, 90°F, weather 112% HR factor, short right porch
+
+──────────────────────────────────────────────────────────────
+#6  Munetaka Murakami  ★★★★☆
+   Tampa Bay Rays @ Chicago White Sox
+   LHB vs Steven Matz (L)  •  Rate Field  •  Home  ✗ platoon-
+
+   Season:  5 HR          Lineup:  #3 in order
+   Barrel:  20.6%         Hard Hit: 58.8%         xISO: 0.300
+   EV avg:  93.2          Sweet Sp: 35.3%         FB%:  38.2%
+   Park 119% (HR-friendly) | 66°F | wind 8mph → | weather 116% HR factor
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.300, barrel 20.6%, park 119%, weather 116% HR factor, Small outfield
+
+──────────────────────────────────────────────────────────────
+#7  Elly De La Cruz  ★★★★☆
+   San Francisco Giants @ Cincinnati Reds
+   SHB vs Landen Roupp (R)  •  Great American Ball Park  •  Home  ✓ PLATOON+
+
+   Season:  5 HR          Lineup:  #3 in order
+   Barrel:  19.6%         Hard Hit: 63.0%         xISO: 0.270
+   EV avg:  97.4          Sweet Sp: 37.0%         FB%:  23.9%
+   Park 114% (HR-friendly) | 81°F | wind 13mph ↓
+   Pitcher L3: 0.0 HR/9
+   Why: xISO 0.270, PLATOON+, barrel 19.6%, 81°F, Small outfield
+
+──────────────────────────────────────────────────────────────
+#8  William Contreras  ★★★☆☆
+   Toronto Blue Jays @ Milwaukee Brewers
+   RHB vs Patrick Corbin (L)  •  American Family Field  •  Home  ✓ PLATOON+
+
+   Season:  3 HR          Lineup:  #3 in order
+   Barrel:  15.8%         Hard Hit: 42.1%         xISO: 0.230
+   EV avg:  91.1          Sweet Sp: 31.6%         FB%:  21.1%
+   Park 103% (neutral) | Dome
+   Pitcher L3: 4.5 HR/9 | H2H: 0 HR / 6 AB | BPP rank #84
+   Why: xISO 0.230, PLATOON+, pitcher L3: 4.5HR/9, barrel 15.8%
+
+──────────────────────────────────────────────────────────────
+#9  Chase DeLauter  [WAITING]  ★★★☆☆
+   Baltimore Orioles @ Cleveland Guardians
+   ? vs Shane Baz (R)  •  Progressive Field  •  Home
+
+   Season:  5 HR          Lineup:  #5 in order
+   Barrel:  16.7%         Hard Hit: 50.0%         xISO: 0.280
+   EV avg:  92.5          Sweet Sp: 41.7%         FB%:  29.2%
+   Park 110% (HR-friendly) | 63°F | wind 9mph → | weather 112% HR factor
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.280, barrel 16.7%, weather 112% HR factor, Small outfield
+
+──────────────────────────────────────────────────────────────
+#10  Dillon Dingler  ★★★☆☆
+   Kansas City Royals @ Detroit Tigers
+   RHB vs Kris Bubic (L)  •  Comerica Park  •  Home  ✓ PLATOON+
+
+   Season:  3 HR          Lineup:  #4 in order
+   Barrel:  15.8%         Hard Hit: 57.9%         xISO: 0.300
+   EV avg:  92.8          Sweet Sp: 42.1%         FB%:  23.7%
+   64°F | wind 11mph ↑ | weather 110% HR factor
+   Pitcher L3: 1.0 HR/9
+   Why: xISO 0.300, PLATOON+, pitcher L3: 1.0HR/9, barrel 15.8%, weather 110% HR factor
+
+──────────────────────────────────────────────────────────────
+#11  Brice Turang  ★★★☆☆
+   Toronto Blue Jays @ Milwaukee Brewers
+   LHB vs Patrick Corbin (L)  •  American Family Field  •  Home  ✗ platoon-
+
+   Season:  3 HR          Lineup:  #2 in order
+   Barrel:  9.5%          Hard Hit: 50.0%         xISO: 0.260
+   EV avg:  92.8          Sweet Sp: 35.7%         FB%:  31.0%
+   Park 103% (neutral) | Dome
+   Pitcher L3: 4.5 HR/9 | H2H: 0 HR / — AB | BPP rank #93
+   Why: xISO 0.260, pitcher L3: 4.5HR/9
+
+──────────────────────────────────────────────────────────────
+#12  Christian Walker  [WAITING]  ★★★☆☆
+   Colorado Rockies @ Houston Astros
+   ? vs Juan Mejia (R)  •  Daikin Park  •  Home
+
+   Season:  8 HR          Lineup:  #5 in order
+   Barrel:  22.9%         Hard Hit: 60.4%         xISO: 0.400
+   EV avg:  95.3          Sweet Sp: 45.8%         FB%:  37.5%
+   Park 104% (neutral) | Dome
+   Why: xISO 0.400, barrel 22.9%
+
+──────────────────────────────────────────────────────────────
+#13  CJ Abrams  ★★☆☆☆
+   Washington Nationals @ Pittsburgh Pirates
+   LHB vs Braxton Ashcraft (R)  •  PNC Park  •  Away  ✓ PLATOON+
+
+   Season:  6 HR          Lineup:  #5 in order
+   Barrel:  13.7%         Hard Hit: 51.0%         xISO: 0.260
+   EV avg:  92.1          Sweet Sp: 37.3%         FB%:  31.4%
+   Park 91% (neutral) | 82°F | wind 13mph ↘ | weather 108% HR factor
+   Pitcher L3: 0.0 HR/9
+   Why: xISO 0.260, PLATOON+, barrel 13.7%, 82°F
+
+──────────────────────────────────────────────────────────────
+#14  Trent Grisham  ★★☆☆☆
+   Los Angeles Angels @ New York Yankees
+   LHB vs Brent Suter (L)  •  Yankee Stadium  •  Home  ✗ platoon-
+
+   Season:  2 HR          Lineup:  #1 in order
+   Barrel:  11.9%         Hard Hit: 59.5%         xISO: 0.200
+   EV avg:  91.4          Sweet Sp: 23.8%         FB%:  28.6%
+   Park 116% (HR-friendly) | 90°F | wind 12mph ↑ | weather 112% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #65
+   Why: xISO 0.200, barrel 11.9%, park 116%, 90°F, weather 112% HR factor, short right porch
+
+──────────────────────────────────────────────────────────────
+#15  Amed Rosario  ★★☆☆☆
+   Los Angeles Angels @ New York Yankees
+   RHB vs Brent Suter (L)  •  Yankee Stadium  •  Home  ✓ PLATOON+
+
+   Season:  2 HR          Lineup:  #6 in order
+   Barrel:  16.0%         Hard Hit: 40.0%         xISO: 0.350
+   EV avg:  90.0          Sweet Sp: 40.0%         FB%:  36.0%
+   Park 116% (HR-friendly) | 90°F | wind 12mph ↑ | weather 112% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #63
+   Why: xISO 0.350, PLATOON+, barrel 16.0%, park 116%, 90°F, weather 112% HR factor, short left porch
+
+──────────────────────────────────────────────────────────────
+#16  Everson Pereira  ★★☆☆☆
+   Tampa Bay Rays @ Chicago White Sox
+   RHB vs Steven Matz (L)  •  Rate Field  •  Home  ✓ PLATOON+
+
+   Season:  2 HR          Lineup:  #4 in order
+   Barrel:  27.3%         Hard Hit: 54.5%         xISO: 0.370
+   EV avg:  93.6          Sweet Sp: 63.6%         FB%:  36.4%
+   Park 119% (HR-friendly) | 66°F | wind 8mph → | weather 116% HR factor
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.370, PLATOON+, barrel 27.3%, park 119%, weather 116% HR factor, Small outfield
+
+──────────────────────────────────────────────────────────────
+#17  Ramón Laureano  [WAITING]  ★☆☆☆☆
+   Seattle Mariners @ San Diego Padres
+   ? vs Luis Castillo (R)  •  Petco Park  •  Home
+
+   Season:  4 HR          Lineup:  #11 in order
+   Barrel:  18.0%         Hard Hit: 50.0%         xISO: 0.310
+   EV avg:  89.5          Sweet Sp: 38.0%         FB%:  40.0%
+   Park 95% (neutral) | 66°F | wind 9mph ↗ | weather 99% HR factor
+   Pitcher L3: 0.7 HR/9
+   Why: xISO 0.310, barrel 18.0%
+
+──────────────────────────────────────────────────────────────
+#18  Luke Raley  [WAITING]  ★☆☆☆☆
+   Seattle Mariners @ San Diego Padres
+   ? vs Walker Buehler (R)  •  Petco Park  •  Away
+
+   Season:  4 HR          Lineup:  #10 in order
+   Barrel:  22.2%         Hard Hit: 55.6%         xISO: 0.340
+   EV avg:  93.5          Sweet Sp: 55.6%         FB%:  27.8%
+   Park 95% (neutral) | 66°F | wind 9mph ↗ | weather 99% HR factor
+   Pitcher L3: 0.9 HR/9 | H2H: 0 HR / — AB | BPP rank #21
+   Why: xISO 0.340, barrel 22.2%
+
+──────────────────────────────────────────────────────────────
+#19  Tyler Stephenson  [WAITING]  ★☆☆☆☆
+   San Francisco Giants @ Cincinnati Reds
+   ? vs Landen Roupp (R)  •  Great American Ball Park  •  Home
+
+   Season:  2 HR          Lineup:  #12 in order
+   Barrel:  11.1%         Hard Hit: 48.1%         xISO: 0.180
+   EV avg:  95.5          Sweet Sp: 29.6%         FB%:  48.1%
+   Park 114% (HR-friendly) | 81°F | wind 13mph ↓
+   Pitcher L3: 0.0 HR/9
+   Why: barrel 11.1%, 81°F, Small outfield
+
+──────────────────────────────────────────────────────────────
+#20  Jonathan Aranda  [WAITING]  ★☆☆☆☆
+   Tampa Bay Rays @ Chicago White Sox
+   ? vs Jordan Leasure (R)  •  Rate Field  •  Away
+
+   Season:  3 HR          Lineup:  #12 in order
+   Barrel:  9.6%          Hard Hit: 48.1%         xISO: 0.220
+   EV avg:  92.8          Sweet Sp: 42.3%         FB%:  38.5%
+   Park 119% (HR-friendly) | 66°F | wind 8mph → | weather 116% HR factor
+   Why: xISO 0.220, park 119%, weather 116% HR factor, Small outfield
+
+──────────────────────────────────────────────────────────────

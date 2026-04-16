@@ -1,6 +1,6 @@
-# HomeRunBets — Claude Project Instructions
+# DingersHotline — Claude Project Instructions
 
-This file gives Claude context about the HomeRunBets project so future sessions
+This file gives Claude context about the DingersHotline project so future sessions
 can pick up without re-deriving the architecture.
 
 ---
@@ -23,7 +23,7 @@ build_historical_dataset.py ← Bootstrap 2015–present training data (188k row
 optimize_weights.py         ← Train logistic regression → ml_weights.json (auto-called by daily_picks.py)
 cache_data.py               ← Save today's data for offline testing
 test_homer_prompt.py        ← Test pick logic without re-fetching data
-HomeRunBets.ipynb           ← Log bets, P&L charts, backtesting
+DingersHotline.ipynb           ← Log bets, P&L charts, backtesting
 ml_weights.json             ← Auto-generated ML model weights
 agents/
   base.py               ← Shared Claude client (claude-3.5-sonnet via Claude Code) + run_agent() loop
@@ -313,12 +313,21 @@ Daily script uses ~12–15 Odds API requests (one per game).
 
 ## GitHub
 
-- **Repo:** `https://github.com/sliwij25/HomeRunBets` (private, user: sliwij25)
+- **Repo:** `https://github.com/sliwij25/DingersHotline` (private, user: sliwij25)
 - **Auto-commit:** `daily_picks.py` commits + pushes after every run — ml_weights.json, code changes, etc.
 - **Routine trigger ID:** `trig_01HWF4ucuuE1fofLn6M2GcgD` (claude.ai/code/routines)
-- **Dispatch command:** `Run ~/AIProjects/HomeRunBets/run-picks.sh and show me today's top HR picks and model stats`
+- **Dispatch command:** `Run ~/AIProjects/DingersHotline/run-picks.sh and show me today's top HR picks and model stats`
 - **launchd job:** `com.homerunbets.daily` — fires at 11am daily, output to `logs/daily_picks.log`
 - **Mac wake schedule:** `sudo pmset repeat wakeorpoweron MTWRFSU 10:55:00`
+
+---
+
+## Pick Grading System
+
+See **[GRADING.md](GRADING.md)** for the full star rating definitions, AUC ceiling thresholds, and rank bands.
+
+Stars combine two signals: rank within today's top 20 pool + model accuracy ceiling (AUC).
+Current max: ★★★★☆ (AUC 0.634). Reaches ★★★★★ when AUC ≥ 0.65.
 
 ---
 

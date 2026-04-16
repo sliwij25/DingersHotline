@@ -1,4 +1,4 @@
-# Claude Usage Optimization for HomeRunBets
+# Claude Usage Optimization for Dingers Hotline
 
 This guide explains how to cut Claude API costs (and other API costs) by 10-50x during development.
 
@@ -190,7 +190,7 @@ $ python daily_picks.py                # always fetches fresh
 
 3. **Session C:** Deploy to production (~15 min)
    - Run final `daily_picks.py` to confirm picks
-   - Record bets in HomeRunBets.ipynb
+   - Record bets in Dingers Hotline.ipynb
    - Done
 
 **Token savings:** Each separate session avoids context accumulation from the previous session.
