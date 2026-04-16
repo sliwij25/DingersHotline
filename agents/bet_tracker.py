@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS pick_factors (
     kelly_size       REAL,
     value_edge       REAL,
     pinnacle_odds    TEXT,
+    best_odds        TEXT,
     platoon          TEXT,
     barrel_rate      REAL,
     hard_hit_pct     REAL,
@@ -132,6 +133,7 @@ _MIGRATION_COLUMNS = [
     ("bpp_hr_pct",       "REAL"),
     ("park_hr_factor",   "REAL"),
     ("lineup_confirmed", "INTEGER"),
+    ("best_odds",        "TEXT"),
 ]
 
 
@@ -171,13 +173,13 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
         conn.execute("""
             INSERT OR REPLACE INTO pick_factors
               (bet_date, player, algo_version, confidence, score, rank,
-               ev_10, kelly_size, value_edge, pinnacle_odds,
+               ev_10, kelly_size, value_edge, pinnacle_odds, best_odds,
                platoon, barrel_rate, hard_hit_pct, hr_fb_ratio,
                xiso, xslg, xhr_rate, fb_pct, launch_angle, ev_avg, sweet_spot_pct,
                bpp_hr_pct, park_hr_factor,
                recent_form_14d, pitcher_hr_per_9,
                h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
@@ -187,6 +189,7 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             signals.get("kelly_size"),
             signals.get("value_edge"),
             signals.get("pinnacle_odds"),
+            signals.get("best_odds"),
             signals.get("platoon"),
             signals.get("barrel_rate"),
             signals.get("hard_hit_pct"),
@@ -212,6 +215,81 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
         return f"Saved signals for {player} ({bet_date})"
     finally:
         conn.close()
+
+
+def model_pnl_report() -> str:
+    """
+    Hypothetical P&L if $10 was bet on every top-20 pick each day.
+    Completely separate from actual bets — tracks model quality in dollar terms.
+    Only counts picks where homered IS NOT NULL and best_odds IS NOT NULL.
+    """
+    conn = get_db_conn()
+    try:
+        rows = conn.execute("""
+            SELECT bet_date, player, rank, best_odds, homered
+            FROM pick_factors
+            WHERE homered IS NOT NULL
+              AND best_odds IS NOT NULL
+              AND algo_version NOT LIKE 'hist_%'
+            ORDER BY bet_date, rank
+        """).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        return json.dumps({"error": "No labeled picks with odds data yet. Run tomorrow after games end."})
+
+    def _to_decimal(odds_str: str) -> float:
+        try:
+            o = int(odds_str)
+            return (o / 100 + 1) if o > 0 else (100 / abs(o) + 1)
+        except Exception:
+            return None
+
+    days: dict = {}
+    for bet_date, player, rank, best_odds, homered in rows:
+        dec = _to_decimal(best_odds)
+        if dec is None:
+            continue
+        pnl = round((dec - 1) * 10, 2) if homered else -10.0
+        if bet_date not in days:
+            days[bet_date] = {"picks": 0, "wins": 0, "pnl": 0.0, "players": []}
+        days[bet_date]["picks"] += 1
+        days[bet_date]["wins"] += int(homered)
+        days[bet_date]["pnl"] = round(days[bet_date]["pnl"] + pnl, 2)
+        days[bet_date]["players"].append({
+            "rank": rank, "player": player,
+            "odds": best_odds, "homered": bool(homered), "pnl": pnl,
+        })
+
+    cumulative = 0.0
+    daily_rows = []
+    for date_str in sorted(days):
+        d = days[date_str]
+        cumulative = round(cumulative + d["pnl"], 2)
+        daily_rows.append({
+            "date": date_str,
+            "picks_with_odds": d["picks"],
+            "wins": d["wins"],
+            "day_pnl": f"${d['pnl']:+.2f}",
+            "cumulative_pnl": f"${cumulative:+.2f}",
+            "players": d["players"],
+        })
+
+    total_picks = sum(d["picks"] for d in days.values())
+    total_wins  = sum(d["wins"]  for d in days.values())
+    return json.dumps({
+        "model_pnl_summary": {
+            "days_tracked": len(days),
+            "total_picks_with_odds": total_picks,
+            "total_wins": total_wins,
+            "win_pct": f"{total_wins/total_picks*100:.1f}%" if total_picks else "0%",
+            "total_wagered": f"${total_picks * 10:.2f}",
+            "cumulative_pnl": f"${cumulative:+.2f}",
+            "roi": f"{cumulative / (total_picks * 10) * 100:+.1f}%" if total_picks else "0%",
+        },
+        "daily": daily_rows,
+    }, indent=2)
 
 
 def model_performance_report() -> str:

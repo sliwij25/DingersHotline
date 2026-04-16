@@ -1995,6 +1995,7 @@ class Homer:
                     player_signals[pname]["kelly_size"]    = comp.get("kelly_size")
                     player_signals[pname]["value_edge"]    = comp.get("value_edge")
                     player_signals[pname]["pinnacle_odds"] = comp.get("pinnacle")
+                    player_signals[pname]["best_odds"]     = comp.get("best_odds")
         except Exception:
             pass
 
