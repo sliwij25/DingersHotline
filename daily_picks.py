@@ -332,3 +332,21 @@ if not args.use_cache:
             print("  [GitHub] Changes pushed to github.com/sliwij25/HomeRunBets")
     except Exception as e:
         print(f"  [GitHub] Push skipped: {e}")
+
+# ── iMessage notification ──────────────────────────────────────────────────────
+
+if not args.use_cache:
+    try:
+        import subprocess as _isp
+        _top = picks[:3] if picks else []
+        _names = ", ".join(p.get("player", "?") for p in _top) if _top else "no picks"
+        _msg = f"HomeRunBets {TODAY}: picks ready. Top 3 — {_names}. Run: python bets.py log"
+        _isp.run(
+            ["osascript", "-e",
+             f'tell application "Messages" to send "{_msg}" '
+             f'to buddy "sliwij25@gmail.com" of service "iMessage"'],
+            capture_output=True, timeout=10
+        )
+        print("  [iMessage] Notification sent.")
+    except Exception as e:
+        print(f"  [iMessage] Notification skipped: {e}")
