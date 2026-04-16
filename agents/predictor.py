@@ -1849,6 +1849,7 @@ class Homer:
                             "pitcher_name":     sp,                 # starting pitcher name
                             "pitcher_throws":   sp_throws,          # R / L
                             "batting_order":    pos + 1,            # 1–9 lineup position
+                            "pa":               _safe_int(b_data.get("pa")),
                             "season_hr":        _safe_int(b_data.get("home_run")),
                             "barrel_rate":      _safe_float(barrel),
                             "hard_hit_pct":     _safe_float(hh),
@@ -2213,6 +2214,7 @@ class Homer:
                         "matchup":          (f"{game.get('away',{}).get('team','')} @ "
                                              f"{game.get('home',{}).get('team','')}"),
                         "venue":            game.get("venue", ""),
+                        "pa":               _safe_int(sc_data.get("pa")),
                         "barrel_rate":      _safe_float(sc_data.get("barrel_batted_rate")),
                         "hard_hit_pct":     _safe_float(sc_data.get("hard_hit_percent")),
                         "hr_fb_ratio":      _safe_float(sc_data.get("hr_flyballs_rate_batter")),
@@ -2368,129 +2370,138 @@ class Homer:
             elif p_hr9 >= 1.0: score += 2
             elif p_hr9 >= 0.5: score += 1
 
+        # Statcast rate stats require a minimum sample to be reliable.
+        # pa_scale weights their contribution based on sample size:
+        #   PA >= 40 (or unknown): full weight — enough data to trust rate stats
+        #   PA 20–39: half weight — real signal from a hot/called-up player, but uncertain
+        #   PA < 20:  zero weight — 1–2 good swings can inflate every rate to elite
+        # Non-Statcast signals (park, platoon, pitcher form, recent HRs) are unaffected.
+        pa = sig.get("pa")
+        if pa is None or pa >= 40:
+            pa_scale = 1.0
+        elif pa >= 20:
+            pa_scale = 0.5
+        else:
+            pa_scale = 0.0
+
+        barrel = sig.get("barrel_rate") if pa_scale > 0 else None
+        hh     = sig.get("hard_hit_pct") if pa_scale > 0 else None
+        xiso   = sig.get("xiso") if pa_scale > 0 else None
+        xslg   = sig.get("xslg") if pa_scale > 0 else None
+        xhr    = sig.get("xhr_rate") if pa_scale > 0 else None
+        fb     = sig.get("fb_pct") if pa_scale > 0 else None
+        la     = sig.get("launch_angle") if pa_scale > 0 else None
+        ev     = sig.get("ev_avg") if pa_scale > 0 else None
+        ss     = sig.get("sweet_spot_pct") if pa_scale > 0 else None
+
+        sc_statcast = 0.0
+
         # Barrel rate
-        barrel = sig.get("barrel_rate")
         if barrel is not None:
-            if barrel >= 25:   score += 4  # Elite barrel rate (Judge, Schwarber tier)
-            elif barrel >= 15: score += 3
-            elif barrel >= 10: score += 2
-            elif barrel >= 7:  score += 1
-            elif barrel >= 4:  score += 0
-            else:              score -= 1
+            if barrel >= 25:   sc_statcast += 4  # Elite barrel rate (Judge, Schwarber tier)
+            elif barrel >= 15: sc_statcast += 3
+            elif barrel >= 10: sc_statcast += 2
+            elif barrel >= 7:  sc_statcast += 1
+            elif barrel >= 4:  sc_statcast += 0
+            else:              sc_statcast -= 1
 
         # Hard hit %
-        hh = sig.get("hard_hit_pct")
         if hh is not None:
-            if hh >= 50:   score += 3  # Elite hard hit (Judge, Schwarber)
-            elif hh >= 45: score += 2
-            elif hh >= 40: score += 1
-
-        # H2H — has hit HR off this specific pitcher before
-        h2h_hr = sig.get("h2h_hr")
-        if h2h_hr is not None:
-            if h2h_hr >= 2:   score += 3
-            elif h2h_hr >= 1: score += 2
+            if hh >= 50:   sc_statcast += 3  # Elite hard hit (Judge, Schwarber)
+            elif hh >= 45: sc_statcast += 2
+            elif hh >= 40: sc_statcast += 1
 
         # xISO — expected isolated slugging (pure power metric, park/luck neutral)
         # League avg xISO ~0.160. Elite HR hitters (Judge, Schwarber) are 0.270+.
-        xiso = sig.get("xiso")
         if xiso is not None:
-            if xiso >= 0.250:   score += 4  # Elite power
-            elif xiso >= 0.220: score += 3
-            elif xiso >= 0.190: score += 2
-            elif xiso >= 0.165: score += 1  # Above average
-            elif xiso >= 0.140: score += 0  # League average — neutral
-            elif xiso >= 0.110: score -= 1  # Below average power
-            else:               score -= 2  # Contact hitter
+            if xiso >= 0.250:   sc_statcast += 4  # Elite power
+            elif xiso >= 0.220: sc_statcast += 3
+            elif xiso >= 0.190: sc_statcast += 2
+            elif xiso >= 0.165: sc_statcast += 1  # Above average
+            elif xiso >= 0.140: sc_statcast += 0  # League average — neutral
+            elif xiso >= 0.110: sc_statcast -= 1  # Below average power
+            else:               sc_statcast -= 2  # Contact hitter
 
         # xSLG — expected slugging from exit velocity + launch angle distribution.
         # Per FanGraphs research, this is more predictive of future HRs than actual
         # HR rate (r²=0.465 vs 0.421). League avg ~0.400. Elite power hitters are 0.600+.
         # Only score if xiso is missing (they measure similar things; avoid double-counting).
-        xslg = sig.get("xslg")
         if xslg is not None and xiso is None:
-            if xslg >= 0.600:   score += 4  # Elite power (Judge/Schwarber tier)
-            elif xslg >= 0.520: score += 3
-            elif xslg >= 0.460: score += 2
-            elif xslg >= 0.410: score += 1  # Above average
-            elif xslg >= 0.350: score += 0  # League average
-            elif xslg >= 0.280: score -= 1
-            else:               score -= 2  # Contact hitter
+            if xslg >= 0.600:   sc_statcast += 4  # Elite power (Judge/Schwarber tier)
+            elif xslg >= 0.520: sc_statcast += 3
+            elif xslg >= 0.460: sc_statcast += 2
+            elif xslg >= 0.410: sc_statcast += 1  # Above average
+            elif xslg >= 0.350: sc_statcast += 0  # League average
+            elif xslg >= 0.280: sc_statcast -= 1
+            else:               sc_statcast -= 2  # Contact hitter
 
         # xHR% — expected HR rate (Savant). Most direct predictor per FanGraphs research.
         # Empty early in season (<~100 PA); captured automatically once Savant populates it.
-        xhr = sig.get("xhr_rate")
         if xhr is not None:
-            if xhr >= 6.0:   score += 4   # Elite — hits HR in >1 of every 17 PA
-            elif xhr >= 4.5: score += 3
-            elif xhr >= 3.5: score += 2
-            elif xhr >= 2.5: score += 1
-            elif xhr >= 1.5: score += 0
-            else:            score -= 1
+            if xhr >= 6.0:   sc_statcast += 4   # Elite — hits HR in >1 of every 17 PA
+            elif xhr >= 4.5: sc_statcast += 3
+            elif xhr >= 3.5: sc_statcast += 2
+            elif xhr >= 2.5: sc_statcast += 1
+            elif xhr >= 1.5: sc_statcast += 0
+            else:            sc_statcast -= 1
 
         # Fly ball rate — per RotoGrinders: strong correlation with HR volume.
         # More fly balls = more HR opportunities. Ground ball hitters rarely homer.
-        fb = sig.get("fb_pct")
         if fb is not None:
-            if fb >= 45:   score += 3   # Elite fly ball hitter (Schwarber tier)
-            elif fb >= 38: score += 2
-            elif fb >= 30: score += 1
-            elif fb < 20:  score -= 2   # Ground ball hitter — unlikely to HR
+            if fb >= 45:   sc_statcast += 3   # Elite fly ball hitter (Schwarber tier)
+            elif fb >= 38: sc_statcast += 2
+            elif fb >= 30: sc_statcast += 1
+            elif fb < 20:  sc_statcast -= 2   # Ground ball hitter — unlikely to HR
 
         # Launch angle — from Savant glossary research (predictive correlations):
         # - Launch Angle Average: r=0.42 predictive for HR%
         # - Launch Angle (38+%): r=0.43 predictive — DO NOT penalize high angles
         # - Launch Angle (-4 to 26%): r=-0.15 NEGATIVE — line drive/grounder range hurts HRs
         # Note: elite exit velocity can overcome low launch angle (see Judge at 8.2°)
-        la = sig.get("launch_angle")
         if la is not None:
-            if la >= 25:        score += 2   # Optimal HR zone (includes 38+% which is positive)
-            elif la >= 20:      score += 1
-            elif la >= 12:      score += 0   # Neutral — line drive zone
-            elif la < 12:       score -= 1   # Ground ball tendency (mild, EV can overcome)
+            if la >= 25:   sc_statcast += 2   # Optimal HR zone
+            elif la >= 20: sc_statcast += 1
+            elif la >= 12: sc_statcast += 0   # Neutral — line drive zone
+            elif la < 12:  sc_statcast -= 1   # Ground ball tendency (mild, EV can overcome)
 
         # Exit velocity average — r=0.57 predictive for HR% (2nd strongest after barrel%).
         # MLB average ~88.5 mph. Elite HR hitters consistently 92+ mph.
-        ev = sig.get("ev_avg")
         if ev is not None:
-            if ev >= 93:    score += 3   # Elite (Ohtani/Schwarber/Yordan tier)
-            elif ev >= 91:  score += 2   # Very good (Trout, Judge tier)
-            elif ev >= 89:  score += 1   # Above average
-            elif ev < 86:   score -= 2   # Weak contact — unlikely HR candidate
-            elif ev < 87.5: score -= 1   # Below average
+            if ev >= 93:    sc_statcast += 3   # Elite (Ohtani/Schwarber/Yordan tier)
+            elif ev >= 91:  sc_statcast += 2   # Very good (Trout, Judge tier)
+            elif ev >= 89:  sc_statcast += 1   # Above average
+            elif ev < 86:   sc_statcast -= 2   # Weak contact — unlikely HR candidate
+            elif ev < 87.5: sc_statcast -= 1   # Below average
 
         # Sweet spot% — r=0.42 predictive. % of batted balls at 8–32° launch angle.
         # Combines both fly balls AND hard line drives in the HR corridor.
         # MLB average ~33%. Elite power hitters: 40%+.
-        ss = sig.get("sweet_spot_pct")
         if ss is not None:
-            if ss >= 42:    score += 2   # Elite (Schwarber 45.5%, Yordan 42.3%)
-            elif ss >= 37:  score += 1   # Good (Trout 37%)
-            elif ss < 28:   score -= 1   # Below average — poor contact profile
+            if ss >= 42:   sc_statcast += 2   # Elite (Schwarber 45.5%, Yordan 42.3%)
+            elif ss >= 37: sc_statcast += 1   # Good (Trout 37%)
+            elif ss < 28:  sc_statcast -= 1   # Below average — poor contact profile
 
         # HR/FB sustainability check — per RotoGrinders:
         # A high HR/FB rate on a low fly ball base is likely to regress.
-        # Flag it as unsustainable and reduce credit for recent form.
         hr_fb_ratio = sig.get("hr_fb_ratio")
         if hr_fb_ratio is not None and fb is not None:
-            # Implied HR rate = FB% × HR/FB  (e.g. 30% × 15% = 4.5% HR rate)
             implied_hr_rate = fb * hr_fb_ratio / 100
             if hr_fb_ratio > 20 and fb < 25:
-                score -= 2  # Unsustainable: high HR/FB on ground-ball profile
+                sc_statcast -= 2  # Unsustainable: high HR/FB on ground-ball profile
             elif implied_hr_rate >= 6.0:
-                score += 1  # FB% × HR/FB confirms genuine power production
+                sc_statcast += 1  # FB% × HR/FB confirms genuine power production
 
         # Contact hitter penalty — if BOTH barrel and xISO indicate low power,
         # penalize regardless of contextual bonuses (platoon, pitcher, EV).
-        # This prevents contact hitters from ranking high just because they face a
-        # lefty pitcher who gave up a few HRs recently.
         if barrel is not None and xiso is not None:
             if barrel < 8 and xiso < 0.160:
-                score -= 2  # Contact hitter — unlikely HR candidate
+                sc_statcast -= 2  # Contact hitter — unlikely HR candidate
         elif barrel is not None and barrel < 4:
-            score -= 1
+            sc_statcast -= 1
         elif xiso is not None and xiso < 0.110:
-            score -= 1
+            sc_statcast -= 1
+
+        score += sc_statcast * pa_scale
 
         # BallparkPal batter-vs-pitcher matchup grade (0–10, higher = better for batter)
         # This grades the specific batter against today's opposing pitcher.

@@ -369,7 +369,7 @@ if not args.use_cache:
                         if _line.startswith("TELEGRAM_BOT_TOKEN="):
                             _tg_token = _line.strip().split("=", 1)[1]
         if _tg_token:
-            _tg_chat = "6624347634"
+            _tg_chat = "-1003940624182"  # Dingers Hotline group
             _txt_path = Path(__file__).parent / "picks" / f"picks_{TODAY}.txt"
             if _txt_path.exists():
                 # Send as document so recipient can tap to open full list
