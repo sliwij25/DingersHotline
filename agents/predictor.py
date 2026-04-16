@@ -2100,14 +2100,29 @@ class Homer:
                         if k:
                             park_lookup[k] = park_entry
 
-            # Augment BPP park entries with OWM wind direction (BPP provides speed, not degrees)
+            # Augment BPP park entries with OWM wind direction at game time.
+            # BPP provides game-time wind speed but not degrees; OWM /forecast gives
+            # 3-hour intervals — we pick the block closest to each game's start time.
             _weather_key = os.getenv("OPENWEATHER_API_KEY", "").strip()
             if _weather_key and park_lookup:
+                # Build venue→game_time from lineups so we fetch forecast for the right hour
+                _venue_game_ts: dict[str, float] = {}
+                try:
+                    _lu_games = json.loads(lineups_json).get("games", [])
+                    for _lg in _lu_games:
+                        _gt = _lg.get("game_time")
+                        _venue = (_lg.get("venue") or "").lower()
+                        if _gt and _venue:
+                            from datetime import datetime, timezone
+                            _dt = datetime.fromisoformat(_gt.replace("Z", "+00:00"))
+                            _venue_game_ts[_venue] = _dt.timestamp()
+                except Exception:
+                    pass
+
                 _city_to_deg: dict[str, float | None] = {}
                 for _pe in park_lookup.values():
                     if _pe.get("wind_deg") is not None:
                         continue
-                    # Find a city for this park_entry via the venue keys that reference it
                     _city = next(
                         (_VENUE_CITY[_k] for _k in park_lookup
                          if park_lookup[_k] is _pe and _k in _VENUE_CITY),
@@ -2115,10 +2130,26 @@ class Homer:
                     )
                     if _city and _city not in _city_to_deg:
                         try:
-                            _wr = requests.get(OPENWEATHER_URL, params={
-                                "q": _city, "appid": _weather_key, "units": "imperial"
-                            }, timeout=8).json()
-                            _city_to_deg[_city] = (_wr.get("wind") or {}).get("deg")
+                            _fc = requests.get(
+                                "https://api.openweathermap.org/data/2.5/forecast",
+                                params={"q": _city, "appid": _weather_key, "units": "imperial", "cnt": 16},
+                                timeout=8,
+                            ).json()
+                            # Find the venue key to get game time
+                            _venue_key = next(
+                                (_k for _k in park_lookup
+                                 if park_lookup[_k] is _pe and _k in _venue_game_ts),
+                                None
+                            )
+                            _target_ts = _venue_game_ts.get(_venue_key) if _venue_key else None
+                            _entries = _fc.get("list", [])
+                            if _entries and _target_ts:
+                                _best = min(_entries, key=lambda e: abs(e["dt"] - _target_ts))
+                            elif _entries:
+                                _best = _entries[0]
+                            else:
+                                _best = None
+                            _city_to_deg[_city] = (_best.get("wind") or {}).get("deg") if _best else None
                         except Exception:
                             _city_to_deg[_city] = None
                     if _city and _city in _city_to_deg:
@@ -2609,9 +2640,11 @@ class Homer:
 
     @staticmethod
     def _deg_to_arrow(deg: float) -> str:
-        """Convert wind degrees (0–360) to a directional arrow. 0/360 = N (↑)."""
+        """Convert meteorological wind degrees to the direction the wind blows TO.
+        OWM wind.deg is the direction FROM which the wind blows (0=from N, 90=from E).
+        We add 4 slots (180°) to get the TO direction, which is what matters for HR context."""
         arrows = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"]
-        idx = round(deg / 45) % 8
+        idx = (round(deg / 45) + 4) % 8
         return arrows[idx]
 
     @staticmethod
