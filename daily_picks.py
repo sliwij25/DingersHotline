@@ -182,7 +182,7 @@ else:
     homer = Homer()
 
 narrative = homer.run(
-    f"Today is {TODAY}. Give me the top 8 HR picks for today with confidence tiers. "
+    f"Today is {TODAY}. Give me the top 20 HR picks for today with confidence tiers. "
     "Evaluate ALL batters in the confirmed lineups using BallparkPal matchup grades, "
     "park factors, Statcast barrel rate, hard hit %, recent HR form, and our historical record. "
     "For each pick include: player, matchup, batting position, key stats, and reasoning."
@@ -210,7 +210,7 @@ print("\n" + "=" * 60)
 print("  BET SLIPS — fill in odds + potential_payout from your platform")
 print("=" * 60)
 
-picks = homer.get_picks_json(top_n=8)
+picks = homer.get_picks_json(top_n=20)
 
 if not picks:
     print("\nCould not generate structured bet slip.")
@@ -238,7 +238,7 @@ else:
         print(f"\n# ── {platform.upper()} ──────────────────────────────────────")
         print(f"log_singles('{TODAY}', '{platform}', [")
         for p in picks:
-            print(f"    # [{p.get('confidence','?')}] {p.get('reasoning','')}")
+            print(f"    # {p.get('stars','')} {p.get('reasoning','')}")
             print(f"    {{'player': '{p.get('player','')}', "
                   f"'game': '{p.get('matchup','')}', "
                   f"'odds': '___', 'potential_payout': 0.00}},")

@@ -1767,6 +1767,11 @@ class Homer:
                             "platoon":          platoon,
                             "matchup":          matchup_str,
                             "venue":            venue,   # stadium name for park-factor lookup
+                            "bat_side":         bat_side,           # L / R / S
+                            "pitcher_name":     sp,                 # starting pitcher name
+                            "pitcher_throws":   sp_throws,          # R / L
+                            "batting_order":    pos + 1,            # 1–9 lineup position
+                            "season_hr":        _safe_int(b_data.get("home_run")),
                             "barrel_rate":      _safe_float(barrel),
                             "hard_hit_pct":     _safe_float(hh),
                             "hr_fb_ratio":      _safe_float(hr_fb),
@@ -1834,7 +1839,7 @@ class Homer:
             "batter",
             "barrel_batted_rate,hard_hit_percent,hr_flyballs_rate_batter,"
             "pull_percent,exit_velocity_avg,sweet_spot_percent,xiso,xslg,xhrs,"
-            "flyballs_percent,launch_angle_avg"
+            "flyballs_percent,launch_angle_avg,home_run"
         )
 
         print("  [4/9] Fetching full Statcast pitcher leaderboard...")
@@ -2488,6 +2493,44 @@ class Homer:
 
         return round(score, 1)
 
+    @staticmethod
+    def _star_rating(rank: int, auc: float) -> str:
+        """
+        Combine rank-within-pool and model accuracy (AUC) into a 1–5 star rating.
+
+        AUC ceiling (see GRADING.md):
+          >= 0.65 → max 5 stars  (model reliable)
+          >= 0.55 → max 4 stars  (model developing)
+          <  0.55 → max 3 stars  (model near random)
+
+        Rank bands for top 20:
+          1–3  → 5 stars (capped by ceiling)
+          4–7  → 4 stars (capped by ceiling)
+          8–12 → 3 stars
+          13–16 → 2 stars
+          17–20 → 1 star
+        """
+        if auc >= 0.65:
+            ceiling = 5
+        elif auc >= 0.55:
+            ceiling = 4
+        else:
+            ceiling = 3
+
+        if rank <= 3:
+            base = 5
+        elif rank <= 7:
+            base = 4
+        elif rank <= 12:
+            base = 3
+        elif rank <= 16:
+            base = 2
+        else:
+            base = 1
+
+        stars = min(base, ceiling)
+        return "★" * stars + "☆" * (5 - stars)
+
     def _rank_picks_python(self, player_signals: dict, top_n: int = 8, verbose: bool = False) -> list:
         """
         Score every player (confirmed and roster) and return the top_n as a list of dicts.
@@ -2600,6 +2643,16 @@ class Homer:
         # Pure score sort — best picks first regardless of game
         scored.sort(key=lambda x: x["score"], reverse=True)
 
+        # Assign star ratings now that we have final ranks
+        auc = 0.5
+        try:
+            weights = Homer._ml_weights or {}
+            auc = float(weights.get("cv_auc_mean", 0.5))
+        except Exception:
+            pass
+        for rank_i, pick in enumerate(scored, 1):
+            pick["stars"] = Homer._star_rating(rank_i, auc)
+
         if verbose:
             print(f"\n  [SCORING DEBUG] Total players scored: {len(player_signals)}")
             print("  [SCORING DEBUG] Top 20 players by score:")
@@ -2620,17 +2673,15 @@ class Homer:
 
     @staticmethod
     def _format_narrative(ranked: list, date_str: str, availability: str) -> str:
-        """Generate a plain-text pick report from Python-ranked picks."""
-        lines = [
-            f"TOP HR PICKS — {date_str}",
-            "=" * 60,
-        ]
+        """Generate a card-per-player pick report from Python-ranked picks."""
+        DIVIDER = "─" * 62
+        lines = [f"TOP HR PICKS — {date_str}", "=" * 62]
 
         # Lineup alerts
         try:
             av = json.loads(availability)
             if av.get("alerts"):
-                lines.append("\n  LINEUP ALERTS:")
+                lines.append("\nLINEUP ALERTS:")
                 for p in av["alerts"]:
                     lines.append(f"  !! {p} — not in confirmed lineup")
         except Exception:
@@ -2642,82 +2693,106 @@ class Homer:
             lines.append("Best time to run: 11am–noon ET on game days.")
             return "\n".join(lines)
 
+        def _fmt(val, fmt=".1f", suffix="", fallback="—"):
+            return f"{val:{fmt}}{suffix}" if val is not None else fallback
+
         for i, pick in enumerate(ranked, 1):
-            sig     = pick["signals"]
-            name    = pick["player"]
-            mu      = pick["matchup"]
-            conf    = pick["confidence"]
-            sc      = pick["score"]
-            hr_prob = pick.get("hr_prob")
-            status  = sig.get("status", "unknown")
-            status_marker = f" [{status.upper()}]" if status != "confirmed" else ""
+            sig    = pick["signals"]
+            name   = pick["player"]
+            stars  = pick.get("stars", "")
+            status = sig.get("status", "unknown")
+            status_tag = f"  [{status.upper()}]" if status != "confirmed" else ""
 
-            barrel    = sig.get("barrel_rate")
-            hh        = sig.get("hard_hit_pct")
-            hr_fb     = sig.get("hr_fb_ratio")
-            xiso_val  = sig.get("xiso")
-            form      = sig.get("recent_form_14d")
-            ev        = sig.get("ev_10")
-            kelly     = sig.get("kelly_size")
-            ve        = sig.get("value_edge")
-            pin       = sig.get("pinnacle_odds", "—")
-            p_hr9     = sig.get("pitcher_hr_per_9")
-            h2h_hr    = sig.get("h2h_hr")
-            h2h_ab    = sig.get("h2h_ab")
-            platoon   = sig.get("platoon", "")
-            v_slg     = sig.get("venue_slugging")
-            park_hr   = sig.get("park_hr_factor")
-            temp      = sig.get("temp_f")
-            wind      = sig.get("wind_mph")
-            wind_dir  = sig.get("wind_dir", "")
-            bpp_rank  = sig.get("bpp_proj_rank")
+            # ── Header row ────────────────────────────────────────────
+            lines.append(f"\n{DIVIDER}")
+            lines.append(f"#{i}  {name}{status_tag}  {stars}")
 
-            rank_str = f"  BPP #{bpp_rank}" if bpp_rank is not None else ""
-            prob_str = f"  {hr_prob:.1f}% HR prob" if hr_prob is not None else ""
-            lines.append(f"\n{i}. {name}{status_marker}  [{conf}]{rank_str}{prob_str}  score={sc}  {mu}")
+            # ── Matchup / context row ──────────────────────────────────
+            mu            = sig.get("matchup", "—")
+            venue         = sig.get("venue", "")
+            is_home       = sig.get("is_home")
+            home_away_str = "Home" if is_home else "Away" if is_home is not None else "—"
+            bat_side      = sig.get("bat_side", "?")
+            bat_label     = {"L": "LHB", "R": "RHB", "S": "SHB"}.get(bat_side, bat_side)
+            p_name        = sig.get("pitcher_name") or "TBD"
+            p_throws      = sig.get("pitcher_throws", "?")
+            platoon       = sig.get("platoon", "")
+            platoon_tag   = "  ✓ PLATOON+" if platoon == "PLATOON+" else ("  ✗ platoon-" if platoon == "platoon-" else "")
+            lines.append(f"   {mu}")
+            lines.append(f"   {bat_label} vs {p_name} ({p_throws})  •  {venue}  •  {home_away_str}{platoon_tag}")
 
-            stat_parts = []
-            if barrel   is not None: stat_parts.append(f"barrel={barrel:.1f}%")
-            if hh       is not None: stat_parts.append(f"hh={hh:.1f}%")
-            if hr_fb    is not None: stat_parts.append(f"HR/FB={hr_fb:.1f}%")
-            if xiso_val is not None: stat_parts.append(f"xISO={xiso_val:.3f}")
-            if form     is not None: stat_parts.append(f"form(14d)={form}HR")
-            if stat_parts:
-                lines.append(f"   {' | '.join(stat_parts)}")
+            # ── Stats grid ────────────────────────────────────────────
+            season_hr  = sig.get("season_hr")
+            bat_order  = sig.get("batting_order")
+            hr_str     = f"{season_hr} HR" if season_hr is not None else "— HR"
+            order_str  = f"#{bat_order} in order" if bat_order else "—"
+            lines.append(f"")
+            lines.append(f"   Season:  {hr_str:<12}  Lineup:  {order_str}")
 
-            flags = []
-            if platoon == "PLATOON+":  flags.append("PLATOON+")
-            if platoon == "platoon-":  flags.append("platoon-")
-            if ev     is not None:     flags.append(f"EV ${ev:+.2f}")
-            if kelly  is not None and kelly > 0: flags.append(f"Kelly ${kelly:.2f}")
-            if ve     is not None and ve >= 3:   flags.append(f"VALUE +{ve:.1f}pp")
-            if pin != "—":             flags.append(f"Pinnacle {pin}")
-            if flags:
-                lines.append(f"   {' | '.join(flags)}")
+            barrel   = sig.get("barrel_rate")
+            hh       = sig.get("hard_hit_pct")
+            xiso_val = sig.get("xiso")
+            ev_avg   = sig.get("ev_avg")
+            sweet    = sig.get("sweet_spot_pct")
+            fb_pct   = sig.get("fb_pct")
+            hr_fb    = sig.get("hr_fb_ratio")
+            form     = sig.get("recent_form_14d")
 
-            extra = []
-            if p_hr9  is not None: extra.append(f"Pitcher L3: {p_hr9:.1f}HR/9")
-            if h2h_hr is not None: extra.append(f"h2h: {h2h_hr}HR/{h2h_ab}AB")
-            if v_slg:              extra.append(f"venue SLG={v_slg}")
-            if extra:
-                lines.append(f"   {' | '.join(extra)}")
+            lines.append(f"   Barrel:  {_fmt(barrel, suffix='%'):<12}  Hard Hit: {_fmt(hh, suffix='%'):<12}  xISO: {_fmt(xiso_val, '.3f')}")
+            lines.append(f"   EV avg:  {_fmt(ev_avg, '.1f'):<12}  Sweet Sp: {_fmt(sweet, suffix='%'):<12}  FB%:  {_fmt(fb_pct, suffix='%')}")
+            if hr_fb is not None or form is not None:
+                lines.append(f"   HR/FB:   {_fmt(hr_fb, suffix='%'):<12}  Form 14d: {_fmt(form, 'd', ' HR')}")
 
-            # Park + weather context (always shown so you can see environment factors)
+            # ── Park / weather ─────────────────────────────────────────
+            park_hr  = sig.get("park_hr_factor")
+            temp     = sig.get("temp_f")
+            wind     = sig.get("wind_mph")
+            wind_dir = sig.get("wind_dir", "")
+            whr      = sig.get("weather_hr_factor")
             env_parts = []
             if park_hr is not None:
-                park_label = "HR-friendly" if park_hr >= 110 else ("HR-suppressor" if park_hr <= 90 else "neutral park")
-                env_parts.append(f"park={park_hr:.0f} ({park_label})")
-            if temp is not None:
-                env_parts.append(f"{temp:.0f}°F")
-            if wind is not None:
+                park_label = "HR-friendly" if park_hr >= 110 else ("HR-suppressor" if park_hr <= 90 else "neutral")
+                env_parts.append(f"Park {park_hr:.0f}% ({park_label})")
+            if temp    is not None: env_parts.append(f"{temp:.0f}°F")
+            if wind    is not None:
                 dir_str = f" {wind_dir}" if wind_dir else ""
                 env_parts.append(f"wind {wind:.0f}mph{dir_str}")
+            if whr     is not None and whr != 100: env_parts.append(f"weather {whr:.0f}% HR factor")
             if env_parts:
-                lines.append(f"   Park/Weather: {' | '.join(env_parts)}")
+                lines.append(f"   {' | '.join(env_parts)}")
 
-            if pick["reasoning"]:
+            # ── Pitcher / matchup intelligence ─────────────────────────
+            p_hr9  = sig.get("pitcher_hr_per_9")
+            h2h_hr = sig.get("h2h_hr")
+            h2h_ab = sig.get("h2h_ab")
+            v_slg  = sig.get("venue_slugging")
+            bpp_r  = sig.get("bpp_proj_rank")
+            intel  = []
+            if p_hr9  is not None:             intel.append(f"Pitcher L3: {p_hr9:.1f} HR/9")
+            if h2h_hr is not None:             intel.append(f"H2H: {h2h_hr} HR / {h2h_ab or '—'} AB")
+            if v_slg:                          intel.append(f"{home_away_str} SLG: {v_slg}")
+            if bpp_r  is not None:             intel.append(f"BPP rank #{bpp_r}")
+            if intel:
+                lines.append(f"   {' | '.join(intel)}")
+
+            # ── Odds / value ───────────────────────────────────────────
+            ev    = sig.get("ev_10")
+            kelly = sig.get("kelly_size")
+            ve    = sig.get("value_edge")
+            pin   = sig.get("pinnacle_odds")
+            odds_parts = []
+            if pin:                            odds_parts.append(f"Pinnacle {pin}")
+            if ev  is not None:                odds_parts.append(f"EV ${ev:+.2f}")
+            if kelly is not None and kelly > 0: odds_parts.append(f"Kelly ${kelly:.2f}")
+            if ve  is not None and ve >= 3:    odds_parts.append(f"VALUE +{ve:.1f}pp")
+            if odds_parts:
+                lines.append(f"   {' | '.join(odds_parts)}")
+
+            # ── Why ────────────────────────────────────────────────────
+            if pick.get("reasoning"):
                 lines.append(f"   Why: {pick['reasoning']}")
 
+        lines.append(f"\n{DIVIDER}")
         return "\n".join(lines)
 
     # ── Public interface ───────────────────────────────────────────────────────
@@ -2730,7 +2805,7 @@ class Homer:
 
         # Step 2 — rank with deterministic Python scorer (no LLM)
         player_signals = context.get("player_signals", {})
-        ranked         = self._rank_picks_python(player_signals, top_n=8)
+        ranked         = self._rank_picks_python(player_signals, top_n=20)
 
         # Step 3 — format into a readable narrative
         return self._format_narrative(ranked, today, context.get("availability", "{}"))
