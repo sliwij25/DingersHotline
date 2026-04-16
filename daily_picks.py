@@ -207,7 +207,7 @@ print(narrative)
 # ── Export clean .txt file (shareable picks list) ──────────────────────────────
 if not args.use_cache:
     try:
-        txt_path = Path(__file__).parent / f"picks_{TODAY}.txt"
+        txt_path = Path(__file__).parent / "picks" / f"picks_{TODAY}.txt"
         with open(txt_path, "w", encoding="utf-8") as _f:
             _f.write(f"HomeRunBets — {TODAY}\n")
             _f.write("=" * 62 + "\n\n")

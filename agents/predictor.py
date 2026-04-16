@@ -24,6 +24,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .base import get_client, get_db_conn, run_agent
+from .bet_tracker import upsert_player_attr, get_bat_side
 
 _HEADERS = {
     "User-Agent": (
@@ -510,12 +511,17 @@ def fetch_confirmed_lineups(game_date: str = None) -> str:
             confirmed_batters = []
             for p in lineup_players:
                 bat_side = (p.get("batSide") or {}).get("code", "?")
+                pid      = p.get("id")
+                pname    = p.get("fullName")
                 confirmed_batters.append({
-                    "id":       p.get("id"),
-                    "name":     p.get("fullName"),
+                    "id":       pid,
+                    "name":     pname,
                     "bat_side": bat_side,
                     "status":   "confirmed",  # In confirmed lineup
                 })
+                # Persist handedness — confirmed lineup is the most reliable source
+                if pid and pname and bat_side and bat_side != "?":
+                    upsert_player_attr(pid, pname, bat_side=bat_side)
 
             # Get all roster players with status
             all_players = []
@@ -549,6 +555,10 @@ def fetch_confirmed_lineups(game_date: str = None) -> str:
 
                 # bat_side is available from the roster API even for non-lineup players
                 bat_side = (player_info.get("batSide") or {}).get("code", "?")
+
+                # Persist to DB so we have it even when API doesn't return it next time
+                if player_id and player_name and bat_side and bat_side != "?":
+                    upsert_player_attr(player_id, player_name, bat_side=bat_side)
 
                 all_players.append({
                     "id":       player_id,
@@ -722,6 +732,46 @@ _TEAM_VENUE: dict[str, str] = {
     "marlins": "loanDepot park",        "mia": "loanDepot park",
     "reds":    "great american ball park", "cin": "great american ball park",
     "diamondbacks":"chase field",       "ari": "chase field",
+}
+
+
+# Venue → OWM city query string (used to fetch wind direction when BPP doesn't provide degrees)
+_VENUE_CITY: dict[str, str] = {
+    "yankee stadium":           "New York,US",
+    "fenway park":              "Boston,US",
+    "wrigley field":            "Chicago,US",
+    "dodger stadium":           "Los Angeles,US",
+    "oracle park":              "San Francisco,US",
+    "coors field":              "Denver,US",
+    "camden yards":             "Baltimore,US",
+    "citizens bank park":       "Philadelphia,US",
+    "truist park":              "Atlanta,US",
+    "minute maid park":         "Houston,US",
+    "daikin park":              "Houston,US",
+    "citi field":               "New York,US",
+    "busch stadium":            "St. Louis,US",
+    "comerica park":            "Detroit,US",
+    "pnc park":                 "Pittsburgh,US",
+    "petco park":               "San Diego,US",
+    "t-mobile park":            "Seattle,US",
+    "target field":             "Minneapolis,US",
+    "american family field":    "Milwaukee,US",
+    "globe life field":         "Arlington,US",
+    "angel stadium":            "Anaheim,US",
+    "athletics ballpark":       "Las Vegas,US",
+    "tropicana field":          "St. Petersburg,US",
+    "rogers centre":            "Toronto,CA",
+    "guaranteed rate field":    "Chicago,US",
+    "rate field":               "Chicago,US",
+    "progressive field":        "Cleveland,US",
+    "kauffman stadium":         "Kansas City,US",
+    "nationals park":           "Washington,US",
+    "loandepot park":           "Miami,US",
+    "great american ball park": "Cincinnati,US",
+    "chase field":              "Phoenix,US",
+    "loanDepot park":           "Miami,US",
+    "sutter health park":       "Sacramento,US",
+    "sahlen field":             "Buffalo,US",
 }
 
 
@@ -1727,6 +1777,10 @@ class Homer:
                         bat_side    = "?"
                         status      = "unknown"
 
+                    # Fall back to persistent DB if API didn't return handedness
+                    if bat_side == "?" and batter_id:
+                        bat_side = get_bat_side(batter_id)
+
                     b_key  = batter_name.lower()
                     b_data = _find_best_name_match(batter_name, batter_stats)
 
@@ -2034,6 +2088,30 @@ class Homer:
                     for k in keys_to_store:
                         if k:
                             park_lookup[k] = park_entry
+
+            # Augment BPP park entries with OWM wind direction (BPP provides speed, not degrees)
+            _weather_key = os.getenv("OPENWEATHER_API_KEY", "").strip()
+            if _weather_key and park_lookup:
+                _city_to_deg: dict[str, float | None] = {}
+                for _pe in park_lookup.values():
+                    if _pe.get("wind_deg") is not None:
+                        continue
+                    # Find a city for this park_entry via the venue keys that reference it
+                    _city = next(
+                        (_VENUE_CITY[_k] for _k in park_lookup
+                         if park_lookup[_k] is _pe and _k in _VENUE_CITY),
+                        None
+                    )
+                    if _city and _city not in _city_to_deg:
+                        try:
+                            _wr = requests.get(OPENWEATHER_URL, params={
+                                "q": _city, "appid": _weather_key, "units": "imperial"
+                            }, timeout=8).json()
+                            _city_to_deg[_city] = (_wr.get("wind") or {}).get("deg")
+                        except Exception:
+                            _city_to_deg[_city] = None
+                    if _city and _city in _city_to_deg:
+                        _pe["wind_deg"] = _city_to_deg[_city]
 
             # Merge into player_signals
             for player, signals in player_signals.items():

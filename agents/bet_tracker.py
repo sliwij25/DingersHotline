@@ -18,6 +18,70 @@ from typing import Optional
 from .base import get_client, get_db_conn, run_agent
 
 
+# ── player_attributes table (permanent player info — handedness, etc.) ────────
+
+_CREATE_PLAYER_ATTRS = """
+CREATE TABLE IF NOT EXISTS player_attributes (
+    mlb_id     INTEGER PRIMARY KEY,
+    name       TEXT    NOT NULL,
+    bat_side   TEXT,        -- L / R / S
+    throws     TEXT,        -- L / R (pitchers)
+    updated_at TEXT    DEFAULT (datetime('now'))
+);
+"""
+
+def _ensure_player_attrs_table(conn) -> None:
+    conn.execute(_CREATE_PLAYER_ATTRS)
+    conn.commit()
+
+
+def upsert_player_attr(mlb_id: int, name: str,
+                       bat_side: str = None, throws: str = None) -> None:
+    """
+    Persist a player's static attributes (handedness, etc.).
+    Safe to call every run — only writes when values are non-null and meaningful.
+    """
+    if not mlb_id or not name:
+        return
+    conn = get_db_conn()
+    try:
+        _ensure_player_attrs_table(conn)
+        # Only update fields we actually have — don't overwrite good data with None
+        fields, vals = ["name", "updated_at"], [name, date.today().isoformat()]
+        if bat_side and bat_side != "?":
+            fields.append("bat_side"); vals.append(bat_side)
+        if throws and throws != "?":
+            fields.append("throws"); vals.append(throws)
+        set_clause = ", ".join(f"{f} = excluded.{f}" for f in fields)
+        conn.execute(f"""
+            INSERT INTO player_attributes (mlb_id, {', '.join(fields)})
+            VALUES ({mlb_id}, {', '.join('?' for _ in fields)})
+            ON CONFLICT(mlb_id) DO UPDATE SET {set_clause}
+        """, vals)
+        conn.commit()
+    except Exception:
+        pass
+    finally:
+        conn.close()
+
+
+def get_bat_side(mlb_id: int) -> str:
+    """Look up a player's bat side from the persistent DB. Returns '?' if unknown."""
+    if not mlb_id:
+        return "?"
+    conn = get_db_conn()
+    try:
+        _ensure_player_attrs_table(conn)
+        row = conn.execute(
+            "SELECT bat_side FROM player_attributes WHERE mlb_id = ?", (mlb_id,)
+        ).fetchone()
+        return row[0] if row and row[0] else "?"
+    except Exception:
+        return "?"
+    finally:
+        conn.close()
+
+
 # ── pick_factors table helpers ─────────────────────────────────────────────────
 
 _CREATE_PICK_FACTORS = """
