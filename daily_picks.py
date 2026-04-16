@@ -349,12 +349,15 @@ if not args.use_cache:
 # ── Notifications (Telegram primary, iMessage fallback) ────────────────────────
 
 if not args.use_cache:
-    import subprocess as _nsp, urllib.request as _ur, urllib.parse as _up
+    import subprocess as _nsp, requests as _req
     _top = picks[:3] if picks else []
-    _names = ", ".join(p.get("player", "?") for p in _top) if _top else "no picks"
-    _msg = f"HomeRunBets {TODAY}: picks ready.\nTop 3: {_names}\nRun: python bets.py log"
+    _top3_lines = "\n".join(
+        f"  #{i+1} {p.get('stars','')} {p.get('player','?')}  — {p.get('reasoning','')}"
+        for i, p in enumerate(_top)
+    ) if _top else "  no picks yet"
+    _caption = f"HomeRunBets {TODAY}\n\nTop 3:\n{_top3_lines}\n\nFull 20 picks in the file."
 
-    # 1. Telegram (primary)
+    # 1. Telegram (primary) — send .txt file with top-3 caption
     _tg_sent = False
     try:
         _tg_token = os.getenv("TELEGRAM_BOT_TOKEN") or ""
@@ -366,19 +369,39 @@ if not args.use_cache:
                         if _line.startswith("TELEGRAM_BOT_TOKEN="):
                             _tg_token = _line.strip().split("=", 1)[1]
         if _tg_token:
-            _tg_url = f"https://api.telegram.org/bot{_tg_token}/sendMessage"
-            _tg_data = _up.urlencode({"chat_id": "6624347634", "text": _msg}).encode()
-            _tg_resp = _ur.urlopen(_ur.Request(_tg_url, _tg_data), timeout=10)
-            if _tg_resp.status == 200:
-                _tg_sent = True
-                print("  [Telegram] Notification sent.")
+            _tg_chat = "6624347634"
+            _txt_path = Path(__file__).parent / "picks" / f"picks_{TODAY}.txt"
+            if _txt_path.exists():
+                # Send as document so recipient can tap to open full list
+                with open(_txt_path, "rb") as _tf:
+                    _resp = _req.post(
+                        f"https://api.telegram.org/bot{_tg_token}/sendDocument",
+                        data={"chat_id": _tg_chat, "caption": _caption},
+                        files={"document": (_txt_path.name, _tf, "text/plain")},
+                        timeout=20,
+                    )
+                if _resp.status_code == 200:
+                    _tg_sent = True
+                    print("  [Telegram] Picks file sent.")
+                else:
+                    raise RuntimeError(_resp.text[:200])
+            else:
+                # No .txt yet — fall back to plain text message
+                _resp = _req.post(
+                    f"https://api.telegram.org/bot{_tg_token}/sendMessage",
+                    data={"chat_id": _tg_chat, "text": _caption},
+                    timeout=10,
+                )
+                if _resp.status_code == 200:
+                    _tg_sent = True
+                    print("  [Telegram] Notification sent (no file).")
     except Exception as _e:
         print(f"  [Telegram] Skipped: {_e}")
 
     # 2. iMessage (fallback — only if Telegram failed)
     if not _tg_sent:
         try:
-            _imsg = _msg.replace("\n", " ")
+            _imsg = _caption.replace("\n", " ")
             _script = (
                 f'tell application "Messages"\n'
                 f'  set s to 1st service whose service type is iMessage\n'

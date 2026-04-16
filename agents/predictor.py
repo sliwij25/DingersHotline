@@ -2700,19 +2700,21 @@ class Homer:
             park_hr = sig.get("park_hr_factor")
             if park_hr is not None and (park_hr >= 115 or park_hr <= 85):
                 reasons.append(f"park {park_hr:.0f}%")
-            temp = sig.get("temp_f")
-            if temp is not None and (temp >= 80 or temp <= 55):
-                reasons.append(f"{temp:.0f}°F")
-            wind_mph = sig.get("wind_mph")
-            wind_receptiveness = sig.get("wind_receptiveness")
-            if wind_mph is not None and wind_mph <= 5:
-                wind_desc = f"calm {wind_mph:.0f}mph"
-                if wind_receptiveness and "high" in wind_receptiveness.lower():
-                    wind_desc += " (wind receptive)"
-                reasons.append(wind_desc)
-            weather_hr_factor = sig.get("weather_hr_factor")
-            if weather_hr_factor is not None and (weather_hr_factor >= 110 or weather_hr_factor <= 90):
-                reasons.append(f"weather {weather_hr_factor:.0f}% HR factor")
+            _is_dome = sig.get("venue", "").lower() in _DOME_STADIUMS
+            if not _is_dome:
+                temp = sig.get("temp_f")
+                if temp is not None and (temp >= 80 or temp <= 55):
+                    reasons.append(f"{temp:.0f}°F")
+                wind_mph = sig.get("wind_mph")
+                wind_receptiveness = sig.get("wind_receptiveness")
+                if wind_mph is not None and wind_mph <= 5:
+                    wind_desc = f"calm {wind_mph:.0f}mph"
+                    if wind_receptiveness and "high" in wind_receptiveness.lower():
+                        wind_desc += " (wind receptive)"
+                    reasons.append(wind_desc)
+                weather_hr_factor = sig.get("weather_hr_factor")
+                if weather_hr_factor is not None and (weather_hr_factor >= 110 or weather_hr_factor <= 90):
+                    reasons.append(f"weather {weather_hr_factor:.0f}% HR factor")
             outfield_size = sig.get("outfield_size")
             if outfield_size and outfield_size.lower() in ["small", "short"]:
                 reasons.append(f"{outfield_size} outfield")
