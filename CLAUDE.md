@@ -311,6 +311,17 @@ Daily script uses ~12–15 Odds API requests (one per game).
 
 ---
 
+## GitHub
+
+- **Repo:** `https://github.com/sliwij25/HomeRunBets` (private, user: sliwij25)
+- **Auto-commit:** `daily_picks.py` commits + pushes after every run — ml_weights.json, code changes, etc.
+- **Routine trigger ID:** `trig_01HWF4ucuuE1fofLn6M2GcgD` (claude.ai/code/routines)
+- **Dispatch command:** `Run ~/AIProjects/HomeRunBets/run-picks.sh and show me today's top HR picks and model stats`
+- **launchd job:** `com.homerunbets.daily` — fires at 11am daily, output to `logs/daily_picks.log`
+- **Mac wake schedule:** `sudo pmset repeat wakeorpoweron MTWRFSU 10:55:00`
+
+---
+
 ## Common Tasks
 
 ### Record a result

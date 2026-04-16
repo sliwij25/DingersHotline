@@ -391,6 +391,53 @@ python test_homer_prompt.py --top 20             # show top 20 picks
 
 ---
 
+## GitHub & Automation
+
+### Repository
+`https://github.com/sliwij25/HomeRunBets` (private)
+
+### Auto-commit
+Every morning when `daily_picks.py` runs it automatically commits and pushes changes to GitHub — updated ML weights, any code edits, etc. No manual git steps required.
+
+### Running picks without touching your laptop
+
+**Automated (11am daily):**
+A macOS launchd job runs `daily_picks.py` every day at 11am. Output goes to `logs/daily_picks.log`.
+
+To ensure the Mac wakes from sleep in time:
+```bash
+sudo pmset repeat wakeorpoweron MTWRFSU 10:55:00
+```
+
+**On demand via Claude Dispatch:**
+Open the Claude mobile app → Dispatch tab → send:
+> Run `~/AIProjects/HomeRunBets/run-picks.sh` and show me today's top HR picks and model stats
+
+**On demand via remote trigger:**
+The routine `trig_01HWF4ucuuE1fofLn6M2GcgD` is set up at claude.ai/code/routines.
+Fire it from anywhere with:
+```bash
+curl -X POST https://api.claude.ai/v1/code/triggers/trig_01HWF4ucuuE1fofLn6M2GcgD/fire \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json"
+```
+Save this as an iPhone Shortcut for one-tap access.
+
+**On demand in Claude Code:**
+Just say "run daily picks" and Claude will execute it directly in the session.
+
+### Re-cloning on a new machine
+```bash
+git clone https://github.com/sliwij25/HomeRunBets.git
+cd HomeRunBets
+pip install -r requirements.txt
+pip install scikit-learn scipy
+cp api/.env.example api/.env   # then fill in your API keys
+python build_historical_dataset.py  # rebuild historical training data
+```
+
+---
+
 ## Troubleshooting
 
 **"Cache file not found"** (when using `--use-cache`)
