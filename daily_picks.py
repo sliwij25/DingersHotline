@@ -307,3 +307,28 @@ try:
     print(model_performance_report())
 except Exception as e:
     print(f"  [Model dashboard unavailable: {e}]")
+
+# ── Auto-commit + push to GitHub ───────────────────────────────────────────────
+
+if not args.use_cache:
+    try:
+        import subprocess as _sp
+        _repo = os.path.dirname(os.path.abspath(__file__))
+        _sp.run(["/usr/bin/git", "-C", _repo, "add",
+                 "ml_weights.json", "agents/predictor.py",
+                 "agents/bet_tracker.py", "daily_picks.py",
+                 "optimize_weights.py", "fetch_actual_results.py",
+                 "build_historical_dataset.py", "README.md", "requirements.txt"],
+                capture_output=True)
+        _result = _sp.run(
+            ["/usr/bin/git", "-C", _repo, "commit", "-m",
+             f"Auto-update {TODAY} — picks run, ML weights refreshed"],
+            capture_output=True, text=True
+        )
+        if "nothing to commit" in _result.stdout:
+            print("  [GitHub] No changes to commit.")
+        else:
+            _sp.run(["/usr/bin/git", "-C", _repo, "push"], capture_output=True)
+            print("  [GitHub] Changes pushed to github.com/sliwij25/HomeRunBets")
+    except Exception as e:
+        print(f"  [GitHub] Push skipped: {e}")
