@@ -2226,8 +2226,14 @@ class Homer:
 
                 # Add roster batters to player_signals if not already there
                 for player_entry in roster_data.get("roster", []):
-                    # Skip pitchers — they are not HR candidates
-                    if (player_entry.get("position") or {}).get("type") == "Pitcher":
+                    # Skip pitchers — they are not HR candidates.
+                    # Check type, abbreviation, and code since the API is inconsistent.
+                    _pos = player_entry.get("position") or {}
+                    if (
+                        _pos.get("type") == "Pitcher"
+                        or _pos.get("abbreviation") in ("P", "SP", "RP", "TWP")
+                        or _pos.get("code") == "1"
+                    ):
                         continue
 
                     player_info = player_entry.get("person", {})
@@ -2444,15 +2450,21 @@ class Homer:
             elif hh >= 40: sc_statcast += 1
 
         # xISO — expected isolated slugging (pure power metric, park/luck neutral)
-        # League avg xISO ~0.160. Elite HR hitters (Judge, Schwarber) are 0.270+.
+        # League avg xISO ~0.160. Elite HR hitters (Judge, Schwarber) are 0.300+.
+        # Threshold raised from 0.250 to 0.300 after observing all 5 Apr-16 HR hitters
+        # had xISO >= 0.300; <0.280 players consistently missed.
         if xiso is not None:
-            if xiso >= 0.250:   sc_statcast += 4  # Elite power
+            if xiso >= 0.300:   sc_statcast += 5  # True power tier — all Apr-16 winners
+            elif xiso >= 0.250: sc_statcast += 4
             elif xiso >= 0.220: sc_statcast += 3
             elif xiso >= 0.190: sc_statcast += 2
-            elif xiso >= 0.165: sc_statcast += 1  # Above average
-            elif xiso >= 0.140: sc_statcast += 0  # League average — neutral
-            elif xiso >= 0.110: sc_statcast -= 1  # Below average power
-            else:               sc_statcast -= 2  # Contact hitter
+            elif xiso >= 0.165: sc_statcast += 1
+            elif xiso >= 0.140: sc_statcast += 0
+            elif xiso >= 0.110: sc_statcast -= 1
+            else:               sc_statcast -= 2
+            # Extra floor penalty below the observed winner threshold
+            if xiso < 0.280:
+                sc_statcast -= 1
 
         # xSLG — expected slugging from exit velocity + launch angle distribution.
         # Per FanGraphs research, this is more predictive of future HRs than actual
@@ -2508,8 +2520,11 @@ class Homer:
         # Sweet spot% — r=0.42 predictive. % of batted balls at 8–32° launch angle.
         # Combines both fly balls AND hard line drives in the HR corridor.
         # MLB average ~33%. Elite power hitters: 40%+.
+        # Added >=50% tier after Pereira (63.6%) homered at rank #17 on Apr-16 —
+        # signal was underweighted at max +2 for a player well above elite threshold.
         if ss is not None:
-            if ss >= 42:   sc_statcast += 2   # Elite (Schwarber 45.5%, Yordan 42.3%)
+            if ss >= 50:   sc_statcast += 3   # Exceptional (Pereira 63.6% homered at #17)
+            elif ss >= 42: sc_statcast += 2   # Elite (Schwarber 45.5%, Yordan 42.3%)
             elif ss >= 37: sc_statcast += 1   # Good (Trout 37%)
             elif ss < 28:  sc_statcast -= 1   # Below average — poor contact profile
 
@@ -2547,12 +2562,15 @@ class Homer:
             elif bpp_vs <= 2:  score -= 1   # Pitcher advantage
 
         # Park HR factor (stadium conduciveness to HRs)
+        # Added <=85 tier after T-Mobile (82%) was only getting -1 (fell in <=90 bucket)
+        # while suppressing picks like Canzone/Raley/Seager who all missed on Apr-16.
         park_hr = sig.get("park_hr_factor")
         if park_hr is not None:
-            if park_hr >= 120:   score += 2  # Great for HRs
+            if park_hr >= 120:   score += 2
             elif park_hr >= 110: score += 1
-            elif park_hr <= 80:  score -= 2  # Poor for HRs
-            elif park_hr <= 90:  score -= 1
+            elif park_hr <= 80:  score -= 3  # Extreme suppressor
+            elif park_hr <= 85:  score -= 2  # Strong suppressor (T-Mobile 82%)
+            elif park_hr <= 90:  score -= 1  # Mild suppressor
 
         # Enhanced weather and wind factors
         temp = sig.get("temp_f")

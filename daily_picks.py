@@ -242,7 +242,7 @@ else:
             try:
                 save_pick_factors(TODAY, p["player"], p["signals"],
                                   confidence=p.get("confidence"),
-                                  algo_version="3.0",
+                                  algo_version="3.1",
                                   score=p.get("score"),
                                   rank=rank_i)
                 saved += 1
