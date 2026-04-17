@@ -441,60 +441,6 @@ def model_performance_report() -> str:
             rate = hits / n * 100
             add(f"  {tier:<10} {n:>6} {hits:>6} {rate:>9.1f}%")
 
-        # ── 3. Betting P&L (from singles table) ───────────────────────────────
-        try:
-            pnl_rows = conn.execute("""
-                SELECT
-                  COUNT(*)                                   as total,
-                  SUM(CASE WHEN result='win'  THEN 1 ELSE 0 END) as wins,
-                  SUM(CASE WHEN result='loss' THEN 1 ELSE 0 END) as losses,
-                  SUM(CASE WHEN result IS NULL THEN 1 ELSE 0 END) as pending,
-                  SUM(wager)                                 as wagered,
-                  SUM(CASE WHEN result='win' THEN payout - wager
-                           WHEN result='loss' THEN -wager
-                           ELSE 0 END)                       as net_pnl
-                FROM singles
-            """).fetchone()
-
-            total_b, wins_b, losses_b, pending_b, wagered, net = pnl_rows
-            settled = (wins_b or 0) + (losses_b or 0)
-            win_rate = (wins_b or 0) / settled * 100 if settled else 0
-            roi      = (net or 0) / (wagered or 1) * 100
-
-            add(f"\n  BETTING P&L")
-            add(f"  {'Record:':<18} {wins_b or 0}W - {losses_b or 0}L  ({pending_b or 0} pending)")
-            add(f"  {'Win rate:':<18} {win_rate:.1f}%  (MLB base HR rate ~15%)")
-            add(f"  {'Total wagered:':<18} ${wagered or 0:.2f}")
-            add(f"  {'Net P&L:':<18} ${net or 0:+.2f}")
-            add(f"  {'ROI:':<18} {roi:+.1f}%")
-
-            # Last 7 days P&L
-            row7p = conn.execute("""
-                SELECT COUNT(*),
-                  SUM(CASE WHEN result='win' THEN 1 ELSE 0 END),
-                  SUM(CASE WHEN result='win' THEN payout - wager
-                           WHEN result='loss' THEN -wager ELSE 0 END)
-                FROM singles WHERE result IS NOT NULL AND bet_date >= ?
-            """, (week_ago,)).fetchone()
-            if row7p[0]:
-                r7_rate = (row7p[1] or 0) / row7p[0] * 100
-                add(f"  {'Last 7 days:':<18} {row7p[0]} bets, {r7_rate:.0f}% win rate, ${row7p[2] or 0:+.2f} P&L")
-
-            # Last 30 days P&L
-            row30p = conn.execute("""
-                SELECT COUNT(*),
-                  SUM(CASE WHEN result='win' THEN 1 ELSE 0 END),
-                  SUM(CASE WHEN result='win' THEN payout - wager
-                           WHEN result='loss' THEN -wager ELSE 0 END)
-                FROM singles WHERE result IS NOT NULL AND bet_date >= ?
-            """, (month_ago,)).fetchone()
-            if row30p[0]:
-                r30_rate = (row30p[1] or 0) / row30p[0] * 100
-                add(f"  {'Last 30 days:':<18} {row30p[0]} bets, {r30_rate:.0f}% win rate, ${row30p[2] or 0:+.2f} P&L")
-
-        except Exception as e:
-            add(f"\n  BETTING P&L  (unavailable: {e})")
-
         # ── 4. ML model status ─────────────────────────────────────────────────
         add(f"\n  ML MODEL STATUS")
         weights_path = os.path.join(os.path.dirname(__file__), "..", "ml_weights.json")
