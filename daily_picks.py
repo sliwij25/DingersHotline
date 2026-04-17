@@ -237,7 +237,7 @@ else:
     all_ranked = homer._rank_picks_python(player_signals, top_n=20, verbose=True)
     _all_ranked = all_ranked
     saved = 0
-    for rank_i, p in enumerate(all_ranked, 1):
+    for rank_i, p in enumerate(all_ranked[:20], 1):  # hard cap at exactly 20
         if p.get("signals"):
             try:
                 save_pick_factors(TODAY, p["player"], p["signals"],
