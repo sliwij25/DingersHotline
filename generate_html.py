@@ -146,6 +146,21 @@ def _build_card(rank: int, pick: dict) -> str:
         cls = "tag-green" if ev_10 > 0 else "tag-red"
         ev_html = f'<span class="tag {cls}">EV ${ev_10:+.2f}</span>'
 
+    best_odds  = sig.get("best_odds")
+    pin_odds   = sig.get("pinnacle_odds")
+    best_book  = sig.get("best_book")
+    odds_html  = ""
+    if best_odds:
+        book_label = f" · {best_book}" if best_book else ""
+        pin_part   = f" &nbsp;|&nbsp; <span class='odds-pin'>Pinnacle {_esc(str(pin_odds))}</span>" if pin_odds else ""
+        odds_html  = (
+            f'<div class="odds-line">'
+            f'Best odds: <span class="odds-best">{_esc(str(best_odds))}</span>'
+            f'<span class="odds-book">{_esc(book_label)}</span>'
+            f'{pin_part}'
+            f'</div>'
+        )
+
     pa_html = ""
     if pa is not None and pa < 40:
         pa_html = f'<span class="tag tag-warn">{pa} PA — small sample</span>'
@@ -205,6 +220,7 @@ def _build_card(rank: int, pick: dict) -> str:
                 <div class="pitcher-line">{pitcher_line}</div>
                 {stats_html}
                 <div class="tags-row">{tags_html}</div>
+                {odds_html}
                 <div class="why-line"><span class="why-label">Why:</span> {_esc(reasoning)}</div>
             </div>
         </div>"""
@@ -219,8 +235,8 @@ def generate_picks_html(
     net_pnl: float = 0.0,
     roi: float = 0.0,
     record: str = "—",
-    yesterday_pnl: float | None = None,
-    cumulative_pnl: float | None = None,
+    model_yesterday_pnl: float | None = None,
+    model_cumulative_pnl: float | None = None,
 ) -> str:
 
     # Group picks by star count (descending)
@@ -263,8 +279,8 @@ def generate_picks_html(
         css = "chip-pnl-pos" if value > 0 else "chip-pnl-neg" if value < 0 else "chip-auc"
         return f'<div class="chip {css}">{_esc(label)} {_esc(fmt)}</div>'
 
-    yesterday_chip  = _pnl_chip("Yesterday", yesterday_pnl)
-    cumulative_chip = _pnl_chip("Total P&L", cumulative_pnl)
+    yesterday_chip  = _pnl_chip("Yesterday", model_yesterday_pnl)
+    cumulative_chip = _pnl_chip("Model P&L", model_cumulative_pnl)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -644,6 +660,25 @@ def generate_picks_html(
     color: var(--text-dim);
     margin-right: 4px;
     font-style: normal;
+  }}
+
+  .odds-line {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-sub);
+    margin-top: 6px;
+  }}
+  .odds-best {{
+    color: #4ADE80;
+    font-weight: 700;
+  }}
+  .odds-book {{
+    color: var(--text-dim);
+    font-size: 10px;
+  }}
+  .odds-pin {{
+    color: var(--text-dim);
+    font-size: 10px;
   }}
 
   /* ─── Footer ─── */

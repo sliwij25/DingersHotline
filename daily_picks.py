@@ -359,35 +359,20 @@ try:
             _auc = _wj.get("cv_auc_mean", 0.0)
             _ml_influence = min(0.7, max(0.0, (_auc - 0.5) * 2.5))
 
-        # P&L + record from bets.db
+        # Model fictitious P&L (pick_factors with best_odds — NOT personal bets)
+        _model_yesterday_pnl, _model_cumulative_pnl = None, None
         _net_pnl, _roi, _record, _win_rate = 0.0, 0.0, "—", "—"
-        _yesterday_pnl, _cumulative_pnl = None, None
         try:
-            import datetime as _dt
-            _yesterday = (_dt.date.today() - _dt.timedelta(days=1)).isoformat()
-            _conn = _sq.connect(Path(__file__).parent / "data" / "bets.db")
-            _rows = _conn.execute(
-                "SELECT result, wager, payout FROM singles WHERE result IS NOT NULL"
-            ).fetchall()
-            _yrows = _conn.execute(
-                "SELECT result, wager, payout FROM singles WHERE result IS NOT NULL AND bet_date=?",
-                (_yesterday,)
-            ).fetchall()
-            _conn.close()
-            if _rows:
-                _wins   = sum(1 for r in _rows if r[0] == "win")
-                _losses = sum(1 for r in _rows if r[0] == "loss")
-                _wagered = sum(r[1] for r in _rows)
-                _returned = sum(r[2] or 0 for r in _rows if r[0] == "win")
-                _net_pnl = _returned - _wagered
-                _cumulative_pnl = _net_pnl
-                _roi = (_net_pnl / _wagered * 100) if _wagered else 0.0
-                _record = f"{_wins}W-{_losses}L"
-                _win_rate = f"{_wins/len(_rows)*100:.0f}%"
-            if _yrows:
-                _y_wagered  = sum(r[1] for r in _yrows)
-                _y_returned = sum(r[2] or 0 for r in _yrows if r[0] == "win")
-                _yesterday_pnl = _y_returned - _y_wagered
+            _pnl_js = _js.loads(model_pnl_report())
+            _pnl_summary = _pnl_js.get("model_pnl_summary", {})
+            _pnl_daily   = _pnl_js.get("daily", [])
+            if _pnl_summary.get("days_tracked", 0) > 0:
+                _cum_str = _pnl_summary.get("cumulative_pnl", "$0.00")
+                _model_cumulative_pnl = float(_cum_str.replace("$", "").replace("+", ""))
+            if _pnl_daily:
+                _last_day = _pnl_daily[-1]
+                _day_str  = _last_day.get("day_pnl", "$0.00")
+                _model_yesterday_pnl = float(_day_str.replace("$", "").replace("+", ""))
         except Exception:
             pass
 
@@ -403,8 +388,8 @@ try:
             net_pnl=_net_pnl,
             roi=_roi,
             record=_record,
-            yesterday_pnl=_yesterday_pnl,
-            cumulative_pnl=_cumulative_pnl,
+            model_yesterday_pnl=_model_yesterday_pnl,
+            model_cumulative_pnl=_model_cumulative_pnl,
         )
 
         # Save dated copy
