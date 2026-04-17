@@ -217,6 +217,60 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
         conn.close()
 
 
+def backfill_pick_odds(bet_date: str, comparisons: list) -> int:
+    """
+    Update pick_factors with best_odds + pinnacle_odds for a given date.
+    Called by record_results.py at night when odds are guaranteed to be posted.
+    Only fills NULL rows — never overwrites existing odds data.
+    Returns the number of rows updated.
+    """
+    from difflib import SequenceMatcher
+
+    conn = get_db_conn()
+    try:
+        _ensure_pick_factors_table(conn)
+        picks = conn.execute(
+            "SELECT player FROM pick_factors WHERE bet_date=? AND rank IS NOT NULL",
+            (bet_date,)
+        ).fetchall()
+        pick_names = [r[0] for r in picks]
+
+        updated = 0
+        for comp in comparisons:
+            odds_name = comp.get("player", "")
+            best_o    = comp.get("best_odds")
+            pin_o     = comp.get("pinnacle")
+            if not odds_name or (not best_o and not pin_o):
+                continue
+
+            # exact match first, then fuzzy
+            matched = odds_name if odds_name in pick_names else None
+            if not matched:
+                best_ratio, best_name = 0.0, None
+                for pname in pick_names:
+                    r = SequenceMatcher(None, odds_name.lower(), pname.lower()).ratio()
+                    if r > best_ratio:
+                        best_ratio, best_name = r, pname
+                if best_ratio >= 0.82:
+                    matched = best_name
+
+            if not matched:
+                continue
+
+            conn.execute("""
+                UPDATE pick_factors
+                SET best_odds     = COALESCE(best_odds,     ?),
+                    pinnacle_odds = COALESCE(pinnacle_odds, ?)
+                WHERE bet_date=? AND player=?
+            """, (best_o, pin_o, bet_date, matched))
+            updated += conn.total_changes
+
+        conn.commit()
+        return updated
+    finally:
+        conn.close()
+
+
 def model_pnl_report() -> str:
     """
     Hypothetical P&L if $10 was bet on every top-20 pick each day.

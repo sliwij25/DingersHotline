@@ -49,7 +49,7 @@ print("=" * 60)
 
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
-from agents.bet_tracker import save_pick_factors, model_performance_report
+from agents.bet_tracker import save_pick_factors, model_performance_report, model_pnl_report
 from generate_html import generate_picks_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
@@ -323,6 +323,28 @@ try:
     print(model_performance_report())
 except Exception as e:
     print(f"  [Model dashboard unavailable: {e}]")
+
+try:
+    pnl_data = json.loads(model_pnl_report())
+    summary = pnl_data.get("model_pnl_summary", {})
+    if summary and summary.get("days_tracked", 0) > 0:
+        print("\n" + "=" * 60)
+        print("  MODEL P&L  (fictitious — $10 on every top-20 pick)")
+        print("=" * 60)
+        print(f"  Days tracked:   {summary['days_tracked']}")
+        print(f"  Total picks:    {summary['total_picks_with_odds']}  ({summary['win_pct']} hit rate)")
+        print(f"  Total wagered:  {summary['total_wagered']}")
+        print(f"  Cumulative P&L: {summary['cumulative_pnl']}")
+        print(f"  ROI:            {summary['roi']}")
+        daily = pnl_data.get("daily", [])
+        if daily:
+            print(f"\n  {'Date':<12} {'Picks':>6} {'Wins':>5} {'Day P&L':>10} {'Cumulative':>12}")
+            print("  " + "-" * 48)
+            for d in daily[-10:]:
+                print(f"  {d['date']:<12} {d['picks_with_odds']:>6} {d['wins']:>5} "
+                      f"{d['day_pnl']:>10} {d['cumulative_pnl']:>12}")
+except Exception:
+    pass  # silently skip if no odds data yet
 
 # ── Generate HTML for GitHub Pages ────────────────────────────────────────────
 
