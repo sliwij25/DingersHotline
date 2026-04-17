@@ -274,8 +274,8 @@ def backfill_pick_odds(bet_date: str, comparisons: list) -> int:
 def model_pnl_report() -> str:
     """
     Hypothetical P&L if $10 was bet on every top-20 pick each day.
-    Completely separate from actual bets — tracks model quality in dollar terms.
-    Only counts picks where homered IS NOT NULL and best_odds IS NOT NULL.
+    Losses count as -$10 regardless of whether odds were captured.
+    Wins only count when best_odds is known (user can supply missing ones manually).
     """
     conn = get_db_conn()
     try:
@@ -283,17 +283,18 @@ def model_pnl_report() -> str:
             SELECT bet_date, player, rank, best_odds, homered
             FROM pick_factors
             WHERE homered IS NOT NULL
-              AND best_odds IS NOT NULL
+              AND rank IS NOT NULL
               AND algo_version NOT LIKE 'hist_%'
+              AND (homered = 0 OR best_odds IS NOT NULL)
             ORDER BY bet_date, rank
         """).fetchall()
     finally:
         conn.close()
 
     if not rows:
-        return json.dumps({"error": "No labeled picks with odds data yet. Run tomorrow after games end."})
+        return json.dumps({"error": "No labeled picks yet."})
 
-    def _to_decimal(odds_str: str) -> float:
+    def _to_decimal(odds_str: str) -> float | None:
         try:
             o = int(odds_str)
             return (o / 100 + 1) if o > 0 else (100 / abs(o) + 1)
@@ -302,10 +303,13 @@ def model_pnl_report() -> str:
 
     days: dict = {}
     for bet_date, player, rank, best_odds, homered in rows:
-        dec = _to_decimal(best_odds)
-        if dec is None:
-            continue
-        pnl = round((dec - 1) * 10, 2) if homered else -10.0
+        if homered:
+            dec = _to_decimal(best_odds)
+            if dec is None:
+                continue  # win with unknown odds — skip rather than assume
+            pnl = round((dec - 1) * 10, 2)
+        else:
+            pnl = -10.0
         if bet_date not in days:
             days[bet_date] = {"picks": 0, "wins": 0, "pnl": 0.0, "players": []}
         days[bet_date]["picks"] += 1
@@ -313,7 +317,7 @@ def model_pnl_report() -> str:
         days[bet_date]["pnl"] = round(days[bet_date]["pnl"] + pnl, 2)
         days[bet_date]["players"].append({
             "rank": rank, "player": player,
-            "odds": best_odds, "homered": bool(homered), "pnl": pnl,
+            "odds": best_odds or "—", "homered": bool(homered), "pnl": pnl,
         })
 
     cumulative = 0.0
