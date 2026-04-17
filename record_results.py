@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), "api", ".env"))
 
-from agents.bet_tracker import get_pending_bets, record_result, factor_performance_report
+from agents.bet_tracker import get_pending_bets, record_result, factor_performance_report, backfill_pick_odds, model_pnl_report
 from agents.base import get_db_conn
 
 # ── Determine date ─────────────────────────────────────────────────────────────
@@ -32,6 +32,21 @@ else:
 print("=" * 60)
 print(f"  RECORD RESULTS — {target_date}")
 print("=" * 60)
+
+# ── Backfill today's pick odds (odds guaranteed live by game time) ─────────────
+
+try:
+    from agents.predictor import fetch_odds_comparison
+    raw_odds = fetch_odds_comparison()
+    odds_data = json.loads(raw_odds)
+    comparisons = odds_data.get("comparisons", []) if odds_data.get("status") == "success" else []
+    if comparisons:
+        n_updated = backfill_pick_odds(target_date, comparisons)
+        print(f"  [Odds] Backfilled odds for {n_updated} pick(s) in pick_factors")
+    else:
+        print("  [Odds] No odds data available — model P&L will be incomplete for today")
+except Exception as e:
+    print(f"  [Odds] Could not backfill odds: {e}")
 
 # ── Fetch pending bets ─────────────────────────────────────────────────────────
 
@@ -193,5 +208,29 @@ if total_settled >= 10:
 else:
     remaining = 10 - total_settled
     print(f"\n  Signal accuracy report unlocks after {remaining} more settled bet(s).")
+
+# ── Fictitious model P&L (all top-20 picks, $10 each) ─────────────────────────
+
+try:
+    pnl_data = json.loads(model_pnl_report())
+    summary = pnl_data.get("model_pnl_summary", {})
+    if summary and summary.get("days_tracked", 0) > 0:
+        print("\n" + "=" * 60)
+        print("  MODEL P&L  (fictitious — $10 on every top-20 pick)")
+        print("=" * 60)
+        print(f"  Days tracked:   {summary['days_tracked']}")
+        print(f"  Total picks:    {summary['total_picks_with_odds']}  ({summary['win_pct']} hit rate)")
+        print(f"  Total wagered:  {summary['total_wagered']}")
+        print(f"  Cumulative P&L: {summary['cumulative_pnl']}")
+        print(f"  ROI:            {summary['roi']}")
+        daily = pnl_data.get("daily", [])
+        if daily:
+            print(f"\n  {'Date':<12} {'Picks':>6} {'Wins':>5} {'Day P&L':>10} {'Cumulative':>12}")
+            print("  " + "-" * 48)
+            for d in daily[-10:]:
+                print(f"  {d['date']:<12} {d['picks_with_odds']:>6} {d['wins']:>5} "
+                      f"{d['day_pnl']:>10} {d['cumulative_pnl']:>12}")
+except Exception as e:
+    print(f"\n  [Model P&L unavailable: {e}]")
 
 print("\n" + "=" * 60)

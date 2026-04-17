@@ -219,6 +219,8 @@ def generate_picks_html(
     net_pnl: float = 0.0,
     roi: float = 0.0,
     record: str = "—",
+    yesterday_pnl: float | None = None,
+    cumulative_pnl: float | None = None,
 ) -> str:
 
     # Group picks by star count (descending)
@@ -253,6 +255,16 @@ def generate_picks_html(
 
     auc_str = f"{auc:.3f}" if auc else "—"
     ml_str  = f"{ml_influence*100:.0f}%" if ml_influence else "—"
+
+    def _pnl_chip(label: str, value: float | None) -> str:
+        if value is None:
+            return ""
+        fmt = f"${value:+.2f}"
+        css = "chip-pnl-pos" if value > 0 else "chip-pnl-neg" if value < 0 else "chip-auc"
+        return f'<div class="chip {css}">{_esc(label)} {_esc(fmt)}</div>'
+
+    yesterday_chip  = _pnl_chip("Yesterday", yesterday_pnl)
+    cumulative_chip = _pnl_chip("Total P&L", cumulative_pnl)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -371,6 +383,8 @@ def generate_picks_html(
     white-space: nowrap;
   }}
   .chip.chip-auc {{ color: #FBBF24; border-color: rgba(251,191,36,0.4); }}
+  .chip.chip-pnl-pos {{ color: #4ADE80; border-color: rgba(74,222,128,0.4); }}
+  .chip.chip-pnl-neg {{ color: #F87171; border-color: rgba(248,113,113,0.4); }}
 
   /* ─── Tier section ─── */
   .tier-section {{
@@ -671,6 +685,8 @@ def generate_picks_html(
   <div class="model-chips">
     <div class="chip chip-auc">Model AUC {_esc(auc_str)}</div>
     <div class="chip chip-auc">ML Weight {_esc(ml_str)}</div>
+    {yesterday_chip}
+    {cumulative_chip}
   </div>
 </header>
 

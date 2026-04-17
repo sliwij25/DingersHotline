@@ -361,10 +361,17 @@ try:
 
         # P&L + record from bets.db
         _net_pnl, _roi, _record, _win_rate = 0.0, 0.0, "—", "—"
+        _yesterday_pnl, _cumulative_pnl = None, None
         try:
+            import datetime as _dt
+            _yesterday = (_dt.date.today() - _dt.timedelta(days=1)).isoformat()
             _conn = _sq.connect(Path(__file__).parent / "data" / "bets.db")
             _rows = _conn.execute(
                 "SELECT result, wager, payout FROM singles WHERE result IS NOT NULL"
+            ).fetchall()
+            _yrows = _conn.execute(
+                "SELECT result, wager, payout FROM singles WHERE result IS NOT NULL AND bet_date=?",
+                (_yesterday,)
             ).fetchall()
             _conn.close()
             if _rows:
@@ -373,21 +380,31 @@ try:
                 _wagered = sum(r[1] for r in _rows)
                 _returned = sum(r[2] or 0 for r in _rows if r[0] == "win")
                 _net_pnl = _returned - _wagered
+                _cumulative_pnl = _net_pnl
                 _roi = (_net_pnl / _wagered * 100) if _wagered else 0.0
                 _record = f"{_wins}W-{_losses}L"
                 _win_rate = f"{_wins/len(_rows)*100:.0f}%"
+            if _yrows:
+                _y_wagered  = sum(r[1] for r in _yrows)
+                _y_returned = sum(r[2] or 0 for r in _yrows if r[0] == "win")
+                _yesterday_pnl = _y_returned - _y_wagered
         except Exception:
             pass
 
+        import datetime as _dt2
+        _timestamp = _dt2.datetime.now().strftime("%Y-%m-%d %I:%M %p")
+
         _html_str = generate_picks_html(
             _all_ranked or picks,
-            today=TODAY,
+            today=_timestamp,
             auc=_auc,
             ml_influence=_ml_influence,
             win_rate=_win_rate,
             net_pnl=_net_pnl,
             roi=_roi,
             record=_record,
+            yesterday_pnl=_yesterday_pnl,
+            cumulative_pnl=_cumulative_pnl,
         )
 
         # Save dated copy
