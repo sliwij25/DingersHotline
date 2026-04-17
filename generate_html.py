@@ -272,15 +272,16 @@ def generate_picks_html(
     auc_str = f"{auc:.3f}" if auc else "—"
     ml_str  = f"{ml_influence*100:.0f}%" if ml_influence else "—"
 
-    def _pnl_chip(label: str, value: float | None) -> str:
+    def _pnl_chip(label: str, value: float | None, since: str = "") -> str:
         if value is None:
             return ""
         fmt = f"${value:+.2f}"
         css = "chip-pnl-pos" if value > 0 else "chip-pnl-neg" if value < 0 else "chip-auc"
-        return f'<div class="chip {css}">{_esc(label)} {_esc(fmt)}</div>'
+        since_html = f' <span class="chip-since">since {_esc(since)}</span>' if since else ""
+        return f'<div class="chip {css}">{_esc(label)} {_esc(fmt)}{since_html}</div>'
 
     yesterday_chip  = _pnl_chip("Yesterday", model_yesterday_pnl)
-    cumulative_chip = _pnl_chip("Model P&L", model_cumulative_pnl)
+    cumulative_chip = _pnl_chip("Model P&L", model_cumulative_pnl, since="Apr 16")
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -401,6 +402,7 @@ def generate_picks_html(
   .chip.chip-auc {{ color: #FBBF24; border-color: rgba(251,191,36,0.4); }}
   .chip.chip-pnl-pos {{ color: #4ADE80; border-color: rgba(74,222,128,0.4); }}
   .chip.chip-pnl-neg {{ color: #F87171; border-color: rgba(248,113,113,0.4); }}
+  .chip-since {{ font-size: 9px; opacity: 0.55; font-weight: 400; }}
 
   /* ─── Tier section ─── */
   .tier-section {{
