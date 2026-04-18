@@ -18,6 +18,7 @@ import io
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date
 
 import requests
@@ -1935,44 +1936,76 @@ class Homer:
         print("  [2/9] Checking lineup availability for pending bets...")
         data["availability"] = check_lineup_availability(today)
 
-        print("  [3/9] Fetching full Statcast batter leaderboard...")
-        batter_stats = self._fetch_full_statcast(
-            "batter",
-            "pa,barrel_batted_rate,hard_hit_percent,hr_flyballs_rate_batter,"
-            "pull_percent,exit_velocity_avg,sweet_spot_percent,xiso,xslg,xhrs,"
-            "flyballs_percent,launch_angle_avg,home_run"
-        )
+        print("  [3-6] Fetching Statcast, recent form, BPP, and odds in parallel...")
+        batter_stats   = {}
+        pitcher_stats  = {}
+        recent_form    = []
+        _bpp_matchups  = ""
+        _bpp_parks     = ""
+        _odds          = ""
 
-        print("  [4/9] Fetching full Statcast pitcher leaderboard...")
-        pitcher_stats = self._fetch_full_statcast(
-            "pitcher",
-            "hr_flyball_rate,fb_percent,xfip,hard_hit_percent,barrel_batted_rate"
-        )
+        def _fetch_batters():
+            return self._fetch_full_statcast(
+                "batter",
+                "pa,barrel_batted_rate,hard_hit_percent,hr_flyballs_rate_batter,"
+                "pull_percent,exit_velocity_avg,sweet_spot_percent,xiso,xslg,xhrs,"
+                "flyballs_percent,launch_angle_avg,home_run"
+            )
 
-        print("  [5/9] Fetching recent HR form (last 14 days)...")
-        recent_json        = fetch_recent_hr_form(days=14)
-        data["recent_form_raw"] = recent_json
-        try:
-            recent_form = json.loads(recent_json).get("hr_leaders", [])
-        except Exception:
-            recent_form = []
+        def _fetch_pitchers():
+            return self._fetch_full_statcast(
+                "pitcher",
+                "hr_flyball_rate,fb_percent,xfip,hard_hit_percent,barrel_batted_rate"
+            )
 
-        print("  [6/9] Fetching BallparkPal matchups + park factors + odds (EV/Kelly)...")
-        data["matchups"]     = fetch_pitcher_matchups()
-        data["park_factors"] = fetch_park_factors()
-        data["odds"]         = fetch_odds_comparison()
+        def _fetch_recent():
+            raw = fetch_recent_hr_form(days=14)
+            try:
+                leaders = json.loads(raw).get("hr_leaders", [])
+            except Exception:
+                leaders = []
+            return raw, leaders
 
-        # ── Extract player IDs from lineups for new API calls ─────────────────
+        def _fetch_bpp():
+            return fetch_pitcher_matchups(), fetch_park_factors()
+
+        def _fetch_odds_filtered():
+            return fetch_odds_comparison()
+
+        with ThreadPoolExecutor(max_workers=6) as executor:
+            fut_batters  = executor.submit(_fetch_batters)
+            fut_pitchers = executor.submit(_fetch_pitchers)
+            fut_recent   = executor.submit(_fetch_recent)
+            fut_bpp      = executor.submit(_fetch_bpp)
+            fut_odds     = executor.submit(_fetch_odds_filtered)
+
+            for fut in as_completed([fut_batters, fut_pitchers, fut_recent, fut_bpp, fut_odds]):
+                if fut is fut_batters:
+                    batter_stats = fut.result()
+                elif fut is fut_pitchers:
+                    pitcher_stats = fut.result()
+                elif fut is fut_recent:
+                    _recent_raw, recent_form = fut.result()
+                    data["recent_form_raw"] = _recent_raw
+                elif fut is fut_bpp:
+                    _bpp_matchups, _bpp_parks = fut.result()
+                    data["matchups"]     = _bpp_matchups
+                    data["park_factors"] = _bpp_parks
+                elif fut is fut_odds:
+                    _odds = fut.result()
+                    data["odds"] = _odds
+
+        print("  [7] Fetching pitcher recent form (parallel)...")
         pitcher_ids: list[int] = []
         batter_ids:  list[int] = []
         try:
             lu = json.loads(lineups_json)
             for game in lu.get("games", []):
                 for side_key in ("away", "home"):
-                    side = game.get(side_key, {})
+                    side    = game.get(side_key, {})
                     opp_key = "home" if side_key == "away" else "away"
-                    opp = game.get(opp_key, {})
-                    pid = opp.get("pitcher_id")
+                    opp     = game.get(opp_key, {})
+                    pid     = opp.get("pitcher_id")
                     if pid:
                         pitcher_ids.append(pid)
                     for b in (side.get("batters") or []):
@@ -1982,12 +2015,15 @@ class Homer:
         except Exception:
             pass
 
-        print("  [7/9] Fetching pitcher recent form (last 3 starts)...")
         pitcher_form: dict[int, dict] = {}
-        for pid in pitcher_ids:
-            form = _fetch_pitcher_recent_form(pid)
-            if form:
-                pitcher_form[pid] = form
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = {executor.submit(_fetch_pitcher_recent_form, pid): pid
+                       for pid in pitcher_ids}
+            for fut in as_completed(futures):
+                pid  = futures[fut]
+                form = fut.result()
+                if form:
+                    pitcher_form[pid] = form
 
         print("  [8/9] Fetching home/away splits for confirmed batters...")
         home_away = _fetch_home_away_splits_batch(list(set(batter_ids)))
