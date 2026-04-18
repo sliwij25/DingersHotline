@@ -1693,19 +1693,32 @@ class Homer:
         self._context: dict | None = None   # cache so data is only fetched once
 
     def _fetch_full_statcast(self, player_type: str, selections: str) -> dict:
-        """Fetch the full Statcast leaderboard CSV and return a name→stats dict."""
-        season = date.today().year
-        url = (
-            f"{SAVANT_BASE}/leaderboard/custom"
-            f"?year={season}&type={player_type}&filter=&sort=4&sortDir=desc&min=5"
-            f"&selections={selections}"
-            f"&chart=false&r=no&exactNameSearch=false&csv=true"
-        )
+        """Fetch the full Statcast leaderboard CSV and return a name→stats dict.
+        Caches raw CSV to cache/statcast_{type}_YYYY-MM-DD.csv — re-runs that day skip the fetch.
+        """
+        from pathlib import Path as _Path
+        season     = date.today().year
+        today_str  = date.today().isoformat()
+        cache_path = _Path(__file__).parent.parent / "cache" / f"statcast_{player_type}_{today_str}.csv"
+
+        if cache_path.exists():
+            text = cache_path.read_text(encoding="utf-8")
+        else:
+            url = (
+                f"{SAVANT_BASE}/leaderboard/custom"
+                f"?year={season}&type={player_type}&filter=&sort=4&sortDir=desc&min=5"
+                f"&selections={selections}"
+                f"&chart=false&r=no&exactNameSearch=false&csv=true"
+            )
+            try:
+                resp = requests.get(url, headers=_HEADERS, timeout=20)
+                text = resp.text.lstrip('\ufeff')
+                cache_path.parent.mkdir(exist_ok=True)
+                cache_path.write_text(text, encoding="utf-8")
+            except Exception:
+                return {}
+
         try:
-            resp = requests.get(url, headers=_HEADERS, timeout=20)
-            # Strip BOM — Savant CSV starts with \ufeff which corrupts the first column header
-            # Without this, "last_name, first_name" becomes "\ufeff\"last_name" and ALL names = ""
-            text   = resp.text.lstrip('\ufeff')
             reader = csv.DictReader(io.StringIO(text))
             result = {}
             for row in reader:
