@@ -23,7 +23,7 @@ from datetime import date
 import requests
 from bs4 import BeautifulSoup
 
-from .base import get_client, get_db_conn, run_agent
+from .base import get_db_conn
 from .bet_tracker import upsert_player_attr, get_bat_side
 
 _HEADERS = {
@@ -731,18 +731,27 @@ _TEAM_VENUE: dict[str, str] = {
 }
 
 
-# Stadiums with fixed or retractable roofs — skip temp/wind display, show "Dome" instead
-_DOME_STADIUMS: frozenset[str] = frozenset({
-    "tropicana field",           # Tampa Bay Rays (fixed dome)
-    "rogers centre",             # Toronto Blue Jays (retractable)
-    "american family field",     # Milwaukee Brewers (retractable)
-    "chase field",               # Arizona Diamondbacks (retractable)
-    "minute maid park",          # Houston Astros (retractable)
-    "daikin park",               # Houston Astros (renamed from Minute Maid)
-    "loandepot park",            # Miami Marlins (retractable)
-    "t-mobile park",             # Seattle Mariners (retractable)
-    "globe life field",          # Texas Rangers (retractable)
+# Fixed dome — roof never opens
+_FIXED_DOMES: frozenset[str] = frozenset({
+    "tropicana field",           # Tampa Bay Rays
 })
+
+# Retractable-roof stadiums — BPP signals roof status via windreceptiveness="Roof Closed"
+# When roof is closed BPP returns temp=0 and windforecast="Variable"; treat as dome.
+# When roof is open BPP returns real weather; treat as outdoor stadium.
+_RETRACTABLE_STADIUMS: frozenset[str] = frozenset({
+    "rogers centre",             # Toronto Blue Jays
+    "american family field",     # Milwaukee Brewers
+    "chase field",               # Arizona Diamondbacks
+    "minute maid park",          # Houston Astros
+    "daikin park",               # Houston Astros (renamed from Minute Maid)
+    "loandepot park",            # Miami Marlins
+    "t-mobile park",             # Seattle Mariners
+    "globe life field",          # Texas Rangers
+})
+
+# Union — used for display/scoring helpers that only need to know "is this ever a dome"
+_DOME_STADIUMS: frozenset[str] = _FIXED_DOMES | _RETRACTABLE_STADIUMS
 
 
 # Venue → OWM city query string (used to fetch wind direction when BPP doesn't provide degrees)
@@ -2056,9 +2065,13 @@ class Homer:
                     outfield_size = g.get("outfieldsize", "")
                     short_description = g.get("shortdescription", "")
 
+                    # BPP signals a closed retractable roof via windreceptiveness="Roof Closed"
+                    # When closed, temp=0 and wind="Variable" — treat as indoor, discard weather.
+                    roof_closed = "roof closed" in wind_receptiveness.lower()
+
                     # Parse weather HR factor
                     weather_hr_factor = None
-                    if homeruns_weather_pct:
+                    if homeruns_weather_pct and not roof_closed:
                         try:
                             if homeruns_weather_pct.startswith("+"):
                                 weather_hr_factor = 100 + float(homeruns_weather_pct[1:-1])
@@ -2071,13 +2084,14 @@ class Homer:
 
                     park_entry = {
                         "park_hr_factor": hr_factor,
-                        "temp_f":         _safe_float(temp_str),
-                        "wind_mph":       _safe_float(wind_str),
-                        "wind_deg":       None,  # Not provided by BallparkPal
-                        "wind_receptiveness": wind_receptiveness,  # Med-High, Low, etc.
-                        "weather_hr_factor": weather_hr_factor,    # Weather impact on HRs
-                        "outfield_size": outfield_size,            # Variable, Small, Large, etc.
-                        "stadium_description": short_description,  # Detailed field description
+                        "temp_f":         None if roof_closed else _safe_float(temp_str),
+                        "wind_mph":       None if roof_closed else _safe_float(wind_str),
+                        "wind_deg":       None,
+                        "wind_receptiveness": wind_receptiveness,
+                        "weather_hr_factor": weather_hr_factor,
+                        "outfield_size": outfield_size,
+                        "stadium_description": short_description,
+                        "roof_closed":    roof_closed,  # True when BPP says "Roof Closed"
                     }
 
                     # BPP game format: "Away @ Home HH:MM" — home team is the venue.
@@ -2182,11 +2196,12 @@ class Homer:
                     signals["park_hr_factor"] = pk["park_hr_factor"]
                     signals["temp_f"]         = pk["temp_f"]
                     signals["wind_mph"]       = pk["wind_mph"]
-                    signals["wind_deg"]       = pk.get("wind_deg")   # degrees 0–360 for arrow
+                    signals["wind_deg"]       = pk.get("wind_deg")
                     signals["wind_receptiveness"] = pk.get("wind_receptiveness")
                     signals["weather_hr_factor"] = pk.get("weather_hr_factor")
                     signals["outfield_size"] = pk.get("outfield_size")
                     signals["stadium_description"] = pk.get("stadium_description")
+                    signals["roof_closed"]    = pk.get("roof_closed", False)
 
         except Exception:
             pass
@@ -2580,30 +2595,34 @@ class Homer:
         outfield_size = sig.get("outfield_size", "").lower()
         stadium_desc = sig.get("stadium_description", "").lower()
 
-        # Temperature impact
-        if temp is not None:
+        # True if indoor: fixed dome OR retractable with roof currently closed.
+        # roof_closed is set at parse time; fall back to wind_receptiveness for cached signals.
+        _wr = sig.get("wind_receptiveness", "") or ""
+        is_dome_venue = (sig.get("venue", "").lower() in _FIXED_DOMES
+                         or sig.get("roof_closed", False)
+                         or "roof closed" in _wr.lower())
+        if temp is not None and not is_dome_venue:
             if temp >= 85: score += 1  # Hot weather helps HRs
             elif temp <= 50: score -= 1  # Cold weather hurts HRs
 
-        # Wind impact (combines speed + receptiveness)
+        # Wind/weather impact — skip entirely for dome stadiums
         wind_score = 0
-        if wind_mph is not None:
-            if wind_mph >= 15: wind_score -= 1  # High wind hurts HRs
-            elif wind_mph <= 5: wind_score += 0.5  # Calm conditions help
+        if not is_dome_venue:
+            if wind_mph is not None:
+                if wind_mph >= 15: wind_score -= 1
+                elif wind_mph <= 5: wind_score += 0.5
 
-        # Wind receptiveness modifier (how much wind affects this park)
-        if wind_receptiveness:
-            if "high" in wind_receptiveness:
-                wind_score *= 1.5  # Wind has bigger impact in receptive parks
-            elif "low" in wind_receptiveness:
-                wind_score *= 0.5  # Wind has less impact in protected parks
+            if wind_receptiveness:
+                if "high" in wind_receptiveness:
+                    wind_score *= 1.5
+                elif "low" in wind_receptiveness:
+                    wind_score *= 0.5
+
+            if weather_hr_factor is not None:
+                if weather_hr_factor >= 110: score += 1
+                elif weather_hr_factor <= 90: score -= 1
 
         score += wind_score
-
-        # Weather HR factor (BallparkPal's assessment of weather impact on HRs)
-        if weather_hr_factor is not None:
-            if weather_hr_factor >= 110: score += 1  # Weather helps HRs
-            elif weather_hr_factor <= 90: score -= 1  # Weather hurts HRs
 
         # Outfield size impact
         if outfield_size:
@@ -2758,7 +2777,10 @@ class Homer:
             park_hr = sig.get("park_hr_factor")
             if park_hr is not None and (park_hr >= 115 or park_hr <= 85):
                 reasons.append(f"park {park_hr:.0f}%")
-            _is_dome = sig.get("venue", "").lower() in _DOME_STADIUMS
+            _wr_r = sig.get("wind_receptiveness", "") or ""
+            _is_dome = (sig.get("venue", "").lower() in _FIXED_DOMES
+                        or sig.get("roof_closed", False)
+                        or "roof closed" in _wr_r.lower())
             if not _is_dome:
                 temp = sig.get("temp_f")
                 if temp is not None and (temp >= 80 or temp <= 55):
@@ -2923,7 +2945,10 @@ class Homer:
             temp       = sig.get("temp_f")
             wind       = sig.get("wind_mph")
             whr        = sig.get("weather_hr_factor")
-            is_dome    = venue.lower() in _DOME_STADIUMS
+            _wr_d = sig.get("wind_receptiveness", "") or ""
+            is_dome    = (venue.lower() in _FIXED_DOMES
+                          or sig.get("roof_closed", False)
+                          or "roof closed" in _wr_d.lower())
             env_parts  = []
             if park_hr is not None:
                 park_label = "HR-friendly" if park_hr >= 110 else ("HR-suppressor" if park_hr <= 90 else "neutral")
