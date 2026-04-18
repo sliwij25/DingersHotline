@@ -16,20 +16,32 @@ value picks using live data and track performance over time.
 ## Architecture at a Glance
 
 ```
-daily_picks.py              ← Run every morning in Spyder (or with --use-cache for testing)
-record_results.py           ← Run after games end (~11pm ET) to log win/loss + see model post-mortem
-fetch_actual_results.py     ← Auto-labels pick_factors with MLB HR results (called by daily_picks.py)
-build_historical_dataset.py ← Bootstrap 2015–present training data (188k rows, run once)
-optimize_weights.py         ← Train logistic regression → ml_weights.json (auto-called by daily_picks.py)
-cache_data.py               ← Save today's data for offline testing
-test_homer_prompt.py        ← Test pick logic without re-fetching data
-DingersHotline.ipynb           ← Log bets, P&L charts, backtesting
-ml_weights.json             ← Auto-generated ML model weights
+scripts/
+  daily_picks.py          ← Run every morning (or with --use-cache / --brief for dev)
+  record_results.py       ← Run after games end (~11pm ET) to log win/loss + model post-mortem
+  bets.py                 ← Bet management CLI (log, history, stats)
+ml/
+  fetch_actual_results.py ← Auto-labels pick_factors with MLB HR results (called by daily_picks.py)
+  build_historical_dataset.py ← Bootstrap 2015–present training data (188k rows, run once)
+  optimize_weights.py     ← Train logistic regression → ml_weights.json (auto-called by daily_picks.py)
+tools/
+  cache_data.py           ← Save today's data for offline testing
+  cache_odds.py           ← Cache odds data
+  odds_check.py           ← Standalone odds comparison utility
+  test_homer_prompt.py    ← Test pick logic without re-fetching data
+  generate_html.py        ← GitHub Pages HTML generator
+  diagnose_games.py       ← Debug utility for game data
+notebooks/
+  HomeRunBets.ipynb       ← Bet logging, P&L charts, backtesting
+notes/
+  GRADING.md              ← Star rating definitions and AUC thresholds
+  TODO.md                 ← Feature backlog
+  COST_OPTIMIZATION.md    ← Dev cost reduction strategies
+ml_weights.json           ← Auto-generated ML model weights
 agents/
-  base.py               ← Shared Claude client (claude-3.5-sonnet via Claude Code) + run_agent() loop
+  base.py               ← DB connection helper (get_db_conn) + path constants
   predictor.py          ← Homer: fetches all data, builds per-game player cards, ranks picks (Python scorer, no LLM)
-  bet_tracker.py        ← BetTrackerAgent: SQLite reads/writes, P&L summaries, save_pick_factors()
-  overseer.py           ← OverseerAgent: orchestrates Homer + BetTrackerAgent
+  bet_tracker.py        ← SQLite reads/writes, P&L summaries, save_pick_factors()
   backtester.py         ← Scores historical bets, finds winning factors
 data/bets.db            ← SQLite database (singles + pick_factors ML training table)
 cache/historical/       ← Cached Statcast + HR event CSVs for 2015–2025 (never re-fetched)
@@ -49,10 +61,10 @@ Homer does **NOT** use Claude for ranking. Instead:
 This was necessary to avoid LLM hallucinations when context is large (~100k tokens).
 The system is **100% reproducible** and **fully auditable** — you can see exactly why each player is ranked.
 
-### Claude API (via Claude Code)
-All agent calls now use Claude 3.5 Sonnet via the Claude Code interface.
-No local Ollama setup needed. Trade-off: Claude API costs money, so use the cache-and-iterate system
-to avoid re-fetching data during development. See COST_OPTIMIZATION.md for details.
+### No LLM in the pipeline
+The entire pick pipeline is pure Python — no Ollama, no Claude API calls.
+Homer fetches data, scores players deterministically, and returns ranked picks.
+100% reproducible, fully auditable, zero per-run API cost.
 
 ### BallparkPal session auth
 `_get_bpp_session()` in predictor.py logs in via POST to Login.php and
@@ -316,7 +328,7 @@ Daily script uses ~12–15 Odds API requests (one per game).
 - **Repo:** `https://github.com/sliwij25/DingersHotline` (private, user: sliwij25)
 - **Auto-commit:** `daily_picks.py` commits + pushes after every run — ml_weights.json, code changes, etc.
 - **Routine trigger ID:** `trig_01HWF4ucuuE1fofLn6M2GcgD` (claude.ai/code/routines)
-- **Dispatch command:** `Run ~/AIProjects/DingersHotline/run-picks.sh and show me today's top HR picks and model stats`
+- **Dispatch command:** `Run ~/AIProjects/DingersHotline/scripts/run-picks.sh and show me today's top HR picks and model stats`
 - **launchd job:** `com.homerunbets.daily` — fires at 11am daily, output to `logs/daily_picks.log`
 - **Mac wake schedule:** `sudo pmset repeat wakeorpoweron MTWRFSU 10:55:00`
 
@@ -324,7 +336,7 @@ Daily script uses ~12–15 Odds API requests (one per game).
 
 ## Pick Grading System
 
-See **[GRADING.md](GRADING.md)** for the full star rating definitions, AUC ceiling thresholds, and rank bands.
+See **[GRADING.md](notes/GRADING.md)** for the full star rating definitions, AUC ceiling thresholds, and rank bands.
 
 Stars combine two signals: rank within today's top 20 pool + model accuracy ceiling (AUC).
 Current max: ★★★★☆ (AUC 0.634). Reaches ★★★★★ when AUC ≥ 0.65.
@@ -343,22 +355,23 @@ set_result('2026-04-15', 'Yordan Alvarez', 'loss')
 ### Daily workflow (token-efficient)
 ```bash
 # Morning — get picks + log bets interactively (prompts you after picks show)
-python daily_picks.py
+python scripts/daily_picks.py
+python scripts/daily_picks.py --brief      # top 7 only, saves Claude tokens
 
 # Iterate on scoring logic WITHOUT re-fetching any data
-python test_homer_prompt.py                      # re-run picks from cache
-python test_homer_prompt.py --debug Aaron Judge  # why is Judge scoring low?
-python test_homer_prompt.py --pipeline           # are BPP/park/weather signals populated?
+python tools/test_homer_prompt.py                      # re-run picks from cache
+python tools/test_homer_prompt.py --debug Aaron Judge  # why is Judge scoring low?
+python tools/test_homer_prompt.py --pipeline           # are BPP/park/weather signals populated?
 
 # Bet management (no Homer loaded — fast)
-python bets.py                           # pending bets + P&L summary
-python bets.py log                       # log new bets interactively
-python bets.py history                   # full history
-python bets.py history --player Judge    # filter by player
-python bets.py stats --player Judge      # win rate + ROI
+python scripts/bets.py                           # pending bets + P&L summary
+python scripts/bets.py log                       # log new bets interactively
+python scripts/bets.py history                   # full history
+python scripts/bets.py history --player Judge    # filter by player
+python scripts/bets.py stats --player Judge      # win rate + ROI
 
 # Night — record results + model post-mortem
-python record_results.py
+python scripts/record_results.py
 ```
 
 ### Run backtesting
