@@ -3185,12 +3185,37 @@ class Homer:
         def _fmt(val, fmt=".1f", suffix="", fallback="—"):
             return f"{val:{fmt}}{suffix}" if val is not None else fallback
 
+        # Pre-compute hit rates by star tier so section headers show historical rates.
+        # Derive rank ranges from the actual picks so AUC shifts don't break the mapping.
+        from .bet_tracker import rank_bucket_hit_rate
+
+        tier_ranks: dict[str, list[int]] = {}
+        for idx, p in enumerate(ranked, 1):
+            s = p.get("stars", "")
+            tier_ranks.setdefault(s, []).append(idx)
+
+        def _tier_label(stars: str) -> str:
+            ranks = tier_ranks.get(stars, [])
+            if not ranks:
+                return f"  {stars}"
+            lo, hi = min(ranks), max(ranks)
+            n, h = rank_bucket_hit_rate(lo, hi)
+            rate_str = f"{h/n*100:.0f}% HR rate  ({n} picks)" if n else "no history yet"
+            return f"  {stars}  —  ranks {lo}–{hi}  —  {rate_str}"
+
+        current_stars = None
         for i, pick in enumerate(ranked, 1):
             sig    = pick["signals"]
             name   = pick["player"]
             stars  = pick.get("stars", "")
             status = sig.get("status", "unknown")
             status_tag = f"  [{status.upper()}]" if status != "confirmed" else ""
+
+            # ── Section break when star tier changes ──────────────────
+            if stars != current_stars:
+                current_stars = stars
+                lines.append(f"\n{'─'*62}")
+                lines.append(_tier_label(stars))
 
             # ── Header row ────────────────────────────────────────────
             lines.append(f"\n{DIVIDER}")

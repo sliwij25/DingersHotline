@@ -363,6 +363,21 @@ def model_pnl_report() -> str:
     }, indent=2)
 
 
+def rank_bucket_hit_rate(min_rank: int, max_rank: int) -> tuple[int, int]:
+    """Return (n_picks, n_homers) for a given rank range from pick_factors."""
+    conn = get_db_conn()
+    try:
+        _ensure_pick_factors_table(conn)
+        row = conn.execute(
+            "SELECT COUNT(*), SUM(homered) FROM pick_factors "
+            "WHERE homered IS NOT NULL AND rank BETWEEN ? AND ?",
+            (min_rank, max_rank),
+        ).fetchone()
+        return (row[0], int(row[1] or 0))
+    finally:
+        conn.close()
+
+
 def model_performance_report() -> str:
     """
     Print a plain-text model performance dashboard to stdout.
