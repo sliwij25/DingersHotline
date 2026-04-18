@@ -281,11 +281,16 @@ def model_pnl_report() -> str:
     try:
         rows = conn.execute("""
             SELECT bet_date, player, rank, best_odds, homered
-            FROM pick_factors
-            WHERE homered IS NOT NULL
-              AND rank IS NOT NULL
-              AND algo_version NOT LIKE 'hist_%'
-              AND (homered = 0 OR best_odds IS NOT NULL)
+            FROM (
+                SELECT bet_date, player, rank, best_odds, homered,
+                       ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn
+                FROM pick_factors
+                WHERE homered IS NOT NULL
+                  AND rank IS NOT NULL
+                  AND algo_version NOT LIKE 'hist_%'
+                  AND (homered = 0 OR best_odds IS NOT NULL)
+            )
+            WHERE rn <= 20
             ORDER BY bet_date, rank
         """).fetchall()
     finally:

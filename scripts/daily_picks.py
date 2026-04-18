@@ -1,0 +1,517 @@
+"""
+daily_picks.py
+Run this every morning in Spyder to get today's HR picks and bet slips.
+
+COST OPTIMIZATION:
+  For testing/development, use --use-cache flag to skip data fetching:
+    python daily_picks.py --use-cache
+  
+  This loads cached context from the latest debug_context_YYYY-MM-DD.json,
+  avoiding ~100 API calls per run (Odds API, MLB API, Statcast, etc.).
+
+Usage:
+  python daily_picks.py              # fetch all data fresh (full output)
+  python daily_picks.py --brief      # fetch fresh, print top 7 only (saves tokens)
+  python daily_picks.py --use-cache  # reuse cached data from today
+"""
+
+import json
+import os
+import sys
+import argparse
+from datetime import date
+from pathlib import Path
+from dotenv import load_dotenv
+
+# ── Setup ──────────────────────────────────────────────────────────────────────
+
+# Make sure we're in the right directory so agent imports work
+os.chdir(str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent / "ml"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
+
+# Load API keys from api/.env
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", "api", ".env"))
+
+TODAY = date.today().isoformat()
+
+# Parse command-line args
+parser = argparse.ArgumentParser()
+parser.add_argument("--use-cache", action="store_true",
+                    help="Load cached context instead of fetching fresh data")
+parser.add_argument("--brief", action="store_true",
+                    help="Print only top 7 picks + summary; full list still saved to .txt and HTML")
+args = parser.parse_args()
+
+print("=" * 60)
+print(f"  DINGERS HOTLINE — {TODAY}")
+if args.use_cache:
+    print("  (using cached data — development mode)")
+print("=" * 60)
+
+# ── Import Homer ───────────────────────────────────────────────────────────────
+
+from agents import Homer
+from agents.predictor import fetch_odds_comparison
+from agents.bet_tracker import save_pick_factors, model_performance_report, model_pnl_report
+from generate_html import generate_picks_html
+
+# ── Auto-maintenance (runs every morning before picks) ─────────────────────────
+# Labels yesterday's pick_factors with actual HR results, refreshes 2026 training
+# data, and retrains ML weights when due. Zero manual steps required.
+
+def _auto_maintain():
+    import sqlite3 as _sqlite3
+    from datetime import date as _date, timedelta
+
+    yesterday = (_date.today() - timedelta(days=1)).isoformat()
+
+    # 1. Label yesterday's MLB results ─────────────────────────────────────────
+    print("  [Auto] Labeling yesterday's HR results...", end=" ", flush=True)
+    try:
+        from fetch_actual_results import fetch_homers_for_date, update_pick_factors
+        import io as _io, sys as _sys
+        _old, _sys.stdout = _sys.stdout, _io.StringIO()
+        try:
+            homers = fetch_homers_for_date(yesterday)
+            # homers=None → off day / all games pending (skip labeling)
+            # homers={} → games completed, nobody homered (still label everyone as 0)
+            if homers is not None:
+                update_pick_factors(yesterday, homers, dry_run=False)
+        finally:
+            _sys.stdout = _old
+        if homers is None:
+            print("no completed games")
+        else:
+            print(f"{len(homers)} players homered")
+    except Exception as e:
+        print(f"skipped ({e})")
+
+    # 2. Refresh 2026 training data ────────────────────────────────────────────
+    print("  [Auto] Refreshing 2026 Statcast + HR data...", end=" ", flush=True)
+    try:
+        from build_historical_dataset import (
+            fetch_statcast_season, fetch_hr_events_season,
+            write_season_to_db, CURRENT_YEAR
+        )
+        import io as _io, sys as _sys
+        _old, _sys.stdout = _sys.stdout, _io.StringIO()
+        try:
+            bs   = fetch_statcast_season(CURRENT_YEAR)
+            hrev = fetch_hr_events_season(CURRENT_YEAR)
+            n, _ = write_season_to_db(CURRENT_YEAR, bs, hrev)
+        finally:
+            _sys.stdout = _old
+        print(f"{n:,} rows in DB" if bs else "no data yet (early season?)")
+    except Exception as e:
+        print(f"skipped ({e})")
+
+    # 3. Retrain ML weights if due ─────────────────────────────────────────────
+    weights_path = Path(__file__).parent.parent / "ml_weights.json"
+    retrain, retrain_reason = False, ""
+
+    try:
+        conn = _sqlite3.connect(Path(__file__).parent.parent / "data" / "bets.db")
+        labeled_n = conn.execute(
+            "SELECT COUNT(*) FROM pick_factors WHERE homered IS NOT NULL"
+        ).fetchone()[0]
+        conn.close()
+    except Exception:
+        labeled_n = 0
+
+    if not weights_path.exists() and labeled_n >= 100:
+        retrain, retrain_reason = True, "first-time training"
+    elif weights_path.exists():
+        try:
+            with open(weights_path) as f:
+                w = json.load(f)
+            days_since = (_date.today() - _date.fromisoformat(w.get("trained_on", "2000-01-01"))).days
+            new_rows   = labeled_n - w.get("n_samples", 0)
+            if days_since >= 7 and new_rows >= 200:
+                retrain, retrain_reason = True, f"{days_since}d old, {new_rows:,} new rows"
+            elif new_rows >= 2000:
+                retrain, retrain_reason = True, f"{new_rows:,} new labeled rows"
+        except Exception:
+            pass
+
+    if retrain:
+        print(f"  [Auto] Retraining ML weights ({retrain_reason})...", end=" ", flush=True)
+        try:
+            from optimize_weights import load_training_data, train_and_save
+            import io as _io, sys as _sys
+            _old, _sys.stdout = _sys.stdout, _io.StringIO()
+            try:
+                X, y, _ = load_training_data()
+                weights  = train_and_save(X, y, save=True)
+            finally:
+                _sys.stdout = _old
+            auc = weights.get("cv_auc_mean", 0) if weights else 0
+            print(f"done  AUC={auc:.3f}")
+            # Invalidate Homer's cached weights so new model loads immediately
+            Homer._ml_weights_loaded = False
+            Homer._ml_weights        = None
+        except ImportError:
+            print("skipped — run: pip install scikit-learn scipy")
+        except Exception as e:
+            print(f"skipped ({e})")
+    elif weights_path.exists():
+        try:
+            with open(weights_path) as f:
+                w = json.load(f)
+            print(f"  [Auto] ML weights up to date  "
+                  f"(trained {w.get('trained_on','?')}, AUC={w.get('cv_auc_mean',0):.3f})")
+        except Exception:
+            pass
+
+    print()
+
+if not args.use_cache:
+    _auto_maintain()
+
+# ── Get picks (narrative) ──────────────────────────────────────────────────────
+
+if args.use_cache:
+    # Load cached context
+    cache_file = sorted(Path(__file__).parent.parent.glob(f"cache/debug_context_{TODAY}.json"), reverse=True)
+    if not cache_file:
+        print("ERROR: No cache file found for today.")
+        print(f"Run without --use-cache first, or run cache_data.py manually.")
+        sys.exit(1)
+    
+    print(f"Loading cached context from {cache_file[0].name}...\n")
+    homer = Homer()
+    with open(cache_file[0]) as f:
+        homer._context = json.load(f)
+else:
+    print("Fetching picks — this takes about 30–60 seconds...\n")
+    homer = Homer()
+
+narrative = homer.run(
+    f"Today is {TODAY}. Give me the top 20 HR picks for today with confidence tiers. "
+    "Evaluate ALL batters in the confirmed lineups using BallparkPal matchup grades, "
+    "park factors, Statcast barrel rate, hard hit %, recent HR form, and our historical record. "
+    "For each pick include: player, matchup, batting position, key stats, and reasoning."
+)
+
+# Auto-save cache on fresh run (not needed when using --use-cache)
+if not args.use_cache:
+    cache_file = Path(__file__).parent.parent / "cache" / f"debug_context_{TODAY}.json"
+    try:
+        with open(cache_file, "w") as f:
+            json.dump(homer._context, f)
+        print(f"\n  [Cached context to {cache_file.name} for testing]")
+    except Exception as e:
+        pass  # silent fail, not critical
+
+
+print("\n" + "=" * 60)
+print("  TODAY'S PICKS")
+print("=" * 60)
+if args.brief:
+    # Print only up to pick #7 — find the 8th separator and cut there
+    sep = "─" * 62
+    parts = narrative.split(sep)
+    brief_text = sep.join(parts[:8]) if len(parts) > 8 else narrative  # 1 header + 7 picks = 8 parts
+    print(brief_text)
+    print(f"\n  ... picks #8–20 saved to picks_{TODAY}.txt")
+else:
+    print(narrative)
+
+# ── Export clean .txt file (shareable picks list) ──────────────────────────────
+if not args.use_cache:
+    try:
+        txt_path = Path(__file__).parent.parent / "picks" / f"picks_{TODAY}.txt"
+        with open(txt_path, "w", encoding="utf-8") as _f:
+            _f.write(f"Dingers Hotline — {TODAY}\n")
+            _f.write("=" * 62 + "\n\n")
+            _f.write(narrative)
+            _f.write("\n")
+        print(f"\n  [Export] Picks saved to {txt_path.name}")
+    except Exception as e:
+        print(f"  [Export] Could not save .txt: {e}")
+
+# ── Generate bet slips ─────────────────────────────────────────────────────────
+
+print("\n" + "=" * 60)
+print("  BET SLIPS — fill in odds + potential_payout from your platform")
+print("=" * 60)
+
+picks = homer.get_picks_json(top_n=20)
+_all_ranked: list[dict] = []  # filled below; used for HTML generation
+
+if not picks:
+    print("\nCould not generate structured bet slip.")
+    print("Use the picks above to manually fill in log_singles().\n")
+else:
+    # Save ALL ranked players (not just top 8) for unbiased ML training data.
+    # The model needs to see who didn't homer just as much as who did.
+    player_signals = homer._context.get("player_signals", {})
+    all_ranked = homer._rank_picks_python(player_signals, top_n=20, verbose=not args.brief)
+    _all_ranked = all_ranked
+    saved = 0
+    for rank_i, p in enumerate(all_ranked[:20], 1):  # hard cap at exactly 20
+        if p.get("signals"):
+            try:
+                save_pick_factors(TODAY, p["player"], p["signals"],
+                                  confidence=p.get("confidence"),
+                                  algo_version="3.1",
+                                  score=p.get("score"),
+                                  rank=rank_i)
+                saved += 1
+            except Exception:
+                pass
+    print(f"\n  [ML Training] Saved signal snapshots for {saved} players (top 20 ranked)")
+
+    if not args.brief:
+        for platform in ["prophetx", "novig"]:
+            print(f"\n# ── {platform.upper()} ──────────────────────────────────────")
+            print(f"log_singles('{TODAY}', '{platform}', [")
+            for p in picks:
+                print(f"    # {p.get('stars','')} {p.get('reasoning','')}")
+                print(f"    {{'player': '{p.get('player','')}', "
+                      f"'game': '{p.get('matchup','')}', "
+                      f"'odds': '___', 'potential_payout': 0.00}},")
+            print("], wager=10.0)")
+    else:
+        print("\n  Run: python bets.py log  to log bets")
+
+# ── Odds comparison / value finder ────────────────────────────────────────────
+
+print("\n" + "=" * 60)
+print("  ODDS COMPARISON — sharp lines + value finder")
+print("=" * 60)
+
+try:
+    raw_cmp = fetch_odds_comparison()
+    cmp_data = json.loads(raw_cmp)
+
+    if cmp_data.get("status") == "success":
+        comparisons = cmp_data.get("comparisons", [])
+        value_picks = [c for c in comparisons if c.get("value_flag") == "VALUE"]
+        if comparisons:
+            if args.brief:
+                # Brief: just VALUE flags + count
+                if value_picks:
+                    print(f"  VALUE picks ({len(value_picks)}): " +
+                          ", ".join(f"{v['player']} {v['best_odds']}" for v in value_picks[:5]))
+                else:
+                    print("  No VALUE flags — lines tight. Run odds_check.py for full table.")
+            else:
+                print("  Pinnacle = sharpest benchmark (no US retail markup).")
+                print("  Compare your Novig / ProphetX odds to Pinnacle and Best Odds.")
+                print("  If your platform beats Best Odds -> you have extra edge.\n")
+                print(f"  {'Player':<26} {'Pinnacle':<11} {'Best Odds':<11} "
+                      f"{'Best Book':<18} {'Consensus%':<12} {'Edge':<8} {'Flag'}")
+                print("  " + "-" * 96)
+                for c in comparisons[:25]:
+                    flag     = "VALUE" if c.get("value_flag") == "VALUE" else ""
+                    edge     = c.get("value_edge", 0)
+                    edge_str = f"+{edge:.1f}pp" if edge >= 0 else f"{edge:.1f}pp"
+                    print(f"  {c['player']:<26} {c['pinnacle']:<11} {c['best_odds']:<11} "
+                          f"{c['best_book']:<18} {c['consensus_prob']:<12} "
+                          f"{edge_str:<8} {flag}")
+                print()
+                if value_picks:
+                    print("  ── VALUE picks — full book breakdown ──────────────────")
+                    for vp in value_picks[:8]:
+                        print(f"\n  {vp['player']}  ({vp['matchup']})")
+                        for book, odds in vp["all_books"].items():
+                            marker   = " <- BEST"       if book == vp["best_book"] else ""
+                            pin_mark = " <- SHARP LINE" if "Pinnacle" in book      else ""
+                            print(f"    {book:<22} {odds}{marker}{pin_mark}")
+                        print(f"  >> Novig / ProphetX: check app — beat Pinnacle {vp['pinnacle']} = value")
+                else:
+                    print("  No VALUE flags today — lines are tight across books.")
+                    print("  Compare your Novig/ProphetX to the Pinnacle column above.")
+        else:
+            print("  No prop odds data yet — books post HR props ~2-4h before first pitch.")
+    else:
+        print(f"  {cmp_data.get('message', 'Could not fetch odds comparison.')}")
+except Exception as e:
+    print(f"  Odds comparison unavailable: {e}")
+
+print("\n" + "=" * 60)
+print("  To log bets: python bets.py log")
+print("  To record results tonight: python record_results.py")
+print("=" * 60)
+
+# ── Model performance dashboard ────────────────────────────────────────────────
+
+print()
+try:
+    if args.brief:
+        # Brief: one-line model status instead of full dashboard
+        import re as _re
+        _report = model_performance_report()
+        _auc_line = next((l for l in _report.splitlines() if "AUC" in l), "")
+        _top3_line = next((l for l in _report.splitlines() if "Top 3" in l), "")
+        if _auc_line: print(" ", _auc_line.strip())
+        if _top3_line: print(" ", _top3_line.strip())
+    else:
+        print(model_performance_report())
+except Exception as e:
+    print(f"  [Model dashboard unavailable: {e}]")
+
+try:
+    pnl_data = json.loads(model_pnl_report())
+    summary = pnl_data.get("model_pnl_summary", {})
+    if summary and summary.get("days_tracked", 0) > 0:
+        if args.brief:
+            print(f"  Model P&L: {summary['cumulative_pnl']}  ROI: {summary['roi']}  "
+                  f"({summary['win_pct']} hit rate, {summary['days_tracked']}d)")
+        else:
+            print("\n" + "=" * 60)
+            print("  MODEL P&L  (fictitious — $10 on every top-20 pick)")
+            print("=" * 60)
+            print(f"  Days tracked:   {summary['days_tracked']}")
+            print(f"  Total picks:    {summary['total_picks_with_odds']}  ({summary['win_pct']} hit rate)")
+            print(f"  Total wagered:  {summary['total_wagered']}")
+            print(f"  Cumulative P&L: {summary['cumulative_pnl']}")
+            print(f"  ROI:            {summary['roi']}")
+            daily = pnl_data.get("daily", [])
+            if daily:
+                print(f"\n  {'Date':<12} {'Picks':>6} {'Wins':>5} {'Day P&L':>10} {'Cumulative':>12}")
+                print("  " + "-" * 48)
+                for d in daily[-10:]:
+                    print(f"  {d['date']:<12} {d['picks_with_odds']:>6} {d['wins']:>5} "
+                          f"{d['day_pnl']:>10} {d['cumulative_pnl']:>12}")
+except Exception:
+    pass
+
+# ── Generate HTML for GitHub Pages ────────────────────────────────────────────
+
+try:
+        import sqlite3 as _sq, json as _js
+        # AUC + ML influence from weights file
+        _wp = Path(__file__).parent.parent / "ml_weights.json"
+        _auc, _ml_influence = 0.0, 0.0
+        if _wp.exists():
+            with open(_wp) as _wf:
+                _wj = _js.load(_wf)
+            _auc = _wj.get("cv_auc_mean", 0.0)
+            _ml_influence = min(0.7, max(0.0, (_auc - 0.5) * 2.5))
+
+        # Model fictitious P&L (pick_factors with best_odds — NOT personal bets)
+        _model_yesterday_pnl, _model_cumulative_pnl = None, None
+        _net_pnl, _roi, _record, _win_rate = 0.0, 0.0, "—", "—"
+        try:
+            _pnl_js = _js.loads(model_pnl_report())
+            _pnl_summary = _pnl_js.get("model_pnl_summary", {})
+            _pnl_daily   = _pnl_js.get("daily", [])
+            if _pnl_summary.get("days_tracked", 0) > 0:
+                _cum_str = _pnl_summary.get("cumulative_pnl", "$0.00")
+                _model_cumulative_pnl = float(_cum_str.replace("$", "").replace("+", ""))
+            if _pnl_daily:
+                _last_day = _pnl_daily[-1]
+                _day_str  = _last_day.get("day_pnl", "$0.00")
+                _model_yesterday_pnl = float(_day_str.replace("$", "").replace("+", ""))
+        except Exception:
+            pass
+
+        import datetime as _dt2
+        _timestamp = _dt2.datetime.now().strftime("%Y-%m-%d %I:%M %p")
+
+        _html_str = generate_picks_html(
+            _all_ranked or picks,
+            today=_timestamp,
+            auc=_auc,
+            ml_influence=_ml_influence,
+            win_rate=_win_rate,
+            net_pnl=_net_pnl,
+            roi=_roi,
+            record=_record,
+            model_yesterday_pnl=_model_yesterday_pnl,
+            model_cumulative_pnl=_model_cumulative_pnl,
+        )
+
+        # Save dated copy
+        _html_dated = Path(__file__).parent.parent / "picks" / f"picks_{TODAY}.html"
+        with open(_html_dated, "w", encoding="utf-8") as _hf:
+            _hf.write(_html_str)
+
+        # Save to docs/ for GitHub Pages (always overwrites → latest picks)
+        _html_pages = Path(__file__).parent.parent / "docs" / "index.html"
+        with open(_html_pages, "w", encoding="utf-8") as _hf:
+            _hf.write(_html_str)
+
+        print(f"  [HTML] GitHub Pages updated → docs/index.html")
+except Exception as _he:
+    print(f"  [HTML] Skipped: {_he}")
+
+# ── Auto-commit + push to GitHub ───────────────────────────────────────────────
+
+if not args.use_cache:
+    try:
+        import subprocess as _sp
+        _repo = str(Path(__file__).parent.parent)
+        _sp.run(["/usr/bin/git", "-C", _repo, "add",
+                 "ml_weights.json", "agents/predictor.py",
+                 "agents/bet_tracker.py", "scripts/daily_picks.py",
+                 "ml/optimize_weights.py", "ml/fetch_actual_results.py",
+                 "ml/build_historical_dataset.py", "README.md", "requirements.txt",
+                 "tools/generate_html.py", "docs/index.html"],
+                capture_output=True)
+        _result = _sp.run(
+            ["/usr/bin/git", "-C", _repo, "commit", "-m",
+             f"Auto-update {TODAY} — picks run, ML weights refreshed"],
+            capture_output=True, text=True
+        )
+        if "nothing to commit" in _result.stdout:
+            print("  [GitHub] No changes to commit.")
+        else:
+            _sp.run(["/usr/bin/git", "-C", _repo, "push"], capture_output=True)
+            print("  [GitHub] Changes pushed to github.com/sliwij25/DingersHotline")
+    except Exception as e:
+        print(f"  [GitHub] Push skipped: {e}")
+
+# ── Notifications (Telegram primary, iMessage fallback) ────────────────────────
+
+if not args.use_cache:
+    import subprocess as _nsp, requests as _req
+    _top = picks[:3] if picks else []
+    _top3_names = "\n".join(
+        f"{i+1}. {p.get('player','?')}" for i, p in enumerate(_top)
+    ) if _top else "  no picks yet"
+    _caption = f"⚾ Dingers Hotline — {TODAY}\n\nTop 3:\n{_top3_names}\n\nFull picks → dingershotline.com"
+
+    # 1. Telegram (primary) — send message with top-3 names + URL
+    _tg_sent = False
+    try:
+        _tg_token = os.getenv("TELEGRAM_BOT_TOKEN") or ""
+        if not _tg_token:
+            _env_path = os.path.join(os.path.expanduser("~"), ".claude", "channels", "telegram", ".env")
+            if os.path.exists(_env_path):
+                with open(_env_path) as _f:
+                    for _line in _f:
+                        if _line.startswith("TELEGRAM_BOT_TOKEN="):
+                            _tg_token = _line.strip().split("=", 1)[1]
+        if _tg_token:
+            _tg_chat = "-1003940624182"  # Dingers Hotline group
+            _resp = _req.post(
+                f"https://api.telegram.org/bot{_tg_token}/sendMessage",
+                data={"chat_id": _tg_chat, "text": _caption},
+                timeout=10,
+            )
+            if _resp.status_code == 200:
+                _tg_sent = True
+                print("  [Telegram] Notification sent.")
+            else:
+                raise RuntimeError(_resp.text[:200])
+    except Exception as _e:
+        print(f"  [Telegram] Skipped: {_e}")
+
+    # 2. iMessage (fallback — only if Telegram failed)
+    if not _tg_sent:
+        try:
+            _imsg = _caption.replace("\n", " ")
+            _script = (
+                f'tell application "Messages"\n'
+                f'  set s to 1st service whose service type is iMessage\n'
+                f'  send "{_imsg}" to buddy "+14148811460" of s\n'
+                f'end tell'
+            )
+            _nsp.run(["osascript", "-e", _script], capture_output=True, timeout=30)
+            print("  [iMessage] Notification sent (Telegram fallback).")
+        except Exception as _e:
+            print(f"  [iMessage] Skipped: {_e}")

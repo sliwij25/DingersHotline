@@ -18,8 +18,10 @@ import io
 import json
 import os
 import time
+import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date
+from difflib import SequenceMatcher
 
 import requests
 from bs4 import BeautifulSoup
@@ -2074,14 +2076,34 @@ class Homer:
         # ── Merge odds signals (EV, Kelly, value_edge, Pinnacle) ─────────────
         try:
             odds_data = json.loads(data["odds"])
+
+            def _norm(s: str) -> str:
+                return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower().strip()
+
+            normed_signals = {_norm(k): k for k in player_signals}
+
             for comp in odds_data.get("comparisons", []):
                 pname = comp.get("player", "")
+                # Exact match first, then accent-stripped, then fuzzy
                 if pname in player_signals:
-                    player_signals[pname]["ev_10"]         = comp.get("ev_10")
-                    player_signals[pname]["kelly_size"]    = comp.get("kelly_size")
-                    player_signals[pname]["value_edge"]    = comp.get("value_edge")
-                    player_signals[pname]["pinnacle_odds"] = comp.get("pinnacle")
-                    player_signals[pname]["best_odds"]     = comp.get("best_odds")
+                    matched = pname
+                elif _norm(pname) in normed_signals:
+                    matched = normed_signals[_norm(pname)]
+                else:
+                    best_ratio, best_key = 0.0, None
+                    pname_norm = _norm(pname)
+                    for nk, orig in normed_signals.items():
+                        r = SequenceMatcher(None, pname_norm, nk).ratio()
+                        if r > best_ratio:
+                            best_ratio, best_key = r, orig
+                    matched = best_key if best_ratio >= 0.85 else None
+
+                if matched:
+                    player_signals[matched]["ev_10"]         = comp.get("ev_10")
+                    player_signals[matched]["kelly_size"]    = comp.get("kelly_size")
+                    player_signals[matched]["value_edge"]    = comp.get("value_edge")
+                    player_signals[matched]["pinnacle_odds"] = comp.get("pinnacle")
+                    player_signals[matched]["best_odds"]     = comp.get("best_odds")
         except Exception:
             pass
 
