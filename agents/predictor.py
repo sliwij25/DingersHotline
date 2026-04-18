@@ -2504,7 +2504,14 @@ class Homer:
 
                 for entry in last_order:
                     player_name = entry["name"]
-                    if not player_name or player_name in player_signals:
+                    if not player_name:
+                        continue
+                    # If this waiting player is already in signals, just backfill
+                    # the batting_order from their prior game (the index from
+                    # _build_game_cards is just roster position, not a real slot).
+                    if player_name in player_signals:
+                        if not player_signals[player_name].get("lineup_confirmed"):
+                            player_signals[player_name]["batting_order"] = entry["batting_order"]
                         continue
 
                     sc_data  = _find_best_name_match(player_name, batter_stats)

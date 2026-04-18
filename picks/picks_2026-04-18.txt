@@ -1,0 +1,247 @@
+Dingers Hotline — 2026-04-18
+==============================================================
+
+TOP HR PICKS — 2026-04-18
+==============================================================
+
+──────────────────────────────────────────────────────────────
+#1  Mike Trout  [WAITING]  ★★★★☆
+   San Diego Padres @ Los Angeles Angels
+   RHB vs Germán Márquez (R)  •  Angel Stadium  •  Home
+
+   Season:  7 HR          Lineup:  #6 in order
+   Barrel:  29.4%         Hard Hit: 49.0%         xISO: 0.490
+   EV avg:  93.8          Sweet Sp: 37.3%         FB%:  45.1%
+   Park 103% (neutral) | 72°F | wind 11mph ↗ | weather 94% HR factor
+   Pitcher L3: 3.5 HR/9
+   Why: xISO 0.490, pitcher L3: 3.5HR/9, barrel 29.4%, Small outfield
+
+──────────────────────────────────────────────────────────────
+#2  Aaron Judge  [WAITING]  ★★★★☆
+   Kansas City Royals @ New York Yankees
+   RHB vs Noah Cameron (L)  •  Yankee Stadium  •  Home
+
+   Season:  8 HR          Lineup:  #1 in order
+   Barrel:  28.6%         Hard Hit: 51.0%         xISO: 0.410
+   EV avg:  91.1          Sweet Sp: 32.7%         FB%:  32.7%
+   Park 101% (neutral) | 68°F | wind 8mph ↘ | weather 94% HR factor
+   Pitcher L3: 1.2 HR/9
+   Why: xISO 0.410, pitcher L3: 1.2HR/9, barrel 28.6%, short left porch
+
+──────────────────────────────────────────────────────────────
+#3  Jordan Walker  [WAITING]  ★★★★☆
+   St. Louis Cardinals @ Houston Astros
+   RHB vs Lance McCullers Jr. (R)  •  Daikin Park  •  Away
+
+   Season:  8 HR          Lineup:  #4 in order
+   Barrel:  22.9%         Hard Hit: 60.4%         xISO: 0.400
+   EV avg:  95.3          Sweet Sp: 45.8%         FB%:  37.5%
+   Park 105% (neutral) | Dome
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.400, barrel 22.9%
+
+──────────────────────────────────────────────────────────────
+#4  Freddie Freeman  [WAITING]  ★★★★☆
+   Los Angeles Dodgers @ Colorado Rockies
+   ? vs Ryan Feltner (R)  •  Coors Field  •  Away
+
+   Season:  3 HR          Lineup:  #5 in order
+   Barrel:  15.6%         Hard Hit: 53.1%         xISO: 0.300
+   EV avg:  93.3          Sweet Sp: 40.6%         FB%:  34.4%
+   Park 111% (HR-friendly) | 59°F | wind 7mph ↙ | weather 90% HR factor
+   Pitcher L3: 2.2 HR/9
+   Why: xISO 0.300, pitcher L3: 2.2HR/9, barrel 15.6%, weather 90% HR factor
+
+──────────────────────────────────────────────────────────────
+#5  Ben Rice  [WAITING]  ★★★★☆
+   Kansas City Royals @ New York Yankees
+   LHB vs Noah Cameron (L)  •  Yankee Stadium  •  Home
+
+   Season:  5 HR          Lineup:  #4 in order
+   Barrel:  21.6%         Hard Hit: 67.6%         xISO: 0.360
+   EV avg:  96.0          Sweet Sp: 43.2%         FB%:  29.7%
+   Park 101% (neutral) | 68°F | wind 8mph ↘ | weather 94% HR factor
+   Pitcher L3: 1.2 HR/9
+   Why: xISO 0.360, pitcher L3: 1.2HR/9, barrel 21.6%, short right porch
+
+──────────────────────────────────────────────────────────────
+#6  Dominic Canzone  [WAITING]  ★★★★☆
+   Texas Rangers @ Seattle Mariners
+   LHB vs Nathan Eovaldi (R)  •  T-Mobile Park  •  Home
+
+   Season:  2 HR          Lineup:  #5 in order
+   Barrel:  15.2%         Hard Hit: 48.5%         xISO: 0.290
+   EV avg:  94.7          Sweet Sp: 45.5%         FB%:  48.5%
+   Park 100% (neutral) | 66°F | wind 1mph ↓ | weather 99% HR factor
+   Pitcher L3: 2.5 HR/9 | H2H: 0 HR / — AB | BPP rank #49
+   Why: xISO 0.290, pitcher L3: 2.5HR/9, barrel 15.2%, calm 1mph, Small outfield
+
+──────────────────────────────────────────────────────────────
+#7  Kyle Schwarber  [WAITING]  ★★★★☆
+   Atlanta Braves @ Philadelphia Phillies
+   LHB vs Chris Sale (L)  •  Citizens Bank Park  •  Home
+
+   Season:  6 HR          Lineup:  #10 in order
+   Barrel:  26.5%         Hard Hit: 50.0%         xISO: 0.300
+   EV avg:  92.9          Sweet Sp: 44.1%         FB%:  47.1%
+   Park 104% (neutral) | 66°F | wind 12mph ↖ | weather 90% HR factor
+   Pitcher L3: 1.7 HR/9 | H2H: 2 HR / — AB | BPP rank #92
+   Why: xISO 0.300, pitcher L3: 1.7HR/9, h2h 2HR/NoneAB, barrel 26.5%, weather 90% HR factor, Small outfield
+
+──────────────────────────────────────────────────────────────
+#8  Luke Raley  [WAITING]  ★★★☆☆
+   Texas Rangers @ Seattle Mariners
+   LHB vs Nathan Eovaldi (R)  •  T-Mobile Park  •  Home
+
+   Season:  4 HR          Lineup:  #10 in order
+   Barrel:  21.6%         Hard Hit: 54.1%         xISO: 0.330
+   EV avg:  93.3          Sweet Sp: 56.8%         FB%:  27.0%
+   Park 100% (neutral) | 66°F | wind 1mph ↓ | weather 99% HR factor
+   Pitcher L3: 2.5 HR/9 | H2H: 1 HR / — AB | BPP rank #44
+   Why: xISO 0.330, pitcher L3: 2.5HR/9, h2h 1HR/NoneAB, barrel 21.6%, calm 1mph, Small outfield
+
+──────────────────────────────────────────────────────────────
+#9  Shohei Ohtani  [WAITING]  ★★★☆☆
+   Los Angeles Dodgers @ Colorado Rockies
+   ? vs Ryan Feltner (R)  •  Coors Field  •  Away
+
+   Season:  5 HR          Lineup:  #11 in order
+   Barrel:  23.9%         Hard Hit: 52.2%         xISO: 0.290
+   EV avg:  94.0          Sweet Sp: 34.8%         FB%:  43.5%
+   Park 111% (HR-friendly) | 59°F | wind 7mph ↙ | weather 90% HR factor
+   Pitcher L3: 2.2 HR/9
+   Why: xISO 0.290, pitcher L3: 2.2HR/9, barrel 23.9%, weather 90% HR factor
+
+──────────────────────────────────────────────────────────────
+#10  Chase DeLauter  [WAITING]  ★★★☆☆
+   Baltimore Orioles @ Cleveland Guardians
+   LHB vs Dean Kremer (R)  •  Progressive Field  •  Home
+
+   Season:  5 HR          Lineup:  #5 in order
+   Barrel:  15.7%         Hard Hit: 47.1%         xISO: 0.260
+   EV avg:  91.7          Sweet Sp: 39.2%         FB%:  27.5%
+   Park 91% (neutral) | 50°F | wind 12mph → | weather 93% HR factor
+   Pitcher L3: 5.4 HR/9
+   Why: xISO 0.260, pitcher L3: 5.4HR/9, barrel 15.7%, 50°F, Small outfield
+
+──────────────────────────────────────────────────────────────
+#11  Corey Seager  [WAITING]  ★★★☆☆
+   Texas Rangers @ Seattle Mariners
+   ? vs George Kirby (R)  •  T-Mobile Park  •  Away
+
+   Season:  5 HR          Lineup:  #3 in order
+   Barrel:  17.4%         Hard Hit: 45.7%         xISO: 0.250
+   EV avg:  89.9          Sweet Sp: 34.8%         FB%:  39.1%
+   Park 100% (neutral) | 66°F | wind 1mph ↓ | weather 99% HR factor
+   Pitcher L3: 1.4 HR/9 | H2H: 0 HR / — AB | BPP rank #31
+   Why: xISO 0.250, pitcher L3: 1.4HR/9, barrel 17.4%, calm 1mph, Small outfield
+
+──────────────────────────────────────────────────────────────
+#12  Bo Naylor  [WAITING]  ★★★☆☆
+   Baltimore Orioles @ Cleveland Guardians
+   LHB vs Dean Kremer (R)  •  Progressive Field  •  Home
+
+   Season:  0 HR          Lineup:  #3 in order
+   Barrel:  13.8%         Hard Hit: 55.2%         xISO: 0.230
+   EV avg:  91.8          Sweet Sp: 37.9%         FB%:  41.4%
+   Park 91% (neutral) | 50°F | wind 12mph → | weather 93% HR factor
+   Pitcher L3: 5.4 HR/9
+   Why: xISO 0.230, pitcher L3: 5.4HR/9, barrel 13.8%, 50°F, Small outfield
+
+──────────────────────────────────────────────────────────────
+#13  Hunter Goodman  [WAITING]  ★★☆☆☆
+   Los Angeles Dodgers @ Colorado Rockies
+   RHB vs Emmet Sheehan (R)  •  Coors Field  •  Home
+
+   Season:  5 HR          Lineup:  #5 in order
+   Barrel:  13.9%         Hard Hit: 50.0%         xISO: 0.190
+   EV avg:  93.5          Sweet Sp: 36.1%         FB%:  44.4%
+   Park 111% (HR-friendly) | 59°F | wind 7mph ↙ | weather 90% HR factor
+   Pitcher L3: 2.5 HR/9
+   Why: pitcher L3: 2.5HR/9, barrel 13.9%, weather 90% HR factor
+
+──────────────────────────────────────────────────────────────
+#14  Munetaka Murakami  [WAITING]  ★★☆☆☆
+   Chicago White Sox @ Athletics
+   LHB vs Luis Severino (R)  •  Sutter Health Park  •  Away
+
+   Season:  5 HR          Lineup:  #9 in order
+   Barrel:  22.9%         Hard Hit: 60.0%         xISO: 0.300
+   EV avg:  93.7          Sweet Sp: 37.1%         FB%:  37.1%
+   Park 105% (neutral) | 72°F | wind 3mph ↙ | weather 96% HR factor
+   Pitcher L3: 0.0 HR/9
+   Why: xISO 0.300, barrel 22.9%, calm 3mph (wind receptive)
+
+──────────────────────────────────────────────────────────────
+#15  CJ Abrams  [WAITING]  ★★☆☆☆
+   San Francisco Giants @ Washington Nationals
+   LHB vs Adrian Houser (R)  •  Nationals Park  •  Home
+
+   Season:  6 HR          Lineup:  #2 in order
+   Barrel:  13.2%         Hard Hit: 50.9%         xISO: 0.260
+   EV avg:  92.1          Sweet Sp: 35.8%         FB%:  30.2%
+   Park 104% (neutral) | 84°F | wind 9mph ← | weather 101% HR factor
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.260, barrel 13.2%, 84°F
+
+──────────────────────────────────────────────────────────────
+#16  Max Muncy  [WAITING]  ★★☆☆☆
+   Los Angeles Dodgers @ Colorado Rockies
+   ? vs Ryan Feltner (R)  •  Coors Field  •  Away
+
+   Season:  4 HR          Lineup:  #8 in order
+   Barrel:  16.7%         Hard Hit: 55.6%         xISO: 0.260
+   EV avg:  92.0          Sweet Sp: 30.6%         FB%:  36.1%
+   Park 111% (HR-friendly) | 59°F | wind 7mph ↙ | weather 90% HR factor
+   Pitcher L3: 2.2 HR/9
+   Why: xISO 0.260, pitcher L3: 2.2HR/9, barrel 16.7%, weather 90% HR factor
+
+──────────────────────────────────────────────────────────────
+#17  Andy Pages  [WAITING]  ★☆☆☆☆
+   Los Angeles Dodgers @ Colorado Rockies
+   ? vs Ryan Feltner (R)  •  Coors Field  •  Away
+
+   Season:  5 HR          Lineup:  #3 in order
+   Barrel:  10.4%         Hard Hit: 58.3%         xISO: 0.200
+   EV avg:  92.6          Sweet Sp: 37.5%         FB%:  25.0%
+   Park 111% (HR-friendly) | 59°F | wind 7mph ↙ | weather 90% HR factor
+   Pitcher L3: 2.2 HR/9
+   Why: xISO 0.200, pitcher L3: 2.2HR/9, barrel 10.4%, weather 90% HR factor
+
+──────────────────────────────────────────────────────────────
+#18  José Ramírez  [WAITING]  ★☆☆☆☆
+   Baltimore Orioles @ Cleveland Guardians
+   SHB vs Dean Kremer (R)  •  Progressive Field  •  Home
+
+   Season:  4 HR          Lineup:  #9 in order
+   Barrel:  12.3%         Hard Hit: 41.5%         xISO: 0.250
+   EV avg:  90.0          Sweet Sp: 38.5%         FB%:  43.1%
+   Park 91% (neutral) | 50°F | wind 12mph → | weather 93% HR factor
+   Pitcher L3: 5.4 HR/9
+   Why: xISO 0.250, pitcher L3: 5.4HR/9, barrel 12.3%, 50°F, Small outfield
+
+──────────────────────────────────────────────────────────────
+#19  Ramón Laureano  [WAITING]  ★☆☆☆☆
+   San Diego Padres @ Los Angeles Angels
+   RHB vs Yusei Kikuchi (L)  •  Angel Stadium  •  Away
+
+   Season:  4 HR          Lineup:  #11 in order
+   Barrel:  17.0%         Hard Hit: 49.1%         xISO: 0.290
+   EV avg:  89.5          Sweet Sp: 37.7%         FB%:  37.7%
+   Park 103% (neutral) | 72°F | wind 11mph ↗ | weather 94% HR factor
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.290, barrel 17.0%, Small outfield
+
+──────────────────────────────────────────────────────────────
+#20  Matt Olson  [WAITING]  ★☆☆☆☆
+   Atlanta Braves @ Philadelphia Phillies
+   LHB vs Cristopher Sánchez (L)  •  Citizens Bank Park  •  Away
+
+   Season:  5 HR          Lineup:  #8 in order
+   Barrel:  21.6%         Hard Hit: 49.0%         xISO: 0.350
+   EV avg:  93.1          Sweet Sp: 37.3%         FB%:  31.4%
+   Park 104% (neutral) | 66°F | wind 12mph ↖ | weather 90% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 1 HR / — AB | BPP rank #84
+   Why: xISO 0.350, h2h 1HR/NoneAB, barrel 21.6%, weather 90% HR factor, Small outfield
+
+──────────────────────────────────────────────────────────────
