@@ -18,6 +18,7 @@ import sqlite3
 import sys
 from datetime import date
 from difflib import SequenceMatcher
+from pathlib import Path
 
 import requests
 

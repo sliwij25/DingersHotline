@@ -21,6 +21,7 @@ import os
 import sqlite3
 import sys
 from datetime import date
+from pathlib import Path
 
 import numpy as np
 
@@ -44,6 +45,8 @@ FEATURES = [
     ("fb_pct",           None),    # fly ball rate — per RotoGrinders: strong HR correlation
     ("launch_angle",     None),    # avg launch angle — r=0.42 predictive
     ("hr_fb_ratio",      None),    # HR/FB — volatile early, meaningful mid-season
+    # Bat tracking
+    ("blast_rate",       None),    # % of swings qualifying as a Blast — high HR correlation
     # Context
     ("bpp_hr_pct",       None),
     ("park_hr_factor",   None),

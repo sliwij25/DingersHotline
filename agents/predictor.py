@@ -1235,14 +1235,17 @@ def _find_best_name_match(player_name: str, name_dict: dict) -> dict:
         if key_lower == player_lower or key_lower == " ".join(reversed(parts)):
             return name_dict[key]
     
-    # Try matching just the last name (first part)
+    # Try matching last name + first name initial to avoid sibling collisions (e.g. Josh vs Bo Naylor)
     if len(parts) >= 2:
-        last_name = parts[-1]  # "schwarber"
+        last_name  = parts[-1]
+        first_init = parts[0][0]  # first letter of first name
         for key in name_dict.keys():
             key_lower = key.lower()
-            # CSV format is typically "last_name, first_name"
             if key_lower.startswith(last_name + ","):
-                return name_dict[key]
+                # Require first-name initial to also match
+                after_comma = key_lower.split(",", 1)[-1].strip()
+                if after_comma.startswith(first_init):
+                    return name_dict[key]
     
     # Count matching parts and prioritize best match
     best_match = None
@@ -1709,6 +1712,55 @@ class Homer:
     def __init__(self):
         self._context: dict | None = None   # cache so data is only fetched once
 
+    def _fetch_bat_tracking(self) -> dict:
+        """Fetch Baseball Savant bat-tracking leaderboard and return name→blast_rate dict.
+        blast_per_swing: fraction of swings that qualify as a Blast
+        ((percent_squared_up × 100) + bat_speed ≥ 164). ~7% is league average.
+        Caches to cache/bat_tracking_YYYY-MM-DD.csv.
+        """
+        from pathlib import Path as _Path
+        season     = date.today().year
+        today_str  = date.today().isoformat()
+        cache_path = _Path(__file__).parent.parent / "cache" / f"bat_tracking_{today_str}.csv"
+
+        if cache_path.exists():
+            text = cache_path.read_text(encoding="utf-8")
+        else:
+            url = (
+                f"{SAVANT_BASE}/leaderboard/bat-tracking"
+                f"?attackZone=&batSide=&contactType=&count=&"
+                f"dateStart={season}-01-01&dateEnd={season}-12-31&"
+                f"gameType=R&isHardHit=&minSwings=&minGroupSwings=1&"
+                f"pitchType=&seasonYear={season}&team=&type=batter&csv=true"
+            )
+            try:
+                resp = requests.get(url, headers=_HEADERS, timeout=20)
+                text = resp.text.lstrip('\ufeff')
+                cache_path.parent.mkdir(exist_ok=True)
+                cache_path.write_text(text, encoding="utf-8")
+            except Exception:
+                return {}
+
+        try:
+            reader = csv.DictReader(io.StringIO(text))
+            result = {}
+            for row in reader:
+                raw = (row.get("name") or "").strip().strip('"')
+                if not raw:
+                    continue
+                # CSV name is "Last, First" — convert to "first last" for matching
+                if "," in raw:
+                    last, first = raw.split(",", 1)
+                    key = f"{first.strip()} {last.strip()}".lower()
+                else:
+                    key = raw.lower()
+                blast = row.get("blast_per_swing")
+                if blast:
+                    result[key] = float(blast)
+            return result
+        except Exception:
+            return {}
+
     def _fetch_full_statcast(self, player_type: str, selections: str) -> dict:
         """Fetch the full Statcast leaderboard CSV and return a name→stats dict.
         Caches raw CSV to cache/statcast_{type}_YYYY-MM-DD.csv — re-runs that day skip the fetch.
@@ -1900,6 +1952,7 @@ class Homer:
                             "launch_angle":     _safe_float(b_data.get("launch_angle_avg")),
                             "ev_avg":           _safe_float(b_data.get("exit_velocity_avg")),
                             "sweet_spot_pct":   _safe_float(b_data.get("sweet_spot_percent")),
+                            "pull_pct":         _safe_float(b_data.get("pull_percent")),
                             "recent_form_14d":  _safe_int(form_hrs),
                             "pitcher_hr_per_9": round(pf["hr_per_9"], 2) if pf else None,
                             "h2h_hr":           h2h.get("hr") if h2h else None,
@@ -2002,14 +2055,18 @@ class Homer:
         def _fetch_odds_filtered():
             return fetch_odds_comparison(confirmed_teams=confirmed_teams or None)
 
-        with ThreadPoolExecutor(max_workers=6) as executor:
+        def _fetch_blast():
+            return self._fetch_bat_tracking()
+
+        with ThreadPoolExecutor(max_workers=7) as executor:
             fut_batters  = executor.submit(_fetch_batters)
             fut_pitchers = executor.submit(_fetch_pitchers)
             fut_recent   = executor.submit(_fetch_recent)
             fut_bpp      = executor.submit(_fetch_bpp)
             fut_odds     = executor.submit(_fetch_odds_filtered)
+            fut_blast    = executor.submit(_fetch_blast)
 
-            for fut in as_completed([fut_batters, fut_pitchers, fut_recent, fut_bpp, fut_odds]):
+            for fut in as_completed([fut_batters, fut_pitchers, fut_recent, fut_bpp, fut_odds, fut_blast]):
                 if fut is fut_batters:
                     batter_stats = fut.result()
                 elif fut is fut_pitchers:
@@ -2024,6 +2081,8 @@ class Homer:
                 elif fut is fut_odds:
                     _odds = fut.result()
                     data["odds"] = _odds
+                elif fut is fut_blast:
+                    data["blast_tracking"] = fut.result()
 
         print("  [7] Fetching pitcher recent form (parallel)...")
         pitcher_ids: list[int] = []
@@ -2104,6 +2163,42 @@ class Homer:
                     player_signals[matched]["value_edge"]    = comp.get("value_edge")
                     player_signals[matched]["pinnacle_odds"] = comp.get("pinnacle")
                     player_signals[matched]["best_odds"]     = comp.get("best_odds")
+        except Exception:
+            pass
+
+        # ── Merge blast rate (bat-tracking leaderboard) ───────────────────────
+        try:
+            blast_tracking = data.get("blast_tracking", {})
+            if blast_tracking:
+                normed_signals = {_norm(k): k for k in player_signals}
+                for bt_key, blast_val in blast_tracking.items():
+                    if bt_key in normed_signals:
+                        matched = normed_signals[bt_key]
+                    else:
+                        best_ratio, best_key = 0.0, None
+                        for nk, orig in normed_signals.items():
+                            r = SequenceMatcher(None, bt_key, nk).ratio()
+                            if r > best_ratio:
+                                best_ratio, best_key = r, orig
+                        matched = best_key if best_ratio >= 0.85 else None
+                    if matched:
+                        player_signals[matched]["blast_rate"] = round(blast_val * 100, 2)
+        except Exception:
+            pass
+
+        # ── Elite leaderboard boost — top 10 in HR or xSLG league-wide ─────────
+        try:
+            hr_vals   = sorted([float(v["home_run"]) for v in batter_stats.values()
+                                 if v.get("home_run") not in (None, "", "null")], reverse=True)
+            xslg_vals = sorted([float(v["xslg"])     for v in batter_stats.values()
+                                 if v.get("xslg") not in (None, "", "null")],     reverse=True)
+            hr_thresh   = hr_vals[9]   if len(hr_vals)   >= 10 else None
+            xslg_thresh = xslg_vals[9] if len(xslg_vals) >= 10 else None
+            for ps in player_signals.values():
+                ps["is_top10_leaderboard"] = bool(
+                    (hr_thresh   is not None and (ps.get("season_hr") or 0) >= hr_thresh) or
+                    (xslg_thresh is not None and (ps.get("xslg")      or 0) >= xslg_thresh)
+                )
         except Exception:
             pass
 
@@ -2308,12 +2403,85 @@ class Homer:
         self._context = data
         return data
 
+    @staticmethod
+    def _fetch_last_batting_order(team_id: int) -> list[dict]:
+        """
+        Fetch batting order from this team's most recent completed game.
+        Uses boxscore battingOrder to preserve slot positions.
+        Returns list of {name, batting_order, bat_side} dicts (pitchers excluded).
+        Falls back to [] if no recent game found.
+        """
+        from datetime import date, timedelta
+        today = date.today()
+        start = (today - timedelta(days=7)).isoformat()
+        end   = (today - timedelta(days=1)).isoformat()
+        try:
+            sched = requests.get(
+                "https://statsapi.mlb.com/api/v1/schedule",
+                params={"teamId": team_id, "sportId": 1,
+                        "startDate": start, "endDate": end, "gameType": "R"},
+                timeout=10,
+            )
+            sched.raise_for_status()
+            sched_data = sched.json()
+        except Exception:
+            return []
+
+        # Walk dates newest-first to find the last completed game
+        game_pk = None
+        team_side = None
+        for date_entry in reversed(sched_data.get("dates", [])):
+            for game in date_entry.get("games", []):
+                state = game.get("status", {}).get("abstractGameState", "")
+                if state not in ("Final", "Game Over"):
+                    continue
+                teams = game.get("teams", {})
+                if teams.get("home", {}).get("team", {}).get("id") == team_id:
+                    team_side = "home"
+                elif teams.get("away", {}).get("team", {}).get("id") == team_id:
+                    team_side = "away"
+                else:
+                    continue
+                game_pk = game["gamePk"]
+                break
+            if game_pk:
+                break
+
+        if not game_pk:
+            return []
+
+        try:
+            box = requests.get(
+                f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore",
+                timeout=10,
+            )
+            box.raise_for_status()
+            boxscore = box.json()
+        except Exception:
+            return []
+
+        side_data   = boxscore.get("teams", {}).get(team_side, {})
+        players     = side_data.get("players", {})
+        batting_ids = side_data.get("battingOrder", [])
+
+        result = []
+        for slot, pid in enumerate(batting_ids, start=1):
+            pdata = players.get(f"ID{pid}", {})
+            pos   = pdata.get("position", {}).get("abbreviation", "")
+            if pos in ("P", "SP", "RP"):
+                continue
+            name     = pdata.get("person", {}).get("fullName", "")
+            bat_side = pdata.get("person", {}).get("batSide", {}).get("code", "")
+            if name:
+                result.append({"name": name, "batting_order": slot, "bat_side": bat_side})
+        return result
+
     def _add_roster_fallback(self, lineups_json: str, player_signals: dict,
                             batter_stats: dict) -> dict:
         """
-        For each team/game where lineup is not confirmed,
-        fetch full team roster and add unconfirmed batters to player_signals
-        with a marker (lineup_confirmed=False) so they get -2 penalty in scoring.
+        For each team/game where lineup is not confirmed, use the batting order
+        from the team's most recent completed game as a fallback.
+        Players are added with lineup_confirmed=False and get a -2 scoring penalty.
         """
         try:
             lineups = json.loads(lineups_json)
@@ -2324,45 +2492,34 @@ class Homer:
             for side_key in ("away", "home"):
                 side = game.get(side_key, {})
                 if side.get("lineup_confirmed"):
-                    continue  # Already have confirmed lineup
+                    continue
 
                 team_id = side.get("team_id")
                 if not team_id:
                     continue
 
-                # Fetch full roster for this team
-                try:
-                    roster_url = f"https://statsapi.mlb.com/api/v1/teams/{team_id}/roster"
-                    resp = requests.get(roster_url, timeout=5)
-                    roster_data = resp.json()
-                except Exception:
+                last_order = self._fetch_last_batting_order(team_id)
+                if not last_order:
                     continue
 
-                # Add roster batters to player_signals if not already there
-                for player_entry in roster_data.get("roster", []):
-                    # Skip pitchers — they are not HR candidates.
-                    # Check type, abbreviation, and code since the API is inconsistent.
-                    _pos = player_entry.get("position") or {}
-                    if (
-                        _pos.get("type") == "Pitcher"
-                        or _pos.get("abbreviation") in ("P", "SP", "RP", "TWP")
-                        or _pos.get("code") == "1"
-                    ):
-                        continue
-
-                    player_info = player_entry.get("person", {})
-                    player_name = player_info.get("fullName")
-
+                for entry in last_order:
+                    player_name = entry["name"]
                     if not player_name or player_name in player_signals:
                         continue
 
-                    # Name-based Statcast lookup (batter_stats keyed by "last, first")
-                    sc_data = _find_best_name_match(player_name, batter_stats)
+                    sc_data  = _find_best_name_match(player_name, batter_stats)
+                    bat_side = entry.get("bat_side") or "R"
+                    sp_throws = game.get(side_key, {}).get("pitcher_throws", "R")
+                    platoon = (
+                        "PLATOON+" if bat_side != sp_throws
+                        else ("platoon-" if bat_side == sp_throws else "unknown")
+                    )
 
                     player_signals[player_name] = {
-                        "status":           "waiting",  # Roster player, lineup not confirmed
+                        "status":           "waiting",
                         "lineup_confirmed": False,
-                        "platoon":          "unknown",
+                        "batting_order":    entry["batting_order"],
+                        "platoon":          platoon,
                         "matchup":          (f"{game.get('away',{}).get('team','')} @ "
                                              f"{game.get('home',{}).get('team','')}"),
                         "venue":            game.get("venue", ""),
@@ -2642,6 +2799,17 @@ class Homer:
             elif ss >= 37: sc_statcast += 1   # Good (Trout 37%)
             elif ss < 28:  sc_statcast -= 1   # Below average — poor contact profile
 
+        # Blast rate — % of swings qualifying as a Blast (bat speed + squared-up contact).
+        # Formula: (percent_squared_up × 100) + bat_speed ≥ 164. ~7% is league average.
+        # Extremely high correlation with HR/power outcomes per MLB bat-tracking research.
+        blast = sig.get("blast_rate") if pa_scale > 0 else None
+        if blast is not None:
+            if blast >= 14:   sc_statcast += 4   # Elite (top ~5% of hitters)
+            elif blast >= 11: sc_statcast += 3   # Great
+            elif blast >= 8:  sc_statcast += 2   # Above average
+            elif blast >= 6:  sc_statcast += 1   # Average+
+            elif blast < 4:   sc_statcast -= 1   # Weak contact profile
+
         # HR/FB sustainability check — per RotoGrinders:
         # A high HR/FB rate on a low fly ball base is likely to regress.
         hr_fb_ratio = sig.get("hr_fb_ratio")
@@ -2754,6 +2922,19 @@ class Homer:
             if bat_side == "L" and "short porch" in stadium_desc and "right" in stadium_desc:
                 stadium_score += 0.5
 
+            # Pull tendency × short porch alignment
+            # High pull% + short porch on the pull side = independent HR edge.
+            pull_pct = sig.get("pull_pct") if pa_scale > 0 else None
+            if pull_pct is not None:
+                has_short_lf = "short left" in stadium_desc or ("short porch" in stadium_desc and "left" in stadium_desc)
+                has_short_rf = "short right" in stadium_desc or ("short porch" in stadium_desc and "right" in stadium_desc)
+                if bat_side == "R" and has_short_lf:
+                    if pull_pct >= 48:   stadium_score += 2   # Strong pull hitter + short LF
+                    elif pull_pct >= 40: stadium_score += 1
+                elif bat_side == "L" and has_short_rf:
+                    if pull_pct >= 48:   stadium_score += 2   # Strong pull hitter + short RF
+                    elif pull_pct >= 40: stadium_score += 1
+
             # Negative factors
             if any(word in stadium_desc for word in ["deep", "large", "vast", "huge"]):
                 stadium_score -= 0.5
@@ -2761,6 +2942,11 @@ class Homer:
                 stadium_score -= 0.5  # High fences hurt HRs
 
         score += stadium_score
+
+        # Elite leaderboard boost — top 10 in HR or xSLG league-wide.
+        # Prevents model from undervaluing proven power hitters with moderate day signals.
+        if sig.get("is_top10_leaderboard"):
+            score += 2
 
         # ── ML blend (active only when ml_weights.json exists) ────────────────
         # Blends the hand-tuned heuristic score with the logistic regression score.

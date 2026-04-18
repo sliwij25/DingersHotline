@@ -134,6 +134,7 @@ _MIGRATION_COLUMNS = [
     ("park_hr_factor",   "REAL"),
     ("lineup_confirmed", "INTEGER"),
     ("best_odds",        "TEXT"),
+    ("blast_rate",       "REAL"),
 ]
 
 
@@ -145,6 +146,11 @@ def _ensure_pick_factors_table(conn) -> None:
     for col_name, col_type in _MIGRATION_COLUMNS:
         if col_name not in existing:
             conn.execute(f"ALTER TABLE pick_factors ADD COLUMN {col_name} {col_type}")
+    # Enforce uniqueness on old tables that predate the UNIQUE constraint in the schema
+    conn.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_pick_factors_date_player
+        ON pick_factors (bet_date, player)
+    """)
     conn.commit()
 
 
@@ -178,8 +184,9 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                xiso, xslg, xhr_rate, fb_pct, launch_angle, ev_avg, sweet_spot_pct,
                bpp_hr_pct, park_hr_factor,
                recent_form_14d, pitcher_hr_per_9,
-               h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging,
+               blast_rate)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
@@ -210,6 +217,7 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             1 if signals.get("is_home") else 0,
             1 if signals.get("lineup_confirmed", True) else 0,
             signals.get("venue_slugging"),
+            signals.get("blast_rate"),
         ))
         conn.commit()
         return f"Saved signals for {player} ({bet_date})"
