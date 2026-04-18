@@ -236,7 +236,9 @@ def generate_picks_html(
     record: str = "—",
     model_yesterday_pnl: float | None = None,
     model_cumulative_pnl: float | None = None,
+    tier_hit_rates: dict | None = None,
 ) -> str:
+    # tier_hit_rates: {star_count: (n_picks, n_homers)} — pre-computed by daily_picks.py
 
     # Group picks by star count (descending)
     buckets: dict[int, list[tuple[int, dict]]] = {}
@@ -251,6 +253,21 @@ def generate_picks_html(
         empty_stars  = "☆" * (5 - star_n)
         group_picks  = buckets[star_n]
 
+        # Hit rate badge for this tier
+        hit_rate_html = ""
+        if tier_hit_rates and star_n in tier_hit_rates:
+            n_picks, n_homers = tier_hit_rates[star_n]
+            if n_picks > 0:
+                rate = n_homers / n_picks * 100
+                hit_rate_html = (
+                    f'<span class="tier-hit-rate">'
+                    f'{rate:.0f}% HR rate'
+                    f'<span class="tier-hit-count"> ({n_picks} picks)</span>'
+                    f'</span>'
+                )
+            else:
+                hit_rate_html = '<span class="tier-hit-rate tier-no-history">no history yet</span>'
+
         cards = "".join(_build_card(rank, pick) for rank, pick in group_picks)
 
         sections_html += f"""
@@ -261,6 +278,7 @@ def generate_picks_html(
             </span>
             <span class="tier-label">{_esc(label)}</span>
             <span class="tier-count">{len(group_picks)} pick{"s" if len(group_picks) != 1 else ""}</span>
+            {hit_rate_html}
             <div class="tier-rule"></div>
         </div>
         <div class="picks-grid">
@@ -440,6 +458,31 @@ def generate_picks_html(
     font-size: 11px;
     color: var(--text-dim);
     white-space: nowrap;
+  }}
+
+  .tier-hit-rate {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--green);
+    background: var(--green-dim);
+    border: 1px solid #A7D7B8;
+    border-radius: 3px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }}
+
+  .tier-hit-count {{
+    font-weight: 400;
+    color: var(--text-dim);
+    font-size: 10px;
+  }}
+
+  .tier-no-history {{
+    color: var(--text-dim);
+    background: var(--surface2);
+    border-color: var(--border);
+    font-weight: 400;
   }}
 
   .tier-rule {{

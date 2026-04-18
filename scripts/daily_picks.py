@@ -54,7 +54,7 @@ print("=" * 60)
 
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
-from agents.bet_tracker import save_pick_factors, model_performance_report, model_pnl_report
+from agents.bet_tracker import save_pick_factors, model_performance_report, model_pnl_report, rank_bucket_hit_rate
 from generate_html import generate_picks_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
@@ -412,8 +412,19 @@ try:
         import datetime as _dt2
         _timestamp = _dt2.datetime.now().strftime("%Y-%m-%d %I:%M %p")
 
+        # Compute hit rates per star tier for HTML section headers
+        _ranked_for_html = _all_ranked or picks
+        _tier_ranks: dict[int, list[int]] = {}
+        for _idx, _p in enumerate(_ranked_for_html, 1):
+            _sc = (_p.get("stars") or "").count("★")
+            _tier_ranks.setdefault(_sc, []).append(_idx)
+        _tier_hit_rates = {
+            _sc: rank_bucket_hit_rate(min(_ranks), max(_ranks))
+            for _sc, _ranks in _tier_ranks.items()
+        }
+
         _html_str = generate_picks_html(
-            _all_ranked or picks,
+            _ranked_for_html,
             today=_timestamp,
             auc=_auc,
             ml_influence=_ml_influence,
@@ -423,6 +434,7 @@ try:
             record=_record,
             model_yesterday_pnl=_model_yesterday_pnl,
             model_cumulative_pnl=_model_cumulative_pnl,
+            tier_hit_rates=_tier_hit_rates,
         )
 
         # Save dated copy
