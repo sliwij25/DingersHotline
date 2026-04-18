@@ -861,7 +861,7 @@ def _safe_int(val) -> int | None:
         return None
 
 
-def fetch_odds_comparison() -> str:
+def fetch_odds_comparison(confirmed_teams: set | None = None) -> str:
     """
     Fetch HR prop odds (over 0.5 HRs) from all available sportsbooks via The Odds API.
     Includes US books (DraftKings, FanDuel, BetMGM, etc.) + Pinnacle (EU region).
@@ -897,6 +897,20 @@ def fetch_odds_comparison() -> str:
     if not events:
         return json.dumps({"status": "no_events",
                            "message": "No MLB events found today."})
+
+    # Filter to games with confirmed lineups to conserve Odds API quota.
+    # confirmed_teams is a set of full team names (e.g. "New York Yankees").
+    # When None, fetch all events (original behaviour — backwards compatible).
+    if confirmed_teams is not None:
+        if not confirmed_teams:
+            return json.dumps({"status": "no_confirmed_lineups",
+                               "message": "No confirmed lineups yet — skipping odds fetch.",
+                               "comparisons": []})
+        events = [
+            e for e in events
+            if e.get("away_team") in confirmed_teams
+            or e.get("home_team") in confirmed_teams
+        ]
 
     # ── For each game, fetch HR prop odds from US + EU (Pinnacle) ─────────────
     # player_name → {"matchup": str, "books": {book_title: odds_int},
@@ -1969,8 +1983,22 @@ class Homer:
         def _fetch_bpp():
             return fetch_pitcher_matchups(), fetch_park_factors()
 
+        # Build confirmed team names for odds quota filter (full names match Odds API event format)
+        confirmed_teams: set[str] = set()
+        try:
+            _lu = json.loads(lineups_json)
+            for g in _lu.get("games", []):
+                for side_key in ("away", "home"):
+                    side = g.get(side_key, {})
+                    if side.get("lineup_confirmed"):
+                        team_name = side.get("team")
+                        if team_name:
+                            confirmed_teams.add(team_name)
+        except Exception:
+            pass
+
         def _fetch_odds_filtered():
-            return fetch_odds_comparison()
+            return fetch_odds_comparison(confirmed_teams=confirmed_teams or None)
 
         with ThreadPoolExecutor(max_workers=6) as executor:
             fut_batters  = executor.submit(_fetch_batters)
