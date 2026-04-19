@@ -25,7 +25,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .base import get_db_conn
-from .bet_tracker import upsert_player_attr, get_bat_side
+from .bet_tracker import upsert_player_attr, get_bat_side, get_bat_side_by_name
 
 _HEADERS = {
     "User-Agent": (
@@ -1743,6 +1743,8 @@ class Homer:
                     # Fall back to persistent DB if API didn't return handedness
                     if bat_side == "?" and batter_id:
                         bat_side = get_bat_side(batter_id)
+                    if bat_side == "?":
+                        bat_side = get_bat_side_by_name(batter_name)
 
                     b_key  = batter_name.lower()
                     b_data = _find_best_name_match(batter_name, batter_stats)
@@ -2883,6 +2885,10 @@ class Homer:
         """
         scored = []
         for player, sig in player_signals.items():
+            if sig.get("bat_side", "?") == "?":
+                resolved = get_bat_side_by_name(player)
+                if resolved != "?":
+                    sig["bat_side"] = resolved
             sc = self._score_player(sig)
             
             if sc >= 10:   confidence = "HIGH"
@@ -2947,6 +2953,8 @@ class Homer:
                 reasons.append(f"{outfield_size} outfield")
             stadium_desc = sig.get("stadium_description", "")
             bat_side = sig.get("bat_side", "?").upper()
+            if bat_side == "?" :
+                bat_side = get_bat_side_by_name(player).upper()
             if bat_side == "R" and "short left" in stadium_desc.lower():
                 reasons.append("short left field")
             if bat_side == "L" and "short right" in stadium_desc.lower():
@@ -3082,7 +3090,9 @@ class Homer:
             is_home       = sig.get("is_home")
             home_away_str = "Home" if is_home else "Away" if is_home is not None else "—"
             bat_side      = sig.get("bat_side", "?")
-            bat_label     = {"L": "LHB", "R": "RHB", "S": "SHB"}.get(bat_side, bat_side)
+            if bat_side == "?":
+                bat_side = get_bat_side_by_name(player)
+            bat_label     = {"L": "LHB", "R": "RHB", "S": "SHB"}.get(bat_side, f"?HB")
             p_name        = sig.get("pitcher_name") or "TBD"
             p_throws      = sig.get("pitcher_throws", "?")
             platoon       = sig.get("platoon", "")

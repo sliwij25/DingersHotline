@@ -78,6 +78,23 @@ def get_bat_side(mlb_id: int) -> str:
         conn.close()
 
 
+def get_bat_side_by_name(name: str) -> str:
+    """Look up bat side by player name. Returns '?' if unknown."""
+    if not name:
+        return "?"
+    conn = get_db_conn()
+    try:
+        _ensure_player_attrs_table(conn)
+        row = conn.execute(
+            "SELECT bat_side FROM player_attributes WHERE name = ?", (name,)
+        ).fetchone()
+        return row[0] if row and row[0] else "?"
+    except Exception:
+        return "?"
+    finally:
+        conn.close()
+
+
 # ── pick_factors table helpers ─────────────────────────────────────────────────
 
 _CREATE_PICK_FACTORS = """
