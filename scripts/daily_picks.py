@@ -42,6 +42,8 @@ parser.add_argument("--use-cache", action="store_true",
                     help="Load cached context instead of fetching fresh data")
 parser.add_argument("--brief", action="store_true",
                     help="Print only top 7 picks + summary; full list still saved to .txt and HTML")
+parser.add_argument("--no-notify", action="store_true",
+                    help="Skip Telegram and iMessage notifications")
 args = parser.parse_args()
 
 print("=" * 60)
@@ -241,8 +243,7 @@ picks = homer.get_picks_json(top_n=20)
 _all_ranked: list[dict] = []  # filled below; used for HTML generation
 
 if not picks:
-    print("\nCould not generate structured bet slip.")
-    print("Use the picks above to manually fill in log_singles().\n")
+    print("\nCould not generate structured picks.")
 else:
     # Save ALL ranked players (not just top 8) for unbiased ML training data.
     # The model needs to see who didn't homer just as much as who did.
@@ -263,18 +264,6 @@ else:
                 pass
     print(f"\n  [ML Training] Saved signal snapshots for {saved} players (top 20 ranked)")
 
-    if not args.brief:
-        for platform in ["prophetx", "novig"]:
-            print(f"\n# ── {platform.upper()} ──────────────────────────────────────")
-            print(f"log_singles('{TODAY}', '{platform}', [")
-            for p in picks:
-                print(f"    # {p.get('stars','')} {p.get('reasoning','')}")
-                print(f"    {{'player': '{p.get('player','')}', "
-                      f"'game': '{p.get('matchup','')}', "
-                      f"'odds': '___', 'potential_payout': 0.00}},")
-            print("], wager=10.0)")
-    else:
-        print("\n  Run: python bets.py log  to log bets")
 
 # ── Odds comparison / value finder ────────────────────────────────────────────
 
@@ -331,10 +320,6 @@ try:
 except Exception as e:
     print(f"  Odds comparison unavailable: {e}")
 
-print("\n" + "=" * 60)
-print("  To log bets: python bets.py log")
-print("  To record results tonight: python record_results.py")
-print("=" * 60)
 
 # ── Model performance dashboard ────────────────────────────────────────────────
 
@@ -479,7 +464,7 @@ if not args.use_cache:
 
 # ── Notifications (Telegram primary, iMessage fallback) ────────────────────────
 
-if not args.use_cache:
+if not args.use_cache and not args.no_notify:
     import subprocess as _nsp, requests as _req
     _top = picks[:3] if picks else []
     _top3_names = "\n".join(

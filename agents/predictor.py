@@ -10,9 +10,7 @@ Skills:
   - fetch_statcast_pitcher_stats   : HR/9, FB%, hard hit % allowed, xFIP
   - fetch_confirmed_lineups        : today's confirmed batting orders + starting pitchers
   - fetch_hr_prop_odds             : current sportsbook HR prop lines (requires ODDS_API_KEY)
-  - get_player_hr_history          : per-player past betting results from DB
-  - get_top_historical_players     : ranked leaderboard by win rate / ROI
-"""
+    """
 import csv
 import io
 import json
@@ -186,34 +184,6 @@ _TOOLS = [
                 "type": "object",
                 "properties": {
                     "player": {"type": "string", "description": "Optional player name filter."},
-                },
-                "required": [],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_player_hr_history",
-            "description": "Return a player's complete HR betting history from our database.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "player": {"type": "string", "description": "Player name (partial match supported)."},
-                },
-                "required": ["player"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_top_historical_players",
-            "description": "Return players ranked by win rate from our betting history.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "min_bets": {"type": "integer", "description": "Minimum bets required (default 2)."},
                 },
                 "required": [],
             },
@@ -1372,33 +1342,8 @@ def fetch_recent_hr_form(days: int = 14) -> str:
 
 
 def check_lineup_availability(game_date: str = None) -> str:
-    """Cross-check our pending bets against today's confirmed lineups.
-
-    Flags any player we have a pending bet on who is NOT in today's confirmed lineup —
-    indicating they may be injured, resting, or scratched.
-
-    Args:
-        game_date: YYYY-MM-DD (defaults to today).
-    """
+    """Check how many teams have confirmed lineups posted for game_date."""
     target_date = game_date or date.today().isoformat()
-
-    # Get our pending bets for this date
-    conn = get_db_conn()
-    try:
-        pending = conn.execute(
-            "SELECT player FROM singles WHERE bet_date=? AND result IS NULL",
-            (target_date,),
-        ).fetchall()
-    finally:
-        conn.close()
-
-    if not pending:
-        return json.dumps({"status": "no_pending_bets",
-                           "message": f"No pending bets found for {target_date}."})
-
-    pending_players = {r[0].lower() for r in pending}
-
-    # Get confirmed lineups
     try:
         resp = requests.get(
             f"{MLB_API_BASE}/schedule"
@@ -1410,96 +1355,20 @@ def check_lineup_availability(game_date: str = None) -> str:
     except requests.RequestException as exc:
         return json.dumps({"status": "error", "message": str(exc)})
 
-    # Build set of all confirmed players across all lineups
-    confirmed = set()
+    confirmed_teams = 0
     for date_entry in data.get("dates", []):
         for game in date_entry.get("games", []):
             for side in ("away", "home"):
-                for player in game.get("teams", {}).get(side, {}).get("battingOrder", []):
-                    name = (player.get("fullName") or "").lower()
-                    if name:
-                        confirmed.add(name)
-
-    if not confirmed:
-        return json.dumps({
-            "status":  "lineups_not_posted",
-            "message": "Lineups not yet confirmed — check back closer to game time.",
-            "pending_bets": [r[0] for r in pending],
-        })
-
-    alerts = []
-    safe   = []
-    for player_name in [r[0] for r in pending]:
-        # Partial match — "Shohei Ohtani" matches "ohtani"
-        found = any(player_name.lower() in c or c in player_name.lower()
-                    for c in confirmed)
-        if found:
-            safe.append(player_name)
-        else:
-            alerts.append(player_name)
+                if game.get("teams", {}).get(side, {}).get("battingOrder"):
+                    confirmed_teams += 1
 
     return json.dumps({
-        "status":       "success",
-        "date":         target_date,
-        "alerts":       alerts,
-        "alert_count":  len(alerts),
-        "confirmed_in_lineup": safe,
-        "message": (
-            f"{len(alerts)} player(s) with pending bets NOT found in confirmed lineups."
-            if alerts else "All players with pending bets are confirmed in lineups."
-        ),
-    }, indent=2)
+        "status": "success",
+        "date": target_date,
+        "confirmed_sides": confirmed_teams,
+    })
 
 
-def get_player_hr_history(player: str) -> str:
-    conn = get_db_conn()
-    try:
-        rows = conn.execute(
-            "SELECT bet_date, odds, result, payout, game FROM singles "
-            "WHERE player LIKE ? AND result IS NOT NULL ORDER BY bet_date DESC",
-            (f"%{player}%",),
-        ).fetchall()
-
-        if not rows:
-            return json.dumps({"player": player, "message": "No betting history found."})
-
-        wins    = [r for r in rows if r[2] == "win"]
-        history = [{"date": r[0], "odds": r[1], "result": r[2],
-                    "payout": r[3], "game": r[4]} for r in rows]
-        return json.dumps({
-            "player":     player,
-            "total_bets": len(rows),
-            "wins":       len(wins),
-            "win_rate":   f"{len(wins) / len(rows) * 100:.1f}%",
-            "history":    history,
-        }, indent=2)
-    finally:
-        conn.close()
-
-
-def get_top_historical_players(min_bets: int = 2) -> str:
-    conn = get_db_conn()
-    try:
-        rows = conn.execute("""
-            SELECT player,
-                   COUNT(*)                                            AS total,
-                   SUM(CASE WHEN result='win' THEN 1 ELSE 0 END)      AS wins,
-                   AVG(CASE WHEN result='win' THEN 1.0 ELSE 0.0 END)  AS win_rate,
-                   SUM(COALESCE(payout, 0) - wager)                   AS net_pnl
-            FROM   singles
-            WHERE  result IS NOT NULL
-            GROUP  BY player
-            HAVING total >= ?
-            ORDER  BY win_rate DESC, total DESC
-        """, (min_bets,)).fetchall()
-
-        return json.dumps({"ranked_players": [
-            {"player": r[0], "total_bets": r[1], "wins": r[2],
-             "win_rate": f"{r[3]*100:.1f}%", "net_pnl": f"${r[4]:+.2f}"}
-            for r in rows
-        ]}, indent=2)
-    finally:
-        conn.close()
 
 
 # ── Agent ──────────────────────────────────────────────────────────────────────
@@ -1517,14 +1386,9 @@ REQUIRED TOOL CALL ORDER:
 4. fetch_statcast_batter_stats    — call for each candidate player
 5. fetch_statcast_pitcher_stats   — call for each candidate's opposing pitcher
 6. fetch_hr_prop_odds             — market odds (line movement signals sharp action)
-7. get_player_hr_history          — our own win/loss record for this player
-8. get_top_historical_players     — leaderboard of our best-performing picks
-
 PICK CRITERIA (priority order):
 1. Lineup confirmed — skip any unconfirmed player
-2. Our historical record — players with 100% win rate in our DB get top priority;
-   players with 0% win rate over 2+ bets should be avoided unless other signals are elite
-3. Odds tier — favorites (<+250) are hitting at 75% in our data; weight them heavily
+2. Odds tier — favorites (<+250) hitting at higher rates; weight them heavily
    early in the season before Statcast data builds up
 4. Recent HR form (last 14 days) — players on a hot streak; more reliable than season
    averages in April when sample sizes are small
@@ -1555,8 +1419,6 @@ _TOOL_FNS = {
     "fetch_statcast_pitcher_stats":  fetch_statcast_pitcher_stats,
     "fetch_confirmed_lineups":       fetch_confirmed_lineups,
     "fetch_hr_prop_odds":            fetch_hr_prop_odds,
-    "get_player_hr_history":         get_player_hr_history,
-    "get_top_historical_players":    get_top_historical_players,
 }
 
 
@@ -2117,20 +1979,13 @@ class Homer:
         print("  [8/9] Fetching home/away splits for confirmed batters...")
         home_away = _fetch_home_away_splits_batch(list(set(batter_ids)))
 
-        print("  [9/9] Building per-game player cards + historical records...")
-        our_history_raw = get_top_historical_players(min_bets=1)
-        try:
-            our_history = json.loads(our_history_raw).get("ranked_players", [])
-        except Exception:
-            our_history = []
-
+        print("  [9/9] Building per-game player cards...")
         cards_text, player_signals = self._build_game_cards(
             lineups_json, batter_stats, pitcher_stats,
-            our_history, recent_form, pitcher_form, home_away
+            [], recent_form, pitcher_form, home_away
         )
         data["game_cards"]     = cards_text
         data["player_signals"] = player_signals
-        data["our_history"]    = our_history_raw
 
         # ── Merge odds signals (EV, Kelly, value_edge, Pinnacle) ─────────────
         try:

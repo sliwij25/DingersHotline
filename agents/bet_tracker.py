@@ -1,15 +1,11 @@
 """
 Bet Tracker Agent
-Uses local Ollama (llama3.1) — no API key required.
 
 Skills:
-  - get_pnl_summary           : overall P&L across all settled bets
-  - get_pending_bets          : bets that still need a result
-  - get_bet_history           : filterable history for analysis
-  - record_result             : write win/loss + payout to DB
-  - get_player_stats          : per-player win rate and ROI
   - save_pick_factors         : store signal snapshot for a pick (algorithm tracking)
-  - factor_performance_report : analyze which signals predict wins
+  - model_pnl_report          : hypothetical P&L if $10 was bet on every top-20 pick
+  - model_performance_report  : hit rates, ROI, and rank-bucket breakdown
+  - rank_bucket_hit_rate      : HR hit rate for a rank range
 """
 import json
 from datetime import date
@@ -524,131 +520,92 @@ def model_performance_report() -> str:
 
 def factor_performance_report() -> str:
     """
-    Analyze which pick signals correlate with wins across all settled bets
-    that have a pick_factors snapshot.
-
-    Joins pick_factors with singles on (bet_date + fuzzy player name) and
-    computes win rates broken down by each key signal. Use this to measure
-    whether the algorithm is improving and which factors are most predictive.
+    Analyze which pick signals correlate with HRs across all labeled pick_factors rows.
+    Uses homered column directly — no singles table dependency.
     """
     conn = get_db_conn()
     try:
         _ensure_pick_factors_table(conn)
 
-        # Join on bet_date + approximate player name
         rows = conn.execute("""
             SELECT
-                pf.player, pf.bet_date,
-                pf.confidence, pf.ev_10, pf.kelly_size, pf.value_edge,
-                pf.platoon, pf.barrel_rate, pf.hard_hit_pct, pf.hr_fb_ratio,
-                pf.recent_form_14d, pf.pitcher_hr_per_9,
-                pf.h2h_hr, pf.h2h_ab, pf.is_home, pf.algo_version,
-                s.result
-            FROM pick_factors pf
-            LEFT JOIN singles s
-              ON s.bet_date = pf.bet_date
-             AND (s.player LIKE '%' || pf.player || '%'
-                  OR pf.player LIKE '%' || s.player || '%')
-            WHERE s.result IS NOT NULL
-            ORDER BY pf.bet_date DESC
+                player, bet_date,
+                confidence, ev_10, kelly_size, value_edge,
+                platoon, barrel_rate, hard_hit_pct, hr_fb_ratio,
+                recent_form_14d, pitcher_hr_per_9,
+                h2h_hr, h2h_ab, is_home, algo_version,
+                homered
+            FROM pick_factors
+            WHERE homered IS NOT NULL
+              AND rank IS NOT NULL AND rank <= 20
+            ORDER BY bet_date DESC
         """).fetchall()
 
         if not rows:
             return json.dumps({
                 "status": "no_data",
-                "message": "No settled bets with signal snapshots yet. "
-                           "Signals are saved automatically when you run daily_picks.py."
+                "message": "No labeled picks yet. Runs automatically each morning."
             }, indent=2)
 
-        cols   = ["player","bet_date","confidence","ev_10","kelly_size","value_edge",
-                  "platoon","barrel_rate","hard_hit_pct","hr_fb_ratio",
-                  "recent_form_14d","pitcher_hr_per_9","h2h_hr","h2h_ab",
-                  "is_home","algo_version","result"]
-        bets   = [dict(zip(cols, r)) for r in rows]
-        total  = len(bets)
-        wins   = [b for b in bets if b["result"] == "win"]
-        w_rate = len(wins) / total * 100 if total else 0
+        cols = ["player","bet_date","confidence","ev_10","kelly_size","value_edge",
+                "platoon","barrel_rate","hard_hit_pct","hr_fb_ratio",
+                "recent_form_14d","pitcher_hr_per_9","h2h_hr","h2h_ab",
+                "is_home","algo_version","homered"]
+        picks  = [dict(zip(cols, r)) for r in rows]
+        total  = len(picks)
+        hits   = [p for p in picks if p["homered"]]
+        h_rate = len(hits) / total * 100 if total else 0
 
         def split_rate(key, condition_fn, label):
-            group = [b for b in bets if condition_fn(b.get(key))]
+            group = [p for p in picks if condition_fn(p.get(key))]
             if not group:
                 return None
-            gw = sum(1 for b in group if b["result"] == "win")
-            return {"label": label, "bets": len(group),
-                    "wins": gw, "win_pct": f"{gw/len(group)*100:.1f}%"}
+            gh = sum(1 for p in group if p["homered"])
+            return {"label": label, "picks": len(group),
+                    "hits": gh, "hit_pct": f"{gh/len(group)*100:.1f}%"}
 
         sections = {}
 
-        # Confidence tier
         for tier in ("HIGH", "MEDIUM", "LOW"):
-            g = [b for b in bets if b.get("confidence") == tier]
+            g = [p for p in picks if p.get("confidence") == tier]
             if g:
-                gw = sum(1 for b in g if b["result"] == "win")
+                gh = sum(1 for p in g if p["homered"])
                 sections.setdefault("by_confidence", {})[tier] = {
-                    "bets": len(g), "wins": gw, "win_pct": f"{gw/len(g)*100:.1f}%"
+                    "picks": len(g), "hits": gh, "hit_pct": f"{gh/len(g)*100:.1f}%"
                 }
 
-        # EV
-        sections["ev_positive"] = split_rate("ev_10", lambda v: v is not None and v > 0, "ev_10 > 0")
-        sections["ev_negative"] = split_rate("ev_10", lambda v: v is not None and v <= 0, "ev_10 <= 0")
-
-        # VALUE flag (value_edge >= 3pp)
-        sections["value_flag"]    = split_rate("value_edge", lambda v: v is not None and v >= 3.0, "value_edge >= 3pp")
-        sections["no_value_flag"] = split_rate("value_edge", lambda v: v is not None and v < 3.0, "value_edge < 3pp")
-
-        # Platoon
-        sections["platoon_plus"]  = split_rate("platoon", lambda v: v == "PLATOON+", "PLATOON+")
-        sections["platoon_minus"] = split_rate("platoon", lambda v: v == "platoon-", "platoon-")
-
-        # H2H — has hit HR off this pitcher before
-        sections["h2h_has_hr"] = split_rate("h2h_hr", lambda v: v is not None and v >= 1, "h2h_hr >= 1")
-        sections["h2h_no_hr"]  = split_rate("h2h_hr", lambda v: v is not None and v == 0, "h2h_hr = 0")
-
-        # Pitcher recent vulnerability (HR/9 last 3 starts)
-        sections["pitcher_vulnerable"] = split_rate("pitcher_hr_per_9",
-                                                     lambda v: v is not None and v >= 1.0,
-                                                     "pitcher HR/9 >= 1.0 (last 3 starts)")
-
-        # Barrel rate
-        sections["barrel_elite"] = split_rate("barrel_rate",
-                                               lambda v: v is not None and v >= 10.0,
-                                               "barrel_rate >= 10%")
-
-        # Home vs away
-        sections["home_batter"] = split_rate("is_home", lambda v: v == 1, "batting at home")
-        sections["away_batter"] = split_rate("is_home", lambda v: v == 0, "batting away")
-
-        # Recent hot streak
-        sections["hot_streak"] = split_rate("recent_form_14d",
-                                             lambda v: v is not None and v >= 2,
-                                             "2+ HR in last 14 days")
-
-        # Filter out None entries
+        sections["ev_positive"]      = split_rate("ev_10", lambda v: v is not None and v > 0, "ev_10 > 0")
+        sections["ev_negative"]      = split_rate("ev_10", lambda v: v is not None and v <= 0, "ev_10 <= 0")
+        sections["value_flag"]       = split_rate("value_edge", lambda v: v is not None and v >= 3.0, "value_edge >= 3pp")
+        sections["no_value_flag"]    = split_rate("value_edge", lambda v: v is not None and v < 3.0, "value_edge < 3pp")
+        sections["platoon_plus"]     = split_rate("platoon", lambda v: v == "PLATOON+", "PLATOON+")
+        sections["platoon_minus"]    = split_rate("platoon", lambda v: v == "platoon-", "platoon-")
+        sections["h2h_has_hr"]       = split_rate("h2h_hr", lambda v: v is not None and v >= 1, "h2h_hr >= 1")
+        sections["h2h_no_hr"]        = split_rate("h2h_hr", lambda v: v is not None and v == 0, "h2h_hr = 0")
+        sections["pitcher_vuln"]     = split_rate("pitcher_hr_per_9", lambda v: v is not None and v >= 1.0, "pitcher HR/9 >= 1.0")
+        sections["barrel_elite"]     = split_rate("barrel_rate", lambda v: v is not None and v >= 10.0, "barrel_rate >= 10%")
+        sections["home_batter"]      = split_rate("is_home", lambda v: v == 1, "batting at home")
+        sections["away_batter"]      = split_rate("is_home", lambda v: v == 0, "batting away")
+        sections["hot_streak"]       = split_rate("recent_form_14d", lambda v: v is not None and v >= 2, "2+ HR in last 14 days")
         sections = {k: v for k, v in sections.items() if v is not None}
 
-        # Version breakdown
         version_stats = {}
-        for b in bets:
-            v = b.get("algo_version") or "unknown"
-            version_stats.setdefault(v, {"bets": 0, "wins": 0})
-            version_stats[v]["bets"] += 1
-            if b["result"] == "win":
-                version_stats[v]["wins"] += 1
+        for p in picks:
+            v = p.get("algo_version") or "unknown"
+            version_stats.setdefault(v, {"picks": 0, "hits": 0})
+            version_stats[v]["picks"] += 1
+            if p["homered"]:
+                version_stats[v]["hits"] += 1
         for v, s in version_stats.items():
-            s["win_pct"] = f"{s['wins']/s['bets']*100:.1f}%" if s["bets"] else "0%"
+            s["hit_pct"] = f"{s['hits']/s['picks']*100:.1f}%" if s["picks"] else "0%"
 
         return json.dumps({
-            "status":         "success",
-            "total_tracked":  total,
-            "overall_wins":   len(wins),
-            "overall_win_pct": f"{w_rate:.1f}%",
-            "by_algo_version": version_stats,
+            "status":           "success",
+            "total_labeled":    total,
+            "overall_hits":     len(hits),
+            "overall_hit_pct":  f"{h_rate:.1f}%",
+            "by_algo_version":  version_stats,
             "signal_breakdown": sections,
-            "note": (
-                "signal_breakdown shows win rate for each signal condition. "
-                "Factors with win_pct well above overall_win_pct are predictive. "
-                "Low sample sizes (<5 bets) may not be statistically meaningful."
-            ),
         }, indent=2)
     finally:
         conn.close()
