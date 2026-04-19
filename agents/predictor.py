@@ -1713,6 +1713,17 @@ class Homer:
                 p_fb_pct = sp_data.get("fb_percent") or "—"
                 p_xfip   = sp_data.get("xfip") or "—"
 
+                # Pitch-type mix buckets
+                def _pct(field):
+                    return _safe_float(sp_data.get(field)) or 0.0
+                sp_fb_pct       = round(_pct("n_ff_formatted") + _pct("n_si_formatted") + _pct("n_fc_formatted"), 1)
+                sp_breaking_pct = round(_pct("n_sl_formatted") + _pct("n_cu_formatted") + _pct("n_sw_formatted"), 1)
+                sp_offspeed_pct = round(_pct("n_ch_formatted") + _pct("n_fs_formatted"), 1)
+                # Use None when pitcher has no pitch data at all (early season / missing)
+                sp_fb_pct       = sp_fb_pct if sp_fb_pct > 0 else None
+                sp_breaking_pct = sp_breaking_pct if sp_breaking_pct > 0 else None
+                sp_offspeed_pct = sp_offspeed_pct if sp_offspeed_pct > 0 else None
+
                 # Pitcher recent form (last 3 starts)
                 pf       = pitcher_form.get(sp_id) or {}
                 pf_str   = (f"L3-starts: {pf['hr_per_9']:.1f}HR/9 over {pf['total_hr']}HR/{pf['starts_sampled']}GS"
@@ -1818,7 +1829,10 @@ class Homer:
                             "sweet_spot_pct":   _safe_float(b_data.get("sweet_spot_percent")),
                             "pull_pct":         _safe_float(b_data.get("pull_percent")),
                             "recent_form_14d":  _safe_int(form_hrs),
-                            "pitcher_hr_per_9": round(pf["hr_per_9"], 2) if pf else None,
+                            "pitcher_hr_per_9":    round(pf["hr_per_9"], 2) if pf else None,
+                            "pitcher_fb_pct":      sp_fb_pct,
+                            "pitcher_breaking_pct": sp_breaking_pct,
+                            "pitcher_offspeed_pct": sp_offspeed_pct,
                             "h2h_hr":           h2h.get("hr") if h2h else None,
                             "h2h_ab":           h2h.get("ab") if h2h else None,
                             "is_home":          is_home,
@@ -3113,7 +3127,7 @@ class Homer:
             home_away_str = "Home" if is_home else "Away" if is_home is not None else "—"
             bat_side      = sig.get("bat_side", "?")
             if bat_side == "?":
-                bat_side = get_bat_side_by_name(player)
+                bat_side = get_bat_side_by_name(name)
             bat_label     = {"L": "LHB", "R": "RHB", "S": "SHB"}.get(bat_side, f"?HB")
             p_name        = sig.get("pitcher_name") or "TBD"
             p_throws      = sig.get("pitcher_throws", "?")

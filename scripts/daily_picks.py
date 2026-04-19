@@ -56,7 +56,7 @@ print("=" * 60)
 
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
-from agents.bet_tracker import save_pick_factors, model_performance_report, model_pnl_report, rank_bucket_hit_rate
+from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, rank_bucket_hit_rate
 from generate_html import generate_picks_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
@@ -277,6 +277,10 @@ try:
 
     if cmp_data.get("status") == "success":
         comparisons = cmp_data.get("comparisons", [])
+        if comparisons:
+            saved_odds = backfill_pick_odds(TODAY, comparisons)
+            if saved_odds:
+                print(f"  [Odds] Saved best_odds for {saved_odds} picks")
         value_picks = [c for c in comparisons if c.get("value_flag") == "VALUE"]
         if comparisons:
             if args.brief:
