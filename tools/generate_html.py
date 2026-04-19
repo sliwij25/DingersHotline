@@ -236,6 +236,7 @@ def generate_picks_html(
     record: str = "—",
     model_yesterday_pnl: float | None = None,
     model_cumulative_pnl: float | None = None,
+    model_days_tracked: int | None = None,
     tier_hit_rates: dict | None = None,
 ) -> str:
     # tier_hit_rates: {star_count: (n_picks, n_homers)} — pre-computed by daily_picks.py
@@ -299,6 +300,10 @@ def generate_picks_html(
 
     yesterday_chip  = _pnl_chip("Yesterday", model_yesterday_pnl)
     cumulative_chip = _pnl_chip("Model P&L", model_cumulative_pnl, since="Apr 16")
+    days_chip = (
+        f'<div class="chip chip-auc">{model_days_tracked}d tracked</div>'
+        if model_days_tracked else ""
+    )
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -767,6 +772,7 @@ def generate_picks_html(
     <div class="chip chip-auc">ML Weight {_esc(ml_str)}</div>
     {yesterday_chip}
     {cumulative_chip}
+    {days_chip}
     <div class="pnl-note">1 unit = $10/pick</div>
   </div>
 </header>

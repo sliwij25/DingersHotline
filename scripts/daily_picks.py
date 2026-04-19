@@ -382,7 +382,7 @@ try:
             _ml_influence = min(0.7, max(0.0, (_auc - 0.5) * 2.5))
 
         # Model fictitious P&L (pick_factors with best_odds — NOT personal bets)
-        _model_yesterday_pnl, _model_cumulative_pnl = None, None
+        _model_yesterday_pnl, _model_cumulative_pnl, _model_days_tracked = None, None, None
         _net_pnl, _roi, _record, _win_rate = 0.0, 0.0, "—", "—"
         try:
             _pnl_js = _js.loads(model_pnl_report())
@@ -391,6 +391,7 @@ try:
             if _pnl_summary.get("days_tracked", 0) > 0:
                 _cum_str = _pnl_summary.get("cumulative_pnl", "$0.00")
                 _model_cumulative_pnl = float(_cum_str.replace("$", "").replace("+", ""))
+                _model_days_tracked = _pnl_summary.get("days_tracked")
             if _pnl_daily:
                 _last_day = _pnl_daily[-1]
                 _day_str  = _last_day.get("day_pnl", "$0.00")
@@ -423,6 +424,7 @@ try:
             record=_record,
             model_yesterday_pnl=_model_yesterday_pnl,
             model_cumulative_pnl=_model_cumulative_pnl,
+            model_days_tracked=_model_days_tracked,
             tier_hit_rates=_tier_hit_rates,
         )
 
