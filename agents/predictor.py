@@ -1888,7 +1888,10 @@ class Homer:
         def _fetch_pitchers():
             return self._fetch_full_statcast(
                 "pitcher",
-                "hr_flyball_rate,fb_percent,xfip,hard_hit_percent,barrel_batted_rate"
+                "hr_flyball_rate,fb_percent,xfip,hard_hit_percent,barrel_batted_rate,"
+                "n_ff_formatted,n_si_formatted,n_fc_formatted,"
+                "n_sl_formatted,n_cu_formatted,n_sw_formatted,"
+                "n_ch_formatted,n_fs_formatted"
             )
 
         def _fetch_recent():
@@ -1993,10 +1996,14 @@ class Homer:
         try:
             odds_data = json.loads(data["odds"])
 
+            if odds_data.get("status") != "success":
+                print(f"[ODDS] Warning: odds fetch returned status={odds_data.get('status')!r} — {odds_data.get('message', '')}")
+
             def _norm(s: str) -> str:
                 return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower().strip()
 
             normed_signals = {_norm(k): k for k in player_signals}
+            matched_count = 0
 
             for comp in odds_data.get("comparisons", []):
                 pname = comp.get("player", "")
@@ -2015,13 +2022,28 @@ class Homer:
                     matched = best_key if best_ratio >= 0.85 else None
 
                 if matched:
-                    player_signals[matched]["ev_10"]         = comp.get("ev_10")
+                    matched_count += 1
+                    ev    = comp.get("ev_10")
+                    pin   = comp.get("pinnacle")
+                    best  = comp.get("best_odds")
+                    if ev is None:
+                        print(f"[ODDS] {pname}: ev_10 is None (pinnacle={pin!r}, best_odds={best!r})")
+                    if pin is None:
+                        print(f"[ODDS] {pname}: pinnacle_odds missing — EV/Kelly unreliable")
+                    player_signals[matched]["ev_10"]         = ev
                     player_signals[matched]["kelly_size"]    = comp.get("kelly_size")
                     player_signals[matched]["value_edge"]    = comp.get("value_edge")
-                    player_signals[matched]["pinnacle_odds"] = comp.get("pinnacle")
-                    player_signals[matched]["best_odds"]     = comp.get("best_odds")
-        except Exception:
-            pass
+                    player_signals[matched]["pinnacle_odds"] = pin
+                    player_signals[matched]["best_odds"]     = best
+                else:
+                    print(f"[ODDS] No signal match for odds player: {pname!r}")
+
+            if matched_count == 0 and odds_data.get("comparisons"):
+                print(f"[ODDS] Warning: {len(odds_data['comparisons'])} odds entries found but 0 matched to player signals")
+            else:
+                print(f"[ODDS] Merged odds signals for {matched_count} players")
+        except Exception as e:
+            print(f"[ODDS] Exception merging odds signals: {e}")
 
         # ── Merge blast rate (bat-tracking leaderboard) ───────────────────────
         try:
