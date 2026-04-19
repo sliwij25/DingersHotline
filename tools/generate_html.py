@@ -420,6 +420,7 @@ def generate_picks_html(
   .chip.chip-pnl-pos {{ color: #4ADE80; border-color: rgba(74,222,128,0.4); }}
   .chip.chip-pnl-neg {{ color: #F87171; border-color: rgba(248,113,113,0.4); }}
   .chip-since {{ font-size: 9px; opacity: 0.55; font-weight: 400; }}
+  .pnl-note {{ font-size: 0.65rem; color: rgba(255,255,255,0.35); align-self: center; }}
 
   /* ─── Tier section ─── */
   .tier-section {{
@@ -766,6 +767,7 @@ def generate_picks_html(
     <div class="chip chip-auc">ML Weight {_esc(ml_str)}</div>
     {yesterday_chip}
     {cumulative_chip}
+    <div class="pnl-note">1 unit = $10/pick</div>
   </div>
 </header>
 
