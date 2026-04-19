@@ -287,7 +287,7 @@ def generate_picks_html(
     </section>"""
 
     auc_str = f"{auc:.3f}" if auc else "—"
-    ml_str  = f"{ml_influence:.0f}%" if ml_influence else "—"
+    ml_str  = f"{ml_influence * 100:.0f}%" if ml_influence else "—"
 
     def _pnl_chip(label: str, value: float | None, since: str = "") -> str:
         if value is None:
