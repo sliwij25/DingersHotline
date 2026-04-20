@@ -2574,6 +2574,22 @@ class Homer:
             elif p_hr9 >= 1.0: score += 2
             elif p_hr9 >= 0.5: score += 1
 
+        # Pitcher pitch mix (directional — fastball favors HR, breaking/offspeed suppresses)
+        fb_pct       = sig.get("pitcher_fb_pct")
+        breaking_pct = sig.get("pitcher_breaking_pct")
+        offspeed_pct = sig.get("pitcher_offspeed_pct")
+
+        if fb_pct is not None:
+            if fb_pct >= 60:   score += 2
+            elif fb_pct >= 50: score += 1
+
+        if breaking_pct is not None:
+            if breaking_pct >= 35: score -= 2
+            elif breaking_pct >= 25: score -= 1
+
+        if offspeed_pct is not None:
+            if offspeed_pct >= 20: score -= 1
+
         # Statcast rate stats require a minimum sample to be reliable.
         # pa_scale weights their contribution based on sample size:
         #   PA >= 40 (or unknown): full weight — enough data to trust rate stats

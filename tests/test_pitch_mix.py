@@ -128,3 +128,75 @@ def test_fetch_pitchers_includes_pitch_mix(require_network):
         if row.get("n_ff_formatted") not in (None, "")
     ]
     assert len(pitchers_with_ff) > 0
+
+
+# ── Step 3 tests: pitch-mix scoring in _score_player() ──────────────────────
+#
+# The ML blend (AUC-weighted) compresses raw heuristic deltas, so we test
+# directional change relative to a fresh baseline rather than absolute thresholds.
+
+
+def _baseline():
+    """Confirmed player with no signals — computed fresh each call."""
+    return Homer._score_player({"status": "confirmed"})
+
+
+def test_score_player_pitch_mix_bonus():
+    """Heavy fastball pitcher (>=60%) should increase score by at least +1 vs baseline."""
+    base = _baseline()
+    sig = {
+        "status": "confirmed",
+        "pitcher_fb_pct": 65.0,
+        "pitcher_breaking_pct": 20.0,
+        "pitcher_offspeed_pct": 10.0,
+    }
+    score = Homer._score_player(sig)
+    assert score > base, (
+        f"Expected score > {base} for heavy FB pitcher, got {score}"
+    )
+
+
+def test_score_player_pitch_mix_penalty():
+    """Breaking-ball+offspeed dominant pitcher should decrease score vs baseline."""
+    base = _baseline()
+    sig = {
+        "status": "confirmed",
+        "pitcher_fb_pct": 30.0,
+        "pitcher_breaking_pct": 40.0,
+        "pitcher_offspeed_pct": 25.0,
+    }
+    score = Homer._score_player(sig)
+    # breaking >= 35 → -2, offspeed >= 20 → -1, total raw = -3
+    assert score < base, (
+        f"Expected score < {base} for breaking+offspeed heavy pitcher, got {score}"
+    )
+
+
+def test_score_player_pitch_mix_neutral():
+    """Arsenal below all thresholds (fb<50, breaking<25, offspeed<20) should not change score."""
+    base = _baseline()
+    sig_with_mix = {
+        "status": "confirmed",
+        "pitcher_fb_pct": 45.0,      # < 50 → no bonus
+        "pitcher_breaking_pct": 20.0, # < 25 → no penalty
+        "pitcher_offspeed_pct": 15.0, # < 20 → no penalty
+    }
+    score_with = Homer._score_player(sig_with_mix)
+    assert score_with == base, (
+        f"Below-threshold arsenal should not change score vs no data (expected {base}, got {score_with})"
+    )
+
+
+def test_score_player_pitch_mix_none():
+    """Missing pitch data (None values) should not affect score."""
+    base = _baseline()
+    sig = {
+        "status": "confirmed",
+        "pitcher_fb_pct": None,
+        "pitcher_breaking_pct": None,
+        "pitcher_offspeed_pct": None,
+    }
+    score = Homer._score_player(sig)
+    assert score == base, (
+        f"None pitch data should yield baseline {base}, got {score}"
+    )
