@@ -20,6 +20,7 @@ import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date
 from difflib import SequenceMatcher
+from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
@@ -856,11 +857,38 @@ def fetch_odds_comparison(confirmed_teams: set | None = None) -> str:
         return json.dumps({"status": "no_api_key",
                            "message": "ODDS_API_KEY not set in api/.env"})
 
-    # ── Fetch today's MLB events ──────────────────────────────────────────────
-    try:
-        events_resp = requests.get(
-            f"{ODDS_API_BASE}/sports/baseball_mlb/events?apiKey={api_key}",
+    # ── Intra-day cache: reuse today's odds rather than burning API quota ─────
+    _today = date.today().isoformat()
+    _cache_path = Path("cache") / f"odds_{_today}.json"
+    if _cache_path.exists():
+        try:
+            cached = json.loads(_cache_path.read_text())
+            if cached.get("status") == "success":
+                return _cache_path.read_text()
+        except Exception:
+            pass  # corrupt cache — fall through to fresh fetch
+
+    # ── Fetch today's MLB events (auto-failover to backup key on quota) ───────
+    def _get_events(key: str):
+        r = requests.get(
+            f"{ODDS_API_BASE}/sports/baseball_mlb/events?apiKey={key}",
             timeout=15)
+        return r
+
+    try:
+        events_resp = _get_events(api_key)
+        if events_resp.status_code == 401:
+            backup_key = os.getenv("ODDS_API_KEY_BACKUP")
+            if backup_key:
+                print("[ODDS] Primary key quota exhausted — switching to backup key")
+                events_resp = _get_events(backup_key)
+                if events_resp.status_code == 200:
+                    api_key = backup_key  # use backup for all subsequent calls
+            if events_resp.status_code == 401:
+                return json.dumps({
+                    "status": "quota_exceeded",
+                    "message": "Both Odds API keys have exhausted their quota. Keys reset monthly.",
+                })
         events_resp.raise_for_status()
         events = events_resp.json()
     except requests.RequestException as exc:
@@ -902,6 +930,12 @@ def fetch_odds_comparison(confirmed_teams: set | None = None) -> str:
                 timeout=15)
             if p_resp.status_code == 422:
                 continue
+            if p_resp.status_code == 401:
+                err = p_resp.json() if p_resp.content else {}
+                return json.dumps({
+                    "status": "quota_exceeded",
+                    "message": f"Odds API quota exhausted — {err.get('message', 'upgrade at the-odds-api.com')}",
+                })
             p_resp.raise_for_status()
             p_data = p_resp.json()
         except requests.RequestException:
@@ -1000,7 +1034,7 @@ def fetch_odds_comparison(confirmed_teams: set | None = None) -> str:
 
     results.sort(key=lambda x: x["value_edge"], reverse=True)
 
-    return json.dumps({
+    out = json.dumps({
         "status":        "success",
         "players_found": len(results),
         "note": (
@@ -1010,6 +1044,15 @@ def fetch_odds_comparison(confirmed_teams: set | None = None) -> str:
         ),
         "comparisons": results,
     }, indent=2)
+
+    # Cache for the rest of today so re-runs don't burn quota
+    try:
+        _cache_path.parent.mkdir(parents=True, exist_ok=True)
+        _cache_path.write_text(out)
+    except Exception:
+        pass
+
+    return out
 
 
 def fetch_park_factors_fallback() -> str:
@@ -2002,6 +2045,10 @@ class Homer:
         data["game_cards"]     = cards_text
         data["player_signals"] = player_signals
 
+        # ── Backfill batting order for waiting players in partial lineups ─────
+        player_signals = self._add_roster_fallback(lineups_json, player_signals, batter_stats)
+        data["player_signals"] = player_signals
+
         # ── Merge odds signals (EV, Kelly, value_edge, Pinnacle) ─────────────
         try:
             odds_data = json.loads(data["odds"])
@@ -2398,8 +2445,7 @@ class Homer:
         for game in lineups.get("games", []):
             for side_key in ("away", "home"):
                 side = game.get(side_key, {})
-                if side.get("lineup_confirmed"):
-                    continue
+                lineup_confirmed = side.get("lineup_confirmed", False)
 
                 team_id = side.get("team_id")
                 if not team_id:
@@ -2413,12 +2459,16 @@ class Homer:
                     player_name = entry["name"]
                     if not player_name:
                         continue
-                    # If this waiting player is already in signals, just backfill
-                    # the batting_order from their prior game (the index from
-                    # _build_game_cards is just roster position, not a real slot).
+                    # Always backfill batting_order for waiting players — covers both
+                    # fully-unconfirmed lineups AND partial lineups where some players
+                    # are confirmed but others are still [WAITING] with a roster index.
                     if player_name in player_signals:
                         if not player_signals[player_name].get("lineup_confirmed"):
                             player_signals[player_name]["batting_order"] = entry["batting_order"]
+                        continue
+
+                    # Only add brand-new players when the whole lineup is unconfirmed.
+                    if lineup_confirmed:
                         continue
 
                     sc_data  = _find_best_name_match(player_name, batter_stats)
@@ -2464,6 +2514,8 @@ class Homer:
                         "outfield_size":    None,
                         "stadium_description": None,
                     }
+
+        return player_signals
 
     # ── Python-based scoring & ranking ────────────────────────────────────────
 
@@ -3071,14 +3123,37 @@ class Homer:
         # Pure score sort — best picks first regardless of game
         scored.sort(key=lambda x: x["score"], reverse=True)
 
-        # Assign star ratings now that we have final ranks
+        # Assign star ratings using natural score breaks within top_n.
+        # Find the 3 largest gaps between consecutive scores — those become tier
+        # boundaries. Tiers map to stars top-down from the AUC ceiling, so the
+        # spread reflects actual quality clustering, not fixed rank positions.
         auc = 0.5
         try:
             weights = Homer._ml_weights or {}
             auc = float(weights.get("cv_auc_mean", 0.5))
         except Exception:
             pass
-        for rank_i, pick in enumerate(scored, 1):
+        max_stars = 5 if auc >= 0.65 else 4 if auc >= 0.55 else 3
+
+        top_scores = [p["score"] for p in scored[:top_n]]
+        gaps = sorted(
+            [(top_scores[i] - top_scores[i + 1], i + 1)
+             for i in range(len(top_scores) - 1)],
+            reverse=True,
+        )
+        # 3 biggest gaps → 4 tiers; sort break indices ascending
+        tier_breaks = sorted(idx for _, idx in gaps[:3])
+
+        for rank_i, pick in enumerate(scored[:top_n], 1):
+            tier = next(
+                (t for t, b in enumerate(tier_breaks, 1) if rank_i <= b),
+                len(tier_breaks) + 1,
+            )
+            stars = max(1, max_stars - (tier - 1))
+            pick["stars"] = "★" * stars + "☆" * (5 - stars)
+
+        # Picks beyond top_n still get score-based rating (for fallback callers)
+        for pick in scored[top_n:]:
             pick["stars"] = Homer._star_rating(pick["score"], auc)
 
         if verbose:
