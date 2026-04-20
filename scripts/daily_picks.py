@@ -392,6 +392,8 @@ try:
                 _cum_str = _pnl_summary.get("cumulative_pnl", "$0.00")
                 _model_cumulative_pnl = float(_cum_str.replace("$", "").replace("+", ""))
                 _model_days_tracked = _pnl_summary.get("days_tracked")
+                _roi = float(_pnl_summary.get("roi", "0%").replace("%", "").replace("+", ""))
+                _win_rate = _pnl_summary.get("win_pct", "—")
             if _pnl_daily:
                 _last_day = _pnl_daily[-1]
                 _day_str  = _last_day.get("day_pnl", "$0.00")

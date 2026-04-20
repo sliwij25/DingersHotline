@@ -305,6 +305,43 @@ def generate_picks_html(
         if model_days_tracked else ""
     )
 
+    # Model stats tile (ROI hero + 4 sub-stats)
+    if roi and model_cumulative_pnl is not None:
+        roi_sign = "+" if roi >= 0 else ""
+        roi_css  = "color:#4ADE80" if roi >= 0 else "color:#F87171"
+        pnl_fmt  = f"${model_cumulative_pnl:+.2f}" if model_cumulative_pnl is not None else "—"
+        days_fmt = f"{model_days_tracked}d" if model_days_tracked else "—"
+        model_stats_tile = f"""<div class="model-stats-tile">
+  <div class="stats-tile-roi">
+    <div class="roi-value" style="{roi_css}">{roi_sign}{roi:.1f}%</div>
+    <div class="roi-label">Model ROI</div>
+  </div>
+  <div class="stats-tile-items">
+    <div class="stats-tile-item">
+      <div class="sti-label">Cumulative P&amp;L</div>
+      <div class="sti-value">{_esc(pnl_fmt)}</div>
+      <div class="sti-sub">since Apr 16</div>
+    </div>
+    <div class="stats-tile-item">
+      <div class="sti-label">HR Hit Rate</div>
+      <div class="sti-value">{_esc(win_rate)}</div>
+      <div class="sti-sub">of top-20 picks</div>
+    </div>
+    <div class="stats-tile-item">
+      <div class="sti-label">Model AUC</div>
+      <div class="sti-value">{_esc(auc_str)}</div>
+      <div class="sti-sub">ML weight {_esc(ml_str)}</div>
+    </div>
+    <div class="stats-tile-item">
+      <div class="sti-label">Days Tracked</div>
+      <div class="sti-value">{_esc(days_fmt)}</div>
+      <div class="sti-sub">labeled results</div>
+    </div>
+  </div>
+</div>"""
+    else:
+        model_stats_tile = ""
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -426,6 +463,79 @@ def generate_picks_html(
   .chip.chip-pnl-neg {{ color: #F87171; border-color: rgba(248,113,113,0.4); }}
   .chip-since {{ font-size: 9px; opacity: 0.55; font-weight: 400; }}
   .pnl-note {{ font-size: 0.65rem; color: rgba(255,255,255,0.35); align-self: center; }}
+
+  /* ─── Model stats tile ─── */
+  .model-stats-tile {{
+    margin: 0 36px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    overflow: hidden;
+  }}
+  .stats-tile-roi {{
+    background: var(--navy);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 28px;
+    min-width: 110px;
+    flex-shrink: 0;
+  }}
+  .stats-tile-roi .roi-value {{
+    font-family: 'Oswald', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }}
+  .stats-tile-roi .roi-label {{
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+    margin-top: 4px;
+  }}
+  .stats-tile-items {{
+    display: flex;
+    flex: 1;
+    border-left: 1px solid var(--border);
+  }}
+  .stats-tile-item {{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 16px 20px;
+    border-right: 1px solid var(--border);
+  }}
+  .stats-tile-item:last-child {{ border-right: none; }}
+  .stats-tile-item .sti-label {{
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }}
+  .stats-tile-item .sti-value {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }}
+  .stats-tile-item .sti-sub {{
+    font-size: 0.65rem;
+    color: var(--text-sub);
+    margin-top: 2px;
+  }}
+  @media (max-width: 600px) {{
+    .model-stats-tile {{ flex-direction: column; margin: 0 16px 20px; }}
+    .stats-tile-items {{ flex-direction: column; border-left: none; border-top: 1px solid var(--border); }}
+    .stats-tile-item {{ border-right: none; border-bottom: 1px solid var(--border); }}
+    .stats-tile-item:last-child {{ border-bottom: none; }}
+  }}
 
   /* ─── Tier section ─── */
   .tier-section {{
@@ -776,6 +886,8 @@ def generate_picks_html(
     <div class="pnl-note">1 unit = $10/pick</div>
   </div>
 </header>
+
+{model_stats_tile}
 
 {sections_html}
 
