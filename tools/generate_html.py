@@ -299,14 +299,18 @@ def generate_picks_html(
         since_html = f' <span class="chip-since">since {_esc(since)}</span>' if since else ""
         return f'<div class="chip {css}">{_esc(label)} {_esc(fmt)}{since_html}</div>'
 
-    yesterday_chip = _pnl_chip("Yesterday", model_yesterday_pnl)
+    yesterday_chip = ""  # moved into stats tile next to Cumulative P&L
 
     # Model stats tile (ROI hero + 5 sub-stats including streak)
     if roi and model_cumulative_pnl is not None:
         roi_sign = "+" if roi >= 0 else ""
         roi_css  = "color:#4ADE80" if roi >= 0 else "color:#F87171"
-        pnl_fmt  = f"${model_cumulative_pnl:+.2f}" if model_cumulative_pnl is not None else "—"
-        days_fmt = f"{model_days_tracked}" if model_days_tracked else "—"
+        cum_color  = "#4ADE80" if model_cumulative_pnl >= 0 else "#F87171"
+        pnl_fmt    = f"${model_cumulative_pnl:+.2f}" if model_cumulative_pnl is not None else "—"
+        yest_fmt   = f"${model_yesterday_pnl:+.2f}" if model_yesterday_pnl is not None else None
+        yest_color = "#4ADE80" if (model_yesterday_pnl or 0) >= 0 else "#F87171"
+        yest_html  = f' <span style="color:{yest_color};font-size:0.75rem;opacity:0.8">({_esc(yest_fmt)} today)</span>' if yest_fmt else ""
+        days_fmt   = f"{model_days_tracked}" if model_days_tracked else "—"
 
         if streak:
             is_win = streak.endswith("W")
@@ -329,7 +333,7 @@ def generate_picks_html(
   <div class="stats-tile-items">
     <div class="stats-tile-item">
       <div class="sti-label">Cumulative P&amp;L</div>
-      <div class="sti-value">{_esc(pnl_fmt)}</div>
+      <div class="sti-value" style="color:{cum_color}">{_esc(pnl_fmt)}{yest_html}</div>
       <div class="sti-sub">since Apr 16 · 1 unit = $10/pick</div>
     </div>
     <div class="stats-tile-item">
