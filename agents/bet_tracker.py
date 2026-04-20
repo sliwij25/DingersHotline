@@ -190,7 +190,7 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
     try:
         _ensure_pick_factors_table(conn)
         conn.execute("""
-            INSERT OR REPLACE INTO pick_factors
+            INSERT OR IGNORE INTO pick_factors
               (bet_date, player, algo_version, confidence, score, rank,
                ev_10, kelly_size, value_edge, pinnacle_odds, best_odds,
                platoon, barrel_rate, hard_hit_pct, hr_fb_ratio,
