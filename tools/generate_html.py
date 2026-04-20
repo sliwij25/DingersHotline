@@ -301,12 +301,26 @@ def generate_picks_html(
 
     yesterday_chip = _pnl_chip("Yesterday", model_yesterday_pnl)
 
-    # Model stats tile (ROI hero + 4 sub-stats)
+    # Model stats tile (ROI hero + 5 sub-stats including streak)
     if roi and model_cumulative_pnl is not None:
         roi_sign = "+" if roi >= 0 else ""
         roi_css  = "color:#4ADE80" if roi >= 0 else "color:#F87171"
         pnl_fmt  = f"${model_cumulative_pnl:+.2f}" if model_cumulative_pnl is not None else "—"
         days_fmt = f"{model_days_tracked}" if model_days_tracked else "—"
+
+        if streak:
+            is_win = streak.endswith("W")
+            streak_color = "#4ADE80" if is_win else "#F87171"
+            streak_count = streak[:-1]
+            streak_type_label = "WIN" if is_win else "LOSS"
+            streak_item = f"""<div class="stats-tile-item">
+      <div class="sti-label">Current Streak</div>
+      <div class="sti-value" style="color:{streak_color}">{_esc(streak_count)} {streak_type_label}</div>
+      <div class="sti-sub">consecutive days</div>
+    </div>"""
+        else:
+            streak_item = ""
+
         model_stats_tile = f"""<div class="model-stats-tile">
   <div class="stats-tile-roi">
     <div class="roi-value" style="{roi_css}">{roi_sign}{roi:.1f}%</div>
@@ -333,30 +347,13 @@ def generate_picks_html(
       <div class="sti-value">{_esc(days_fmt)}</div>
       <div class="sti-sub">labeled results</div>
     </div>
+    {streak_item}
   </div>
 </div>"""
     else:
         model_stats_tile = ""
 
-    # Streak tile
-    if streak:
-        is_win = streak.endswith("W")
-        streak_color = "#4ADE80" if is_win else "#F87171"
-        streak_count = streak[:-1]
-        streak_type_label = "WIN" if is_win else "LOSS"
-        streak_desc = (
-            f"{streak_count} consecutive profitable day{'s' if streak_count != '1' else ''}"
-            if is_win else
-            f"{streak_count} consecutive losing day{'s' if streak_count != '1' else ''}"
-        )
-        streak_tile = f"""<div class="streak-tile">
-  <div class="streak-label">Current Streak</div>
-  <div class="streak-value" style="color:{streak_color}">{_esc(streak_count)}</div>
-  <div class="streak-type" style="color:{streak_color}">{streak_type_label}</div>
-  <div class="streak-desc">{_esc(streak_desc)}</div>
-</div>"""
-    else:
-        streak_tile = ""
+    streak_tile = ""  # removed — streak now lives inside model_stats_tile
 
     return f"""<!DOCTYPE html>
 <html lang="en">
