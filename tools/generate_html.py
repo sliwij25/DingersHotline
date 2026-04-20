@@ -320,7 +320,7 @@ def generate_picks_html(
         pnl_fmt    = f"${model_cumulative_pnl:+.2f}" if model_cumulative_pnl is not None else "—"
         yest_fmt   = f"${model_yesterday_pnl:+.2f}" if model_yesterday_pnl is not None else None
         yest_color = "#4ADE80" if (model_yesterday_pnl or 0) >= 0 else "#F87171"
-        yest_html  = f' <span style="color:{yest_color};font-size:0.75rem;opacity:0.8">({_esc(yest_fmt)} today)</span>' if yest_fmt else ""
+        yest_html  = f' <span style="color:{yest_color};font-size:0.75rem;opacity:0.8">({_esc(yest_fmt)} yesterday)</span>' if yest_fmt else ""
         days_fmt   = f"{model_days_tracked}" if model_days_tracked else "—"
 
         if streak:
@@ -438,6 +438,36 @@ def generate_picks_html(
     flex-direction: column;
     gap: 6px;
   }}
+
+  .tg-join {{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    text-align: right;
+  }}
+  .tg-join-label {{
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.70);
+    line-height: 1.35;
+    max-width: 220px;
+  }}
+  .tg-join-btn {{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #229ED9;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }}
+  .tg-join-btn:hover {{ background: #1a8bbf; }}
+  .tg-join-btn svg {{ flex-shrink: 0; }}
 
   .site-title {{
     font-family: 'Oswald', sans-serif;
@@ -961,6 +991,13 @@ def generate_picks_html(
   </div>
   <div class="model-chips">
     {yesterday_chip}
+  </div>
+  <div class="tg-join">
+    <div class="tg-join-label">Get notified the moment today's picks are ready — join the free Telegram channel.</div>
+    <a class="tg-join-btn" href="https://t.me/+BHJ6UMUkhyoxNzEx" target="_blank" rel="noopener">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.26 13.835l-2.938-.916c-.638-.203-.651-.638.136-.944l11.438-4.41c.532-.194.997.131.998.656z"/></svg>
+      Join Dingers Hotline on Telegram
+    </a>
   </div>
 </header>
 

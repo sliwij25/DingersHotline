@@ -56,7 +56,7 @@ print("=" * 60)
 
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
-from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, score_bucket_hit_rate, score_bucket_pnl, STAR_SCORE_RANGES
+from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, star_bucket_hit_rate, star_bucket_pnl
 from generate_html import generate_picks_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
@@ -258,7 +258,8 @@ else:
                                   confidence=p.get("confidence"),
                                   algo_version="3.1",
                                   score=p.get("score"),
-                                  rank=rank_i)
+                                  rank=rank_i,
+                                  stars=p.get("stars", "").count("★") or None)
                 saved += 1
             except Exception:
                 pass
@@ -416,19 +417,11 @@ try:
         import datetime as _dt2
         _timestamp = _dt2.datetime.now().strftime("%Y-%m-%d %I:%M %p")
 
-        # Compute hit rates per star tier for HTML section headers
+        # Compute hit rates + P&L per star tier for HTML section headers
         _ranked_for_html = _all_ranked or picks
         _present_tiers = {(_p.get("stars") or "").count("★") for _p in _ranked_for_html}
-        _tier_hit_rates = {
-            _sc: score_bucket_hit_rate(*STAR_SCORE_RANGES[_sc])
-            for _sc in _present_tiers
-            if _sc in STAR_SCORE_RANGES
-        }
-        _tier_pnl = {
-            _sc: score_bucket_pnl(*STAR_SCORE_RANGES[_sc])
-            for _sc in _present_tiers
-            if _sc in STAR_SCORE_RANGES
-        }
+        _tier_hit_rates = {_sc: star_bucket_hit_rate(_sc) for _sc in _present_tiers if _sc}
+        _tier_pnl = {_sc: star_bucket_pnl(_sc) for _sc in _present_tiers if _sc}
 
         _html_str = generate_picks_html(
             _ranked_for_html,
