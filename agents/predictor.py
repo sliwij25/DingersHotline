@@ -976,16 +976,17 @@ def fetch_odds_comparison(confirmed_teams: set | None = None) -> str:
         pinnacle_odds  = info["pinnacle"]
         pinnacle_prob  = _american_to_implied_prob(pinnacle_odds) if pinnacle_odds else None
 
-        # EV and Kelly use Pinnacle as the true probability estimate
-        ev     = _compute_ev(pinnacle_prob, best_odds_int) if pinnacle_prob else None
-        kelly  = _compute_kelly(pinnacle_prob, best_odds_int) if pinnacle_prob else None
+        # EV and Kelly: prefer Pinnacle (sharpest), fall back to consensus
+        true_prob      = pinnacle_prob if pinnacle_prob is not None else consensus_prob
+        ev     = _compute_ev(true_prob, best_odds_int)
+        kelly  = _compute_kelly(true_prob, best_odds_int)
 
         results.append({
             "player":         player_name,
             "matchup":        info["matchup"],
             "books_sampled":  len(books),
             "pinnacle":       _fmt(pinnacle_odds),
-            "pinnacle_prob":  f"{pinnacle_prob * 100:.1f}%" if pinnacle_prob else "—",
+            "pinnacle_prob":  f"{pinnacle_prob * 100:.1f}%" if pinnacle_prob else f"{consensus_prob * 100:.1f}% (consensus)",
             "best_book":      best_book,
             "best_odds":      _fmt(best_odds_int),
             "consensus_prob": f"{consensus_prob * 100:.1f}%",
