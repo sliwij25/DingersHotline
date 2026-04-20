@@ -396,8 +396,8 @@ try:
                 _last_day = _pnl_daily[-1]
                 _day_str  = _last_day.get("day_pnl", "$0.00")
                 _model_yesterday_pnl = float(_day_str.replace("$", "").replace("+", ""))
-        except Exception:
-            pass
+        except Exception as _pnl_err:
+            print(f"  [HTML] P&L load failed: {_pnl_err}")
 
         import datetime as _dt2
         _timestamp = _dt2.datetime.now().strftime("%Y-%m-%d %I:%M %p")
@@ -444,29 +444,36 @@ except Exception as _he:
 
 # ── Auto-commit + push to GitHub ───────────────────────────────────────────────
 
-if not args.use_cache:
-    try:
-        import subprocess as _sp
-        _repo = str(Path(__file__).parent.parent)
-        _sp.run(["/usr/bin/git", "-C", _repo, "add",
-                 "ml_weights.json", "agents/predictor.py",
-                 "agents/bet_tracker.py", "scripts/daily_picks.py",
-                 "ml/optimize_weights.py", "ml/fetch_actual_results.py",
-                 "ml/build_historical_dataset.py", "README.md", "requirements.txt",
-                 "tools/generate_html.py", "docs/index.html"],
-                capture_output=True)
-        _result = _sp.run(
-            ["/usr/bin/git", "-C", _repo, "commit", "-m",
-             f"Auto-update {TODAY} — picks run, ML weights refreshed"],
-            capture_output=True, text=True
-        )
-        if "nothing to commit" in _result.stdout:
-            print("  [GitHub] No changes to commit.")
-        else:
-            _sp.run(["/usr/bin/git", "-C", _repo, "push"], capture_output=True)
-            print("  [GitHub] Changes pushed to github.com/sliwij25/DingersHotline")
-    except Exception as e:
-        print(f"  [GitHub] Push skipped: {e}")
+try:
+    import subprocess as _sp
+    _repo = str(Path(__file__).parent.parent)
+    if not args.use_cache:
+        # Full run: commit all generated files
+        _git_files = [
+            "ml_weights.json", "agents/predictor.py",
+            "agents/bet_tracker.py", "scripts/daily_picks.py",
+            "ml/optimize_weights.py", "ml/fetch_actual_results.py",
+            "ml/build_historical_dataset.py", "README.md", "requirements.txt",
+            "tools/generate_html.py", "docs/index.html",
+        ]
+        _commit_msg = f"Auto-update {TODAY} — picks run, ML weights refreshed"
+    else:
+        # Cache run: only commit HTML (picks changed, P&L/chips must stay correct)
+        _git_files = ["docs/index.html", f"picks/picks_{TODAY}.html"]
+        _commit_msg = f"picks({TODAY}): re-run from cache — lineup update"
+
+    _sp.run(["/usr/bin/git", "-C", _repo, "add"] + _git_files, capture_output=True)
+    _result = _sp.run(
+        ["/usr/bin/git", "-C", _repo, "commit", "-m", _commit_msg],
+        capture_output=True, text=True
+    )
+    if "nothing to commit" in _result.stdout:
+        print("  [GitHub] No changes to commit.")
+    else:
+        _sp.run(["/usr/bin/git", "-C", _repo, "push"], capture_output=True)
+        print("  [GitHub] Changes pushed to github.com/sliwij25/DingersHotline")
+except Exception as e:
+    print(f"  [GitHub] Push skipped: {e}")
 
 # ── Notifications (Telegram primary, iMessage fallback) ────────────────────────
 
