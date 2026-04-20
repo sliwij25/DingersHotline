@@ -383,7 +383,7 @@ try:
 
         # Model fictitious P&L (pick_factors with best_odds — NOT personal bets)
         _model_yesterday_pnl, _model_cumulative_pnl, _model_days_tracked = None, None, None
-        _net_pnl, _roi, _record, _win_rate = 0.0, 0.0, "—", "—"
+        _net_pnl, _roi, _record, _win_rate, _streak = 0.0, 0.0, "—", "—", None
         try:
             _pnl_js = _js.loads(model_pnl_report())
             _pnl_summary = _pnl_js.get("model_pnl_summary", {})
@@ -398,6 +398,18 @@ try:
                 _last_day = _pnl_daily[-1]
                 _day_str  = _last_day.get("day_pnl", "$0.00")
                 _model_yesterday_pnl = float(_day_str.replace("$", "").replace("+", ""))
+                # Streak: consecutive profitable or losing days (most recent first)
+                _streak_days = [float(d["day_pnl"].replace("$","").replace("+","")) for d in reversed(_pnl_daily)]
+                _streak_type = "W" if _streak_days[0] > 0 else "L"
+                _streak_count = sum(1 for d in _streak_days if (d > 0) == (_streak_days[0] > 0) and (d > 0 or True))
+                # stop counting when streak breaks
+                _streak_count = 0
+                for _d in _streak_days:
+                    if (_d > 0) == (_streak_days[0] > 0):
+                        _streak_count += 1
+                    else:
+                        break
+                _streak = f"{_streak_count}{_streak_type}"
         except Exception as _pnl_err:
             print(f"  [HTML] P&L load failed: {_pnl_err}")
 
@@ -427,6 +439,7 @@ try:
             model_yesterday_pnl=_model_yesterday_pnl,
             model_cumulative_pnl=_model_cumulative_pnl,
             model_days_tracked=_model_days_tracked,
+            streak=_streak,
             tier_hit_rates=_tier_hit_rates,
         )
 

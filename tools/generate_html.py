@@ -237,6 +237,7 @@ def generate_picks_html(
     model_yesterday_pnl: float | None = None,
     model_cumulative_pnl: float | None = None,
     model_days_tracked: int | None = None,
+    streak: str | None = None,
     tier_hit_rates: dict | None = None,
 ) -> str:
     # tier_hit_rates: {star_count: (n_picks, n_homers)} — pre-computed by daily_picks.py
@@ -341,6 +342,26 @@ def generate_picks_html(
 </div>"""
     else:
         model_stats_tile = ""
+
+    # Streak tile
+    if streak:
+        is_win = streak.endswith("W")
+        streak_color = "#4ADE80" if is_win else "#F87171"
+        streak_count = streak[:-1]
+        streak_desc = (
+            f"{streak_count} consecutive profitable day{'s' if streak_count != '1' else ''}"
+            if is_win else
+            f"{streak_count} consecutive losing day{'s' if streak_count != '1' else ''}"
+        )
+        streak_tile = f"""<div class="streak-tile">
+  <div>
+    <div class="streak-label">Current Streak</div>
+  </div>
+  <div class="streak-value" style="color:{streak_color}">{_esc(streak)}</div>
+  <div class="streak-desc">{_esc(streak_desc)}</div>
+</div>"""
+    else:
+        streak_tile = ""
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -535,6 +556,39 @@ def generate_picks_html(
     .stats-tile-items {{ flex-direction: column; border-left: none; border-top: 1px solid var(--border); }}
     .stats-tile-item {{ border-right: none; border-bottom: 1px solid var(--border); }}
     .stats-tile-item:last-child {{ border-bottom: none; }}
+  }}
+
+  /* ─── Streak tile ─── */
+  .streak-tile {{
+    margin: 0 36px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 18px 28px;
+    gap: 20px;
+  }}
+  .streak-label {{
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }}
+  .streak-value {{
+    font-family: 'Oswald', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }}
+  .streak-desc {{
+    font-size: 0.75rem;
+    color: var(--text-sub);
+  }}
+  @media (max-width: 600px) {{
+    .streak-tile {{ margin: 0 16px 20px; padding: 16px 20px; }}
   }}
 
   /* ─── Tier section ─── */
@@ -888,6 +942,7 @@ def generate_picks_html(
 </header>
 
 {model_stats_tile}
+{streak_tile}
 
 {sections_html}
 
