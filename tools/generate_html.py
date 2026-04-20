@@ -299,19 +299,14 @@ def generate_picks_html(
         since_html = f' <span class="chip-since">since {_esc(since)}</span>' if since else ""
         return f'<div class="chip {css}">{_esc(label)} {_esc(fmt)}{since_html}</div>'
 
-    yesterday_chip  = _pnl_chip("Yesterday", model_yesterday_pnl)
-    cumulative_chip = _pnl_chip("Model P&L", model_cumulative_pnl, since="Apr 16")
-    days_chip = (
-        f'<div class="chip chip-auc">{model_days_tracked}d tracked</div>'
-        if model_days_tracked else ""
-    )
+    yesterday_chip = _pnl_chip("Yesterday", model_yesterday_pnl)
 
     # Model stats tile (ROI hero + 4 sub-stats)
     if roi and model_cumulative_pnl is not None:
         roi_sign = "+" if roi >= 0 else ""
         roi_css  = "color:#4ADE80" if roi >= 0 else "color:#F87171"
         pnl_fmt  = f"${model_cumulative_pnl:+.2f}" if model_cumulative_pnl is not None else "—"
-        days_fmt = f"{model_days_tracked}d" if model_days_tracked else "—"
+        days_fmt = f"{model_days_tracked}" if model_days_tracked else "—"
         model_stats_tile = f"""<div class="model-stats-tile">
   <div class="stats-tile-roi">
     <div class="roi-value" style="{roi_css}">{roi_sign}{roi:.1f}%</div>
@@ -321,7 +316,7 @@ def generate_picks_html(
     <div class="stats-tile-item">
       <div class="sti-label">Cumulative P&amp;L</div>
       <div class="sti-value">{_esc(pnl_fmt)}</div>
-      <div class="sti-sub">since Apr 16</div>
+      <div class="sti-sub">since Apr 16 · 1 unit = $10/pick</div>
     </div>
     <div class="stats-tile-item">
       <div class="sti-label">HR Hit Rate</div>
@@ -348,16 +343,16 @@ def generate_picks_html(
         is_win = streak.endswith("W")
         streak_color = "#4ADE80" if is_win else "#F87171"
         streak_count = streak[:-1]
+        streak_type_label = "WIN" if is_win else "LOSS"
         streak_desc = (
             f"{streak_count} consecutive profitable day{'s' if streak_count != '1' else ''}"
             if is_win else
             f"{streak_count} consecutive losing day{'s' if streak_count != '1' else ''}"
         )
         streak_tile = f"""<div class="streak-tile">
-  <div>
-    <div class="streak-label">Current Streak</div>
-  </div>
-  <div class="streak-value" style="color:{streak_color}">{_esc(streak)}</div>
+  <div class="streak-label">Current Streak</div>
+  <div class="streak-value" style="color:{streak_color}">{_esc(streak_count)}</div>
+  <div class="streak-type" style="color:{streak_color}">{streak_type_label}</div>
   <div class="streak-desc">{_esc(streak_desc)}</div>
 </div>"""
     else:
@@ -582,6 +577,14 @@ def generate_picks_html(
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.5px;
+  }}
+  .streak-type {{
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: -4px;
   }}
   .streak-desc {{
     font-size: 0.75rem;
@@ -932,12 +935,7 @@ def generate_picks_html(
     <div class="site-date">Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(picks)} Picks</div>
   </div>
   <div class="model-chips">
-    <div class="chip chip-auc">Model AUC {_esc(auc_str)}</div>
-    <div class="chip chip-auc">ML Weight {_esc(ml_str)}</div>
     {yesterday_chip}
-    {cumulative_chip}
-    {days_chip}
-    <div class="pnl-note">1 unit = $10/pick</div>
   </div>
 </header>
 
