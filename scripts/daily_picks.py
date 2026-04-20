@@ -242,6 +242,16 @@ print("=" * 60)
 picks = homer.get_picks_json(top_n=20)
 _all_ranked: list[dict] = []  # filled below; used for HTML generation
 
+# Check for existing picks BEFORE saving so the re-run flag is accurate
+try:
+    _conn = _sqlite3.connect(Path(__file__).parent.parent / "data" / "bets.db")
+    _is_rerun = _conn.execute(
+        "SELECT COUNT(*) FROM pick_factors WHERE bet_date = ?", (TODAY,)
+    ).fetchone()[0] > 0
+    _conn.close()
+except Exception:
+    _is_rerun = False
+
 if not picks:
     print("\nCould not generate structured picks.")
 else:
@@ -495,15 +505,6 @@ if not args.use_cache and not args.no_notify:
     _top3_names = "\n".join(
         f"{i+1}. {p.get('player','?')}" for i, p in enumerate(_top)
     ) if _top else "  no picks yet"
-    try:
-        _conn = _sqlite3.connect(Path(__file__).parent.parent / "data" / "bets.db")
-        _prior_rows = _conn.execute(
-            "SELECT COUNT(*) FROM pick_factors WHERE bet_date = ?", (TODAY,)
-        ).fetchone()[0]
-        _conn.close()
-        _is_rerun = _prior_rows > 0
-    except Exception:
-        _is_rerun = False
     _updated_prefix = "🔄 UPDATED — " if _is_rerun else ""
     _caption = f"{_updated_prefix}⚾ Dingers Hotline — {TODAY}\n\nTop 3:\n{_top3_names}\n\nFull picks → dingershotline.com"
 
