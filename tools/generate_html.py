@@ -50,7 +50,7 @@ def _confidence_class(conf: str) -> str:
 
 def _bucket_label(n: int) -> str:
     return {
-        5: "Elite Picks",
+        5: "Elite Dingers",
         4: "Strong Plays",
         3: "Solid Looks",
         2: "Worth Watching",
@@ -239,8 +239,10 @@ def generate_picks_html(
     model_days_tracked: int | None = None,
     streak: str | None = None,
     tier_hit_rates: dict | None = None,
+    tier_pnl: dict | None = None,
 ) -> str:
     # tier_hit_rates: {star_count: (n_picks, n_homers)} — pre-computed by daily_picks.py
+    # tier_pnl: {star_count: float | None} — cumulative hypothetical P&L per tier
 
     # Group picks by star count (descending)
     buckets: dict[int, list[tuple[int, dict]]] = {}
@@ -270,6 +272,14 @@ def generate_picks_html(
             else:
                 hit_rate_html = '<span class="tier-hit-rate tier-no-history">no history yet</span>'
 
+        # P&L badge for this tier
+        pnl_html = ""
+        if tier_pnl and star_n in tier_pnl:
+            pv = tier_pnl[star_n]
+            if pv is not None:
+                pnl_css = "tier-pnl-pos" if pv > 0 else "tier-pnl-neg" if pv < 0 else "tier-pnl-flat"
+                pnl_html = f'<span class="tier-pnl {pnl_css}">{pv:+.2f}</span>'
+
         cards = "".join(_build_card(rank, pick) for rank, pick in group_picks)
 
         sections_html += f"""
@@ -281,6 +291,7 @@ def generate_picks_html(
             <span class="tier-label">{_esc(label)}</span>
             <span class="tier-count">{len(group_picks)} pick{"s" if len(group_picks) != 1 else ""}</span>
             {hit_rate_html}
+            {pnl_html}
             <div class="tier-rule"></div>
         </div>
         <div class="picks-grid">
@@ -658,6 +669,19 @@ def generate_picks_html(
     border-color: var(--border);
     font-weight: 400;
   }}
+
+  .tier-pnl {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    border: 1px solid;
+  }}
+  .tier-pnl-pos {{ color: #4ADE80; background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.4); }}
+  .tier-pnl-neg {{ color: #F87171; background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.4); }}
+  .tier-pnl-flat {{ color: var(--text-dim); background: var(--surface2); border-color: var(--border); }}
 
   .tier-rule {{
     flex: 1;

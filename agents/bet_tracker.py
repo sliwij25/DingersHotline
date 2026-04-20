@@ -5,7 +5,8 @@ Skills:
   - save_pick_factors         : store signal snapshot for a pick (algorithm tracking)
   - model_pnl_report          : hypothetical P&L if $10 was bet on every top-20 pick
   - model_performance_report  : hit rates, ROI, and rank-bucket breakdown
-  - rank_bucket_hit_rate      : HR hit rate for a rank range
+  - score_bucket_hit_rate     : HR hit rate for a score range
+  - score_bucket_pnl          : hypothetical P&L for a score range
 """
 import json
 from datetime import date
@@ -148,6 +149,10 @@ _MIGRATION_COLUMNS = [
     ("lineup_confirmed", "INTEGER"),
     ("best_odds",        "TEXT"),
     ("blast_rate",       "REAL"),
+    ("altitude_ft",      "REAL"),
+    ("humidity_pct",     "REAL"),
+    ("pressure_mb",      "REAL"),
+    ("carry_ft",         "REAL"),
 ]
 
 
@@ -198,8 +203,8 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                bpp_hr_pct, park_hr_factor,
                recent_form_14d, pitcher_hr_per_9,
                h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging,
-               blast_rate)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
@@ -231,6 +236,10 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             1 if signals.get("lineup_confirmed", True) else 0,
             signals.get("venue_slugging"),
             signals.get("blast_rate"),
+            signals.get("altitude_ft"),
+            signals.get("humidity_pct"),
+            signals.get("pressure_mb"),
+            signals.get("carry_ft"),
         ))
         conn.commit()
         return f"Saved signals for {player} ({bet_date})"
@@ -376,19 +385,99 @@ def model_pnl_report() -> str:
     }, indent=2)
 
 
-def rank_bucket_hit_rate(min_rank: int, max_rank: int) -> tuple[int, int]:
-    """Return (n_picks, n_homers) for a given rank range from pick_factors."""
+# Score thresholds mirroring predictor._star_rating — single source of truth.
+# Each entry: star_count → (min_score_inclusive, max_score_exclusive | None=unbounded)
+STAR_SCORE_RANGES: dict[int, tuple[float | None, float | None]] = {
+    5: (19.0, None),
+    4: (16.0, 19.0),
+    3: (14.0, 16.0),
+    2: (13.0, 14.0),
+    1: (None, 13.0),
+}
+
+
+def _score_where(min_score: float | None, max_score: float | None) -> tuple[str, list]:
+    clauses, params = [], []
+    if min_score is not None:
+        clauses.append("score >= ?")
+        params.append(min_score)
+    if max_score is not None:
+        clauses.append("score < ?")
+        params.append(max_score)
+    return (" AND ".join(clauses), params)
+
+
+def _top20_base_query(score_clause: str, params: list) -> str:
+    """CTE that mirrors model_pnl_report: top-20 picks per day, then filtered by score."""
+    return (
+        f"SELECT best_odds, homered FROM ("
+        f"  SELECT best_odds, homered, score,"
+        f"         ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn"
+        f"  FROM pick_factors"
+        f"  WHERE homered IS NOT NULL AND rank IS NOT NULL"
+        f"    AND algo_version NOT LIKE 'hist_%'"
+        f"    AND (homered = 0 OR best_odds IS NOT NULL)"
+        f") WHERE rn <= 20 AND {score_clause}",
+        params,
+    )
+
+
+def score_bucket_hit_rate(min_score: float | None, max_score: float | None) -> tuple[int, int]:
+    """Return (n_picks, n_homers) for top-20 picks whose score falls in [min_score, max_score)."""
     conn = get_db_conn()
     try:
         _ensure_pick_factors_table(conn)
-        row = conn.execute(
-            "SELECT COUNT(*), SUM(homered) FROM pick_factors "
-            "WHERE homered IS NOT NULL AND rank BETWEEN ? AND ?",
-            (min_rank, max_rank),
-        ).fetchone()
+        score_clause, params = _score_where(min_score, max_score)
+        sql = (
+            f"SELECT COUNT(*), SUM(homered) FROM ("
+            f"  SELECT homered, score,"
+            f"         ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn"
+            f"  FROM pick_factors"
+            f"  WHERE homered IS NOT NULL AND rank IS NOT NULL"
+            f"    AND algo_version NOT LIKE 'hist_%'"
+            f") WHERE rn <= 20 AND {score_clause}"
+        )
+        row = conn.execute(sql, params).fetchone()
         return (row[0], int(row[1] or 0))
     finally:
         conn.close()
+
+
+def score_bucket_pnl(min_score: float | None, max_score: float | None) -> float | None:
+    """Return cumulative hypothetical P&L ($10/pick) for top-20 picks in the given score range.
+
+    Mirrors model_pnl_report: losses = -$10, wins require best_odds.
+    Returns None if there are no qualifying labeled rows yet.
+    """
+    conn = get_db_conn()
+    try:
+        _ensure_pick_factors_table(conn)
+        score_clause, params = _score_where(min_score, max_score)
+        sql, qparams = _top20_base_query(score_clause, params)
+        rows = conn.execute(sql, qparams).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        return None
+
+    def _to_decimal(odds_str):
+        try:
+            o = int(odds_str)
+            return (o / 100 + 1) if o > 0 else (100 / abs(o) + 1)
+        except Exception:
+            return None
+
+    total = 0.0
+    for best_odds, homered in rows:
+        if homered:
+            dec = _to_decimal(best_odds)
+            if dec is None:
+                continue
+            total += round((dec - 1) * 10, 2)
+        else:
+            total -= 10.0
+    return round(total, 2)
 
 
 def model_performance_report() -> str:

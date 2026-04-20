@@ -56,7 +56,7 @@ print("=" * 60)
 
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
-from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, rank_bucket_hit_rate
+from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, score_bucket_hit_rate, score_bucket_pnl, STAR_SCORE_RANGES
 from generate_html import generate_picks_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
@@ -418,13 +418,16 @@ try:
 
         # Compute hit rates per star tier for HTML section headers
         _ranked_for_html = _all_ranked or picks
-        _tier_ranks: dict[int, list[int]] = {}
-        for _idx, _p in enumerate(_ranked_for_html, 1):
-            _sc = (_p.get("stars") or "").count("★")
-            _tier_ranks.setdefault(_sc, []).append(_idx)
+        _present_tiers = {(_p.get("stars") or "").count("★") for _p in _ranked_for_html}
         _tier_hit_rates = {
-            _sc: rank_bucket_hit_rate(min(_ranks), max(_ranks))
-            for _sc, _ranks in _tier_ranks.items()
+            _sc: score_bucket_hit_rate(*STAR_SCORE_RANGES[_sc])
+            for _sc in _present_tiers
+            if _sc in STAR_SCORE_RANGES
+        }
+        _tier_pnl = {
+            _sc: score_bucket_pnl(*STAR_SCORE_RANGES[_sc])
+            for _sc in _present_tiers
+            if _sc in STAR_SCORE_RANGES
         }
 
         _html_str = generate_picks_html(
@@ -441,6 +444,7 @@ try:
             model_days_tracked=_model_days_tracked,
             streak=_streak,
             tier_hit_rates=_tier_hit_rates,
+            tier_pnl=_tier_pnl,
         )
 
         # Save dated copy
@@ -498,7 +502,17 @@ if not args.use_cache and not args.no_notify:
     _top3_names = "\n".join(
         f"{i+1}. {p.get('player','?')}" for i, p in enumerate(_top)
     ) if _top else "  no picks yet"
-    _caption = f"⚾ Dingers Hotline — {TODAY}\n\nTop 3:\n{_top3_names}\n\nFull picks → dingershotline.com"
+    try:
+        _conn = _sqlite3.connect(Path(__file__).parent.parent / "data" / "bets.db")
+        _prior_rows = _conn.execute(
+            "SELECT COUNT(*) FROM pick_factors WHERE bet_date = ?", (TODAY,)
+        ).fetchone()[0]
+        _conn.close()
+        _is_rerun = _prior_rows > 0
+    except Exception:
+        _is_rerun = False
+    _updated_prefix = "🔄 UPDATED — " if _is_rerun else ""
+    _caption = f"{_updated_prefix}⚾ Dingers Hotline — {TODAY}\n\nTop 3:\n{_top3_names}\n\nFull picks → dingershotline.com"
 
     # 1. Telegram (primary) — send message with top-3 names + URL
     _tg_sent = False

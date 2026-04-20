@@ -2148,6 +2148,16 @@ class Homer:
                     outfield_size = g.get("outfieldsize", "")
                     short_description = g.get("shortdescription", "")
 
+                    # Air density signals
+                    def _parse_num(s):
+                        try: return float(str(s).replace(",", "").replace("%", "").replace("+", "").strip())
+                        except (ValueError, TypeError): return None
+
+                    altitude_ft  = _parse_num(g.get("altitude", ""))
+                    humidity_pct = _parse_num(g.get("humidity", ""))
+                    pressure_mb  = _parse_num(g.get("pressure", ""))
+                    carry_ft     = _parse_num(g.get("carry", ""))
+
                     # BPP signals a closed retractable roof via windreceptiveness="Roof Closed"
                     # When closed, temp=0 and wind="Variable" — treat as indoor, discard weather.
                     roof_closed = "roof closed" in wind_receptiveness.lower()
@@ -2166,15 +2176,19 @@ class Homer:
                             pass
 
                     park_entry = {
-                        "park_hr_factor": hr_factor,
-                        "temp_f":         None if roof_closed else _safe_float(temp_str),
-                        "wind_mph":       None if roof_closed else _safe_float(wind_str),
-                        "wind_deg":       None,
+                        "park_hr_factor":     hr_factor,
+                        "temp_f":             None if roof_closed else _safe_float(temp_str),
+                        "wind_mph":           None if roof_closed else _safe_float(wind_str),
+                        "wind_deg":           None,
                         "wind_receptiveness": wind_receptiveness,
-                        "weather_hr_factor": weather_hr_factor,
-                        "outfield_size": outfield_size,
+                        "weather_hr_factor":  weather_hr_factor,
+                        "outfield_size":      outfield_size,
                         "stadium_description": short_description,
-                        "roof_closed":    roof_closed,  # True when BPP says "Roof Closed"
+                        "roof_closed":        roof_closed,
+                        "altitude_ft":        altitude_ft,
+                        "humidity_pct":       None if roof_closed else humidity_pct,
+                        "pressure_mb":        pressure_mb,
+                        "carry_ft":           None if roof_closed else carry_ft,
                     }
 
                     # BPP game format: "Away @ Home HH:MM" — home team is the venue.
@@ -2276,15 +2290,19 @@ class Homer:
                                 if k and venue_name and
                                 (k in venue_name or venue_name in k)), None)
                 if pk:
-                    signals["park_hr_factor"] = pk["park_hr_factor"]
-                    signals["temp_f"]         = pk["temp_f"]
-                    signals["wind_mph"]       = pk["wind_mph"]
-                    signals["wind_deg"]       = pk.get("wind_deg")
+                    signals["park_hr_factor"]     = pk["park_hr_factor"]
+                    signals["temp_f"]             = pk["temp_f"]
+                    signals["wind_mph"]           = pk["wind_mph"]
+                    signals["wind_deg"]           = pk.get("wind_deg")
                     signals["wind_receptiveness"] = pk.get("wind_receptiveness")
-                    signals["weather_hr_factor"] = pk.get("weather_hr_factor")
-                    signals["outfield_size"] = pk.get("outfield_size")
+                    signals["weather_hr_factor"]  = pk.get("weather_hr_factor")
+                    signals["outfield_size"]      = pk.get("outfield_size")
                     signals["stadium_description"] = pk.get("stadium_description")
-                    signals["roof_closed"]    = pk.get("roof_closed", False)
+                    signals["roof_closed"]        = pk.get("roof_closed", False)
+                    signals["altitude_ft"]        = pk.get("altitude_ft")
+                    signals["humidity_pct"]       = pk.get("humidity_pct")
+                    signals["pressure_mb"]        = pk.get("pressure_mb")
+                    signals["carry_ft"]           = pk.get("carry_ft")
 
         except Exception:
             pass
@@ -2769,39 +2787,49 @@ class Homer:
         # Enhanced weather and wind factors
         temp = sig.get("temp_f")
         wind_mph = sig.get("wind_mph")
-        wind_receptiveness = sig.get("wind_receptiveness", "").lower()
+        wind_receptiveness = (sig.get("wind_receptiveness") or "").lower()
         weather_hr_factor = sig.get("weather_hr_factor")
         outfield_size = sig.get("outfield_size", "").lower()
         stadium_desc = sig.get("stadium_description", "").lower()
+        carry_ft = sig.get("carry_ft")
 
         # True if indoor: fixed dome OR retractable with roof currently closed.
-        # roof_closed is set at parse time; fall back to wind_receptiveness for cached signals.
         _wr = sig.get("wind_receptiveness", "") or ""
         is_dome_venue = (sig.get("venue", "").lower() in _FIXED_DOMES
                          or sig.get("roof_closed", False)
                          or "roof closed" in _wr.lower())
+
         if temp is not None and not is_dome_venue:
-            if temp >= 85: score += 1  # Hot weather helps HRs
-            elif temp <= 50: score -= 1  # Cold weather hurts HRs
+            if temp >= 85: score += 1
+            elif temp <= 50: score -= 1
 
-        # Wind/weather impact — skip entirely for dome stadiums
-        wind_score = 0
+        # Wind: use BPP's weather_hr_factor as the primary direction-aware signal.
+        # Amplify by wind_receptiveness + speed — but never score wind_mph alone
+        # since we don't know stadium orientation (can't distinguish wind-in vs wind-out).
         if not is_dome_venue:
-            if wind_mph is not None:
-                if wind_mph >= 15: wind_score -= 1
-                elif wind_mph <= 5: wind_score += 0.5
-
-            if wind_receptiveness:
-                if "high" in wind_receptiveness:
-                    wind_score *= 1.5
-                elif "low" in wind_receptiveness:
-                    wind_score *= 0.5
-
             if weather_hr_factor is not None:
-                if weather_hr_factor >= 110: score += 1
-                elif weather_hr_factor <= 90: score -= 1
+                if weather_hr_factor >= 115:   score += 2
+                elif weather_hr_factor >= 108: score += 1
+                elif weather_hr_factor <= 85:  score -= 2
+                elif weather_hr_factor <= 92:  score -= 1
 
-        score += wind_score
+                # High-receptiveness parks amplify the weather effect by 0.5 pts
+                if wind_receptiveness and "high" in wind_receptiveness:
+                    if weather_hr_factor >= 108:   score += 0.5
+                    elif weather_hr_factor <= 92:  score -= 0.5
+
+                # Strong wind amplifies BPP's direction-aware forecast
+                if wind_mph is not None and wind_mph >= 15:
+                    if weather_hr_factor >= 108:   score += 0.5
+                    elif weather_hr_factor <= 92:  score -= 0.5
+
+        # Ball carry (air density: altitude + humidity + pressure combined).
+        # carry_ft = extra feet of ball distance vs sea-level neutral conditions.
+        # Coors = +29ft; most sea-level parks = 0 to +5ft.
+        if carry_ft is not None and not is_dome_venue:
+            if carry_ft >= 25:   score += 2   # Extreme carry (Coors tier)
+            elif carry_ft >= 15: score += 1   # Meaningful carry boost
+            elif carry_ft <= -10: score -= 1  # Dense air suppresses distance
 
         # Outfield size impact
         if outfield_size:
@@ -2883,21 +2911,21 @@ class Homer:
         return arrows[idx]
 
     @staticmethod
-    def _star_rating(rank: int, auc: float) -> str:
+    def _star_rating(score: float, auc: float) -> str:
         """
-        Combine rank-within-pool and model accuracy (AUC) into a 1–5 star rating.
+        Combine absolute score and model accuracy (AUC) into a 1–5 star rating.
 
         AUC ceiling (see GRADING.md):
           >= 0.65 → max 5 stars  (model reliable)
           >= 0.55 → max 4 stars  (model developing)
           <  0.55 → max 3 stars  (model near random)
 
-        Rank bands for top 20:
-          1–3  → 5 stars (capped by ceiling)
-          4–7  → 4 stars (capped by ceiling)
-          8–12 → 3 stars
-          13–16 → 2 stars
-          17–20 → 1 star
+        Score thresholds (not rank-bound):
+          >= 19 → 5 stars (Elite Picks, capped by ceiling)
+          >= 16 → 4 stars (Strong Plays)
+          >= 14 → 3 stars (Solid Looks)
+          >= 13 → 2 stars (Worth Watching)
+          <  13 → 1 star  (Speculative)
         """
         if auc >= 0.65:
             ceiling = 5
@@ -2906,13 +2934,13 @@ class Homer:
         else:
             ceiling = 3
 
-        if rank <= 3:
+        if score >= 19:
             base = 5
-        elif rank <= 7:
+        elif score >= 16:
             base = 4
-        elif rank <= 12:
+        elif score >= 14:
             base = 3
-        elif rank <= 16:
+        elif score >= 13:
             base = 2
         else:
             base = 1
@@ -3051,7 +3079,7 @@ class Homer:
         except Exception:
             pass
         for rank_i, pick in enumerate(scored, 1):
-            pick["stars"] = Homer._star_rating(rank_i, auc)
+            pick["stars"] = Homer._star_rating(pick["score"], auc)
 
         if verbose:
             print(f"\n  [SCORING DEBUG] Total players scored: {len(player_signals)}")
@@ -3098,21 +3126,15 @@ class Homer:
 
         # Pre-compute hit rates by star tier so section headers show historical rates.
         # Derive rank ranges from the actual picks so AUC shifts don't break the mapping.
-        from .bet_tracker import rank_bucket_hit_rate
-
-        tier_ranks: dict[str, list[int]] = {}
-        for idx, p in enumerate(ranked, 1):
-            s = p.get("stars", "")
-            tier_ranks.setdefault(s, []).append(idx)
+        from .bet_tracker import score_bucket_hit_rate, STAR_SCORE_RANGES
 
         def _tier_label(stars: str) -> str:
-            ranks = tier_ranks.get(stars, [])
-            if not ranks:
+            sc = stars.count("★")
+            if sc not in STAR_SCORE_RANGES:
                 return f"  {stars}"
-            lo, hi = min(ranks), max(ranks)
-            n, h = rank_bucket_hit_rate(lo, hi)
+            n, h = score_bucket_hit_rate(*STAR_SCORE_RANGES[sc])
             rate_str = f"{h/n*100:.0f}% HR rate  ({n} picks)" if n else "no history yet"
-            return f"  {stars}  —  ranks {lo}–{hi}  —  {rate_str}"
+            return f"  {stars}  —  {rate_str}"
 
         current_stars = None
         for i, pick in enumerate(ranked, 1):
