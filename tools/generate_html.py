@@ -199,7 +199,7 @@ def _build_card(rank: int, pick: dict) -> str:
     if stats_row2:
         stats_html += f'<div class="stats-row">{stats_row2}</div>'
 
-    tags_html = platoon_html + park_html + weather_tags + form_html + pitcher_html + h2h_html + ev_html + pa_html
+    tags_html = park_html + weather_tags + form_html + pitcher_html + h2h_html + ev_html + pa_html
 
     delay = (rank - 1) * 0.04
 

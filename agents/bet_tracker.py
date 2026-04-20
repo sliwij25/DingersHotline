@@ -153,6 +153,7 @@ _MIGRATION_COLUMNS = [
     ("humidity_pct",     "REAL"),
     ("pressure_mb",      "REAL"),
     ("carry_ft",         "REAL"),
+    ("stars",            "INTEGER"),
 ]
 
 
@@ -176,7 +177,8 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                       confidence: str = None,
                       algo_version: str = "2.0",
                       score: float = None,
-                      rank: int = None) -> str:
+                      rank: int = None,
+                      stars: int = None) -> str:
     """
     Persist the algorithmic signal snapshot for one pick.
     Called automatically by daily_picks.py for ALL ranked players (not just bets),
@@ -196,7 +198,7 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
         _ensure_pick_factors_table(conn)
         conn.execute("""
             INSERT OR IGNORE INTO pick_factors
-              (bet_date, player, algo_version, confidence, score, rank,
+              (bet_date, player, algo_version, confidence, score, rank, stars,
                ev_10, kelly_size, value_edge, pinnacle_odds, best_odds,
                platoon, barrel_rate, hard_hit_pct, hr_fb_ratio,
                xiso, xslg, xhr_rate, fb_pct, launch_angle, ev_avg, sweet_spot_pct,
@@ -204,12 +206,13 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                recent_form_14d, pitcher_hr_per_9,
                h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging,
                blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
             score,
             rank,
+            stars,
             signals.get("ev_10"),
             signals.get("kelly_size"),
             signals.get("value_edge"),
@@ -478,6 +481,71 @@ def score_bucket_pnl(min_score: float | None, max_score: float | None) -> float 
         else:
             total -= 10.0
     return round(total, 2)
+
+
+def star_bucket_hit_rate(star_count: int) -> tuple[int, int]:
+    """Return (n_picks, n_homers) for top-20 picks with exactly star_count stars."""
+    conn = get_db_conn()
+    try:
+        _ensure_pick_factors_table(conn)
+        row = conn.execute(
+            """
+            SELECT COUNT(*), SUM(homered) FROM (
+              SELECT homered, stars,
+                     ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn
+              FROM pick_factors
+              WHERE homered IS NOT NULL AND rank IS NOT NULL AND stars IS NOT NULL
+                AND algo_version NOT LIKE 'hist_%'
+            ) WHERE rn <= 20 AND stars = ?
+            """,
+            (star_count,),
+        ).fetchone()
+        return (row[0], int(row[1] or 0))
+    finally:
+        conn.close()
+
+
+def star_bucket_pnl(star_count: int) -> float | None:
+    """Return cumulative hypothetical P&L ($10/pick) for top-20 picks with star_count stars."""
+    conn = get_db_conn()
+    try:
+        _ensure_pick_factors_table(conn)
+        rows = conn.execute(
+            """
+            SELECT best_odds, homered FROM (
+              SELECT best_odds, homered, stars,
+                     ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn
+              FROM pick_factors
+              WHERE homered IS NOT NULL AND rank IS NOT NULL AND stars IS NOT NULL
+                AND algo_version NOT LIKE 'hist_%'
+                AND (homered = 0 OR best_odds IS NOT NULL)
+            ) WHERE rn <= 20 AND stars = ?
+            """,
+            (star_count,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        return None
+
+    def _to_decimal(odds_str):
+        try:
+            o = int(odds_str)
+            return (o / 100 + 1) if o > 0 else (100 / abs(o) + 1)
+        except Exception:
+            return None
+
+    total = 0.0
+    for best_odds, homered in rows:
+        if homered:
+            dec = _to_decimal(best_odds)
+            if dec is None:
+                continue
+            total += round((dec - 1) * 10, 2)
+        else:
+            total -= 10.0
+    return round(total, 2) if rows else None
 
 
 def model_performance_report() -> str:
