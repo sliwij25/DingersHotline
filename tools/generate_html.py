@@ -483,7 +483,7 @@ def generate_picks_html(
 
   /* ─── Model stats tile ─── */
   .model-stats-tile {{
-    margin: 0 36px 28px;
+    margin: 28px 36px 28px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px;
