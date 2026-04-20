@@ -1714,15 +1714,10 @@ class Homer:
                 p_xfip   = sp_data.get("xfip") or "—"
 
                 # Pitch-type mix buckets
-                def _pct(field):
-                    return _safe_float(sp_data.get(field)) or 0.0
-                sp_fb_pct       = round(_pct("n_ff_formatted") + _pct("n_si_formatted") + _pct("n_fc_formatted"), 1)
-                sp_breaking_pct = round(_pct("n_sl_formatted") + _pct("n_cu_formatted") + _pct("n_sw_formatted"), 1)
-                sp_offspeed_pct = round(_pct("n_ch_formatted") + _pct("n_fs_formatted"), 1)
-                # Use None when pitcher has no pitch data at all (early season / missing)
-                sp_fb_pct       = sp_fb_pct if sp_fb_pct > 0 else None
-                sp_breaking_pct = sp_breaking_pct if sp_breaking_pct > 0 else None
-                sp_offspeed_pct = sp_offspeed_pct if sp_offspeed_pct > 0 else None
+                _pct = lambda f: (_safe_float(sp_data.get(f)) or 0.0)
+                sp_fb_pct       = round(_pct("n_ff_formatted") + _pct("n_si_formatted") + _pct("n_fc_formatted"), 1) or None
+                sp_breaking_pct = round(_pct("n_sl_formatted") + _pct("n_cu_formatted") + _pct("n_sw_formatted"), 1) or None
+                sp_offspeed_pct = round(_pct("n_ch_formatted") + _pct("n_fs_formatted"), 1) or None
 
                 # Pitcher recent form (last 3 starts)
                 pf       = pitcher_form.get(sp_id) or {}
