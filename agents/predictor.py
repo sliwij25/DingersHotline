@@ -1476,8 +1476,8 @@ _TOOL_FNS = {
 
 def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
     """
-    Fetch last n_starts game-log entries for a pitcher from the MLB Stats API.
-    Returns avg HR/9 over those starts, total HR allowed, and individual logs.
+    Fetch pitcher game log from the MLB Stats API.
+    Returns blended HR/9: 60% last-3-starts + 40% season, plus raw values.
     A start = appearance with >= 3 innings pitched.
     """
     if not pitcher_id:
@@ -1486,7 +1486,7 @@ def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
         resp = requests.get(
             f"{MLB_API_BASE}/people/{pitcher_id}/stats",
             params={"stats": "gameLog", "group": "pitching",
-                    "season": date.today().year, "limit": 8},
+                    "season": date.today().year, "limit": 40},
             timeout=10,
         )
         resp.raise_for_status()
@@ -1494,7 +1494,7 @@ def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
     except Exception:
         return {}
 
-    logs = []
+    all_logs = []
     for group in data.get("stats", []):
         for split in group.get("splits", []):
             stat = split.get("stat", {})
@@ -1503,26 +1503,36 @@ def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
             except (ValueError, TypeError):
                 ip = 0
             if ip < 3:
-                continue   # skip relief appearances
-            logs.append({
+                continue
+            all_logs.append({
                 "date":       split.get("date", ""),
                 "hr_allowed": int(stat.get("homeRuns") or 0),
                 "ip":         ip,
                 "er":         int(stat.get("earnedRuns") or 0),
             })
-            if len(logs) >= n_starts:
-                break
 
-    if not logs:
+    if not all_logs:
         return {}
 
-    total_hr = sum(g["hr_allowed"] for g in logs)
-    total_ip = sum(g["ip"] for g in logs)
+    recent_logs = all_logs[:n_starts]
+    recent_hr   = sum(g["hr_allowed"] for g in recent_logs)
+    recent_ip   = sum(g["ip"] for g in recent_logs)
+    recent_hr9  = round(recent_hr / recent_ip * 9, 2) if recent_ip else 0
+
+    season_hr  = sum(g["hr_allowed"] for g in all_logs)
+    season_ip  = sum(g["ip"] for g in all_logs)
+    season_hr9 = round(season_hr / season_ip * 9, 2) if season_ip else 0
+
+    # Blend: 60% recent form, 40% season — captures current vulnerability + baseline
+    blended_hr9 = round(0.6 * recent_hr9 + 0.4 * season_hr9, 2)
+
     return {
-        "starts_sampled": len(logs),
-        "hr_per_9":       round(total_hr / total_ip * 9, 2) if total_ip else 0,
-        "total_hr":       total_hr,
-        "logs":           logs,
+        "starts_sampled": len(recent_logs),
+        "hr_per_9":       blended_hr9,
+        "recent_hr9":     recent_hr9,
+        "season_hr9":     season_hr9,
+        "total_hr":       recent_hr,
+        "logs":           recent_logs,
     }
 
 
@@ -3044,7 +3054,7 @@ class Homer:
         stars = min(base, ceiling)
         return "★" * stars + "☆" * (5 - stars)
 
-    def _rank_picks_python(self, player_signals: dict, top_n: int = 8, verbose: bool = False) -> list:
+    def _rank_picks_python(self, player_signals: dict, top_n: int = 8, verbose: bool = False, scratched: set = None) -> list:
         """
         Score every player (confirmed and roster) and return the top_n as a list of dicts.
         Each dict has: player, matchup, confidence, score, reasoning, signals.
@@ -3055,9 +3065,12 @@ class Homer:
         - waiting: -1 penalty (on roster, waiting for lineup confirmation)
         - unknown: -3 penalty (status unclear)
         """
+        _scratched = {s.lower() for s in (scratched or [])}
         scored = []
         for sig_key, sig in player_signals.items():
             player = sig.get("player_name", sig_key.split("|")[0])
+            if player.lower() in _scratched:
+                continue
             if sig.get("bat_side", "?") == "?":
                 resolved = get_bat_side_by_name(player)
                 if resolved != "?":
@@ -3368,7 +3381,7 @@ class Homer:
 
     # ── Public interface ───────────────────────────────────────────────────────
 
-    def run(self, user_message: str) -> str:
+    def run(self, user_message: str, scratched: set = None) -> str:
         today = date.today().isoformat()
 
         # Step 1 — gather all real data via Python (cached on instance)
@@ -3376,12 +3389,12 @@ class Homer:
 
         # Step 2 — rank with deterministic Python scorer (no LLM)
         player_signals = context.get("player_signals", {})
-        ranked         = self._rank_picks_python(player_signals, top_n=20)
+        ranked         = self._rank_picks_python(player_signals, top_n=20, scratched=scratched)
 
         # Step 3 — format into a readable narrative
         return self._format_narrative(ranked, today, context.get("availability", "{}"))
 
-    def get_picks_json(self, top_n: int = 8) -> list:
+    def get_picks_json(self, top_n: int = 8, scratched: set = None) -> list:
         """
         Return today's top picks as a structured list of dicts for auto-logging.
 
@@ -3398,5 +3411,5 @@ class Homer:
         """
         context        = self._gather_data()
         player_signals = context.get("player_signals", {})
-        return self._rank_picks_python(player_signals, top_n=top_n)
+        return self._rank_picks_python(player_signals, top_n=top_n, scratched=scratched)
 

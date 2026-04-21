@@ -36,6 +36,11 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", "api", ".env"))
 
 TODAY = date.today().isoformat()
 
+# Players confirmed scratched today — add names here when you know someone is out
+SCRATCHED: set = {
+    "Luke Raley",
+}
+
 # Parse command-line args
 parser = argparse.ArgumentParser()
 parser.add_argument("--use-cache", action="store_true",
@@ -193,7 +198,8 @@ narrative = homer.run(
     f"Today is {TODAY}. Give me the top 20 HR picks for today with confidence tiers. "
     "Evaluate ALL batters in the confirmed lineups using BallparkPal matchup grades, "
     "park factors, Statcast barrel rate, hard hit %, recent HR form, and our historical record. "
-    "For each pick include: player, matchup, batting position, key stats, and reasoning."
+    "For each pick include: player, matchup, batting position, key stats, and reasoning.",
+    scratched=SCRATCHED,
 )
 
 # Auto-save cache on fresh run (not needed when using --use-cache)
@@ -239,7 +245,7 @@ print("\n" + "=" * 60)
 print("  BET SLIPS — fill in odds + potential_payout from your platform")
 print("=" * 60)
 
-picks = homer.get_picks_json(top_n=20)
+picks = homer.get_picks_json(top_n=20, scratched=SCRATCHED)
 _all_ranked: list[dict] = []  # filled below; used for HTML generation
 
 # Re-run if a notification was already sent today (survives failed first runs)
@@ -252,7 +258,7 @@ else:
     # Save ALL ranked players (not just top 8) for unbiased ML training data.
     # The model needs to see who didn't homer just as much as who did.
     player_signals = homer._context.get("player_signals", {})
-    all_ranked = homer._rank_picks_python(player_signals, top_n=20, verbose=not args.brief)
+    all_ranked = homer._rank_picks_python(player_signals, top_n=20, verbose=not args.brief, scratched=SCRATCHED)
     _all_ranked = all_ranked
     saved = 0
     for rank_i, p in enumerate(all_ranked[:20], 1):  # hard cap at exactly 20
