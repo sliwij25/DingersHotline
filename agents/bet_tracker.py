@@ -148,6 +148,7 @@ _MIGRATION_COLUMNS = [
     ("park_hr_factor",   "REAL"),
     ("lineup_confirmed", "INTEGER"),
     ("best_odds",        "TEXT"),
+    ("team",             "TEXT"),
     ("blast_rate",       "REAL"),
     ("altitude_ft",      "REAL"),
     ("humidity_pct",     "REAL"),
@@ -205,8 +206,8 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                bpp_hr_pct, park_hr_factor,
                recent_form_14d, pitcher_hr_per_9,
                h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging,
-               blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               team, blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
@@ -238,6 +239,7 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             1 if signals.get("is_home") else 0,
             1 if signals.get("lineup_confirmed", True) else 0,
             signals.get("venue_slugging"),
+            signals.get("team"),
             signals.get("blast_rate"),
             signals.get("altitude_ft"),
             signals.get("humidity_pct"),

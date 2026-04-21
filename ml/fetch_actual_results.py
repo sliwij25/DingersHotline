@@ -29,12 +29,14 @@ MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "bets.db")
 
 
-def fetch_homers_for_date(game_date: str) -> dict[str, int] | None:
+def fetch_homers_for_date(game_date: str) -> tuple[dict[str, int], dict[str, set]] | tuple[None, None]:
     """
     Query MLB Stats API for all players who hit HRs on game_date.
     Returns:
-      {full_player_name: hr_count}  — all players with ≥1 HR (may be empty dict)
-      None                          — no completed games found (off day or all pending)
+      (homers, homer_teams) where:
+        homers       = {full_player_name: hr_count}
+        homer_teams  = {full_player_name: {team_name, ...}}  — which team(s) each name homered for
+      (None, None) — no completed games found (off day or all pending)
     Only includes completed games.
     """
     print(f"Fetching MLB results for {game_date}...")
@@ -48,6 +50,7 @@ def fetch_homers_for_date(game_date: str) -> dict[str, int] | None:
     schedule = resp.json()
 
     homers: dict[str, int] = {}
+    homer_teams: dict[str, set] = {}
     games_checked = 0
     games_pending = 0
 
@@ -72,18 +75,20 @@ def fetch_homers_for_date(game_date: str) -> dict[str, int] | None:
                 continue
 
             for side in ("home", "away"):
-                players = boxscore.get("teams", {}).get(side, {}).get("players", {})
+                side_data = boxscore.get("teams", {}).get(side, {})
+                team_name = side_data.get("team", {}).get("name", "")
+                players = side_data.get("players", {})
                 for pid, pdata in players.items():
                     name = pdata.get("person", {}).get("fullName", "")
                     hr = pdata.get("stats", {}).get("batting", {}).get("homeRuns", 0)
                     if name and hr:
                         homers[name] = homers.get(name, 0) + hr
+                        homer_teams.setdefault(name, set()).add(team_name)
 
     print(f"  Games completed: {games_checked} | Games pending: {games_pending}")
-    # Return None when no games were completed (off day or all still in progress)
     if games_checked == 0:
-        return None
-    return homers
+        return None, None
+    return homers, homer_teams
 
 
 def _similarity(a: str, b: str) -> float:
@@ -100,16 +105,19 @@ def _best_match(player: str, homer_names: list[str]) -> tuple[str | None, float]
 
 
 def update_pick_factors(game_date: str, homers: dict[str, int],
+                        homer_teams: dict[str, set] | None = None,
                         dry_run: bool = False) -> None:
     """
     For every row in pick_factors on game_date:
       - homered=1 if player name matches a homer (exact or fuzzy ≥0.85)
       - homered=0 otherwise (player was in Homer's ranked list but didn't homer)
+    When homer_teams is provided, uses team to disambiguate same-name players
+    (e.g. Max Muncy on Dodgers vs Max Muncy on Athletics).
     """
     conn = sqlite3.connect(DB_PATH)
     try:
         rows = conn.execute(
-            "SELECT id, player FROM pick_factors WHERE bet_date=?",
+            "SELECT id, player, team FROM pick_factors WHERE bet_date=?",
             (game_date,)
         ).fetchall()
 
@@ -121,9 +129,23 @@ def update_pick_factors(game_date: str, homers: dict[str, int],
         homer_names = list(homers.keys())
         results: list[tuple[str, int, str]] = []  # (player, homered, matched_name)
 
-        for row_id, player in rows:
+        for row_id, player, pick_team in rows:
             # Exact match first
             if player in homers:
+                # Disambiguate: if we have team data and this name is known to belong
+                # to a different team's homer, treat as no-homer
+                if homer_teams and pick_team:
+                    teams_that_homered = homer_teams.get(player, set())
+                    # Check if any team that homered is a plausible match for pick_team
+                    team_match = any(
+                        pick_team.lower() in t.lower() or t.lower() in pick_team.lower()
+                        for t in teams_that_homered
+                    )
+                    if not team_match:
+                        results.append((player, 0, ""))
+                        if not dry_run:
+                            conn.execute("UPDATE pick_factors SET homered=0 WHERE id=?", (row_id,))
+                        continue
                 results.append((player, 1, player))
                 if not dry_run:
                     conn.execute("UPDATE pick_factors SET homered=1 WHERE id=?", (row_id,))
@@ -132,6 +154,18 @@ def update_pick_factors(game_date: str, homers: dict[str, int],
             # Fuzzy match
             match_name, sim = _best_match(player, homer_names)
             if match_name and sim >= 0.85:
+                # Disambiguate by team when available
+                if homer_teams and pick_team:
+                    teams_that_homered = homer_teams.get(match_name, set())
+                    team_match = any(
+                        pick_team.lower() in t.lower() or t.lower() in pick_team.lower()
+                        for t in teams_that_homered
+                    )
+                    if not team_match:
+                        results.append((player, 0, ""))
+                        if not dry_run:
+                            conn.execute("UPDATE pick_factors SET homered=0 WHERE id=?", (row_id,))
+                        continue
                 results.append((player, 1, match_name))
                 if not dry_run:
                     conn.execute("UPDATE pick_factors SET homered=1 WHERE id=?", (row_id,))
@@ -181,7 +215,7 @@ def main():
                         help="Dry run — show results without saving to DB")
     args = parser.parse_args()
 
-    homers = fetch_homers_for_date(args.date)
+    homers, homer_teams = fetch_homers_for_date(args.date)
 
     if homers is None:
         print(f"\n  No completed games found for {args.date}.")
@@ -197,7 +231,7 @@ def main():
             plural = "s" if count > 1 else ""
             print(f"    {name}: {count} HR{plural}")
 
-    update_pick_factors(args.date, homers, dry_run=args.show)
+    update_pick_factors(args.date, homers, homer_teams, dry_run=args.show)
 
     if not args.show:
         print(f"\n  pick_factors.homered updated for {args.date}.")

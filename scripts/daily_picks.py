@@ -76,11 +76,11 @@ def _auto_maintain():
         import io as _io, sys as _sys
         _old, _sys.stdout = _sys.stdout, _io.StringIO()
         try:
-            homers = fetch_homers_for_date(yesterday)
+            homers, homer_teams = fetch_homers_for_date(yesterday)
             # homers=None → off day / all games pending (skip labeling)
             # homers={} → games completed, nobody homered (still label everyone as 0)
             if homers is not None:
-                update_pick_factors(yesterday, homers, dry_run=False)
+                update_pick_factors(yesterday, homers, homer_teams, dry_run=False)
         finally:
             _sys.stdout = _old
         if homers is None:
