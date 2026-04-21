@@ -246,6 +246,12 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             signals.get("pressure_mb"),
             signals.get("carry_ft"),
         ))
+        # Backfill stars on existing rows that were saved before stars column existed
+        if stars is not None:
+            conn.execute(
+                "UPDATE pick_factors SET stars=? WHERE bet_date=? AND player=? AND stars IS NULL",
+                (stars, bet_date, player)
+            )
         conn.commit()
         return f"Saved signals for {player} ({bet_date})"
     finally:
