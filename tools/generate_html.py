@@ -106,12 +106,6 @@ def _build_card(rank: int, pick: dict) -> str:
     conf_class    = _confidence_class(conf)
 
     # Tags
-    platoon_html = ""
-    if platoon == "PLATOON+":
-        platoon_html = '<span class="tag tag-green">PLATOON+</span>'
-    elif platoon == "platoon-":
-        platoon_html = '<span class="tag tag-red">platoon−</span>'
-
     park_html = ""
     if park_hr is not None:
         if park_hr >= 110:

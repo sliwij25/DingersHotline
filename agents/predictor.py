@@ -3076,11 +3076,6 @@ class Homer:
             bpp_rank = sig.get("bpp_proj_rank")
             if bpp_rank is not None and bpp_rank <= 15:
                 reasons.append(f"BPP rank #{bpp_rank}")
-            if sig.get("platoon") == "PLATOON+":
-                reasons.append("PLATOON+")
-            ev = sig.get("ev_10")
-            if ev is not None and ev > 0:
-                reasons.append(f"EV +${ev:.2f}")
             ve = sig.get("value_edge")
             if ve is not None and ve >= 3:
                 reasons.append(f"VALUE +{ve:.1f}pp")
@@ -3286,9 +3281,8 @@ class Homer:
             p_name        = sig.get("pitcher_name") or "TBD"
             p_throws      = sig.get("pitcher_throws", "?")
             platoon       = sig.get("platoon", "")
-            platoon_tag   = "  ✓ PLATOON+" if platoon == "PLATOON+" else ("  ✗ platoon-" if platoon == "platoon-" else "")
             lines.append(f"   {mu}")
-            lines.append(f"   {bat_label} vs {p_name} ({p_throws})  •  {venue}  •  {home_away_str}{platoon_tag}")
+            lines.append(f"   {bat_label} vs {p_name} ({p_throws})  •  {venue}  •  {home_away_str}")
 
             # ── Stats grid ────────────────────────────────────────────
             season_hr  = sig.get("season_hr")
@@ -3369,6 +3363,7 @@ class Homer:
                 lines.append(f"   Why: {pick['reasoning']}")
 
         lines.append(f"\n{DIVIDER}")
+        lines.append("\n  Verify scratches before betting: https://www.mlb.com/starting-lineups")
         return "\n".join(lines)
 
     # ── Public interface ───────────────────────────────────────────────────────
