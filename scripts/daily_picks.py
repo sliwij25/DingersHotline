@@ -193,11 +193,38 @@ if args.use_cache:
         print("ERROR: No cache file found for today.")
         print(f"Run without --use-cache first, or run cache_data.py manually.")
         sys.exit(1)
-    
+
     print(f"Loading cached context from {cache_file[0].name}...\n")
     homer = Homer()
     with open(cache_file[0]) as f:
         homer._context = json.load(f)
+
+    # Lock the top-20 player set from today's existing picks file.
+    # Cache re-runs may only REMOVE scratched players — they cannot add new players
+    # or drop existing ones due to ML weight changes or lineup confirmation shifts.
+    import re as _re
+    _picks_txt = Path(__file__).parent.parent / "picks" / f"picks_{TODAY}.txt"
+    if _picks_txt.exists():
+        _locked: list[str] = []
+        for _line in _picks_txt.read_text(encoding="utf-8").splitlines():
+            _m = _re.match(r"^#\d+\s+(.+?)\s+[★☆]", _line.strip())
+            if _m:
+                _locked.append(_m.group(1).strip())
+        if _locked:
+            print(f"  [Lock] Preserving today's top-20 player set ({len(_locked)} players locked).")
+            _all_sig = homer._context.get("player_signals", {})
+            _locked_sig = {}
+            for _name in _locked:
+                if any(s.lower() in _name.lower() for s in SCRATCHED):
+                    print(f"  [Lock] Removing scratched: {_name}")
+                    continue
+                # Find the matching key in player_signals (keys are "Name|Team")
+                _key = next((k for k in _all_sig if k.split("|")[0].lower() == _name.lower()), None)
+                if _key:
+                    _locked_sig[_key] = _all_sig[_key]
+                else:
+                    print(f"  [Lock] Warning: '{_name}' not found in cache signals — skipped.")
+            homer._context["player_signals"] = _locked_sig
 else:
     print("Fetching picks — this takes about 30–60 seconds...\n")
     homer = Homer()
