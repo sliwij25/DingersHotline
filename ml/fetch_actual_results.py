@@ -117,7 +117,7 @@ def update_pick_factors(game_date: str, homers: dict[str, int],
     conn = sqlite3.connect(DB_PATH)
     try:
         rows = conn.execute(
-            "SELECT id, player, team FROM pick_factors WHERE bet_date=?",
+            "SELECT id, player, team FROM pick_factors WHERE bet_date=? AND homered IS NULL",
             (game_date,)
         ).fetchall()
 

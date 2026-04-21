@@ -242,15 +242,9 @@ print("=" * 60)
 picks = homer.get_picks_json(top_n=20)
 _all_ranked: list[dict] = []  # filled below; used for HTML generation
 
-# Check for existing picks BEFORE saving so the re-run flag is accurate
-try:
-    _conn = _sqlite3.connect(Path(__file__).parent.parent / "data" / "bets.db")
-    _is_rerun = _conn.execute(
-        "SELECT COUNT(*) FROM pick_factors WHERE bet_date = ?", (TODAY,)
-    ).fetchone()[0] > 0
-    _conn.close()
-except Exception:
-    _is_rerun = False
+# Re-run if a notification was already sent today (survives failed first runs)
+_notify_flag = Path(__file__).parent.parent / "cache" / f"notified_{TODAY}.flag"
+_is_rerun = _notify_flag.exists()
 
 if not picks:
     print("\nCould not generate structured picks.")
@@ -560,6 +554,7 @@ if not args.use_cache and not args.no_notify:
             )
             if _resp.status_code == 200:
                 _tg_sent = True
+                _notify_flag.touch()
                 print("  [Telegram] Notification sent.")
             else:
                 raise RuntimeError(_resp.text[:200])
