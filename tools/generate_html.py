@@ -141,25 +141,8 @@ def _build_card(rank: int, pick: dict) -> str:
     if h2h_hr is not None and h2h_hr >= 1:
         h2h_html = f'<span class="tag tag-green">H2H {h2h_hr}HR/{h2h_ab or "—"}AB</span>'
 
-    ev_html = ""
-    if ev_10 is not None:
-        cls = "tag-green" if ev_10 > 0 else "tag-red"
-        ev_html = f'<span class="tag {cls}">EV ${ev_10:+.2f}</span>'
-
-    best_odds  = sig.get("best_odds")
-    pin_odds   = sig.get("pinnacle_odds")
-    best_book  = sig.get("best_book")
-    odds_html  = ""
-    if best_odds:
-        book_label = f" · {best_book}" if best_book else ""
-        pin_part   = f" &nbsp;|&nbsp; <span class='odds-pin'>Pinnacle {_esc(str(pin_odds))}</span>" if pin_odds else ""
-        odds_html  = (
-            f'<div class="odds-line">'
-            f'Best odds: <span class="odds-best">{_esc(str(best_odds))}</span>'
-            f'<span class="odds-book">{_esc(book_label)}</span>'
-            f'{pin_part}'
-            f'</div>'
-        )
+    ev_html   = ""
+    odds_html = ""
 
     pa_html = ""
     if pa is not None and pa < 40:
@@ -199,7 +182,7 @@ def _build_card(rank: int, pick: dict) -> str:
     if stats_row2:
         stats_html += f'<div class="stats-row">{stats_row2}</div>'
 
-    tags_html = park_html + weather_tags + form_html + pitcher_html + h2h_html + ev_html + pa_html
+    tags_html = park_html + weather_tags + form_html + pitcher_html + h2h_html + pa_html
 
     delay = (rank - 1) * 0.04
 
