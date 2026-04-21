@@ -36,10 +36,18 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", "api", ".env"))
 
 TODAY = date.today().isoformat()
 
-# Players confirmed scratched today — add names here when you know someone is out
-SCRATCHED: set = {
-    "Luke Raley",
-}
+# Load today's scratched players from cache/scratched.json (auto-expires on date change)
+_scratched_file = Path(__file__).parent.parent / "cache" / "scratched.json"
+SCRATCHED: set = set()
+try:
+    import json as _json
+    _s = _json.loads(_scratched_file.read_text())
+    if _s.get("date") == TODAY:
+        SCRATCHED = set(_s.get("players", []))
+        if SCRATCHED:
+            print(f"  [Scratched] Excluding: {', '.join(sorted(SCRATCHED))}")
+except Exception:
+    pass
 
 # Parse command-line args
 parser = argparse.ArgumentParser()
