@@ -336,6 +336,38 @@ except Exception as e:
     print(f"  Odds comparison unavailable: {e}")
 
 
+# ── Prompt for missing best_odds on today's top-20 ────────────────────────────
+
+if not args.brief and sys.stdin.isatty():
+    try:
+        import sqlite3 as _sq2
+        _db2 = _sq2.connect(str(Path(__file__).parent.parent / "data" / "bets.db"))
+        _missing = _db2.execute("""
+            SELECT player, rank FROM (
+                SELECT player, rank,
+                       ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn
+                FROM pick_factors
+                WHERE bet_date = ? AND best_odds IS NULL AND rank IS NOT NULL
+                  AND algo_version NOT LIKE 'hist_%'
+            ) WHERE rn <= 20
+            ORDER BY rank
+        """, (TODAY,)).fetchall()
+        if _missing:
+            print(f"\n  {len(_missing)} top-20 pick(s) missing odds — enter now or press Enter to skip:")
+            for _mp, _mr in _missing:
+                _inp = input(f"    #{_mr} {_mp} best odds (e.g. +350): ").strip()
+                if _inp:
+                    _db2.execute(
+                        "UPDATE pick_factors SET best_odds=? WHERE bet_date=? AND player=?",
+                        (_inp, TODAY, _mp)
+                    )
+                    _db2.commit()
+                    print(f"    Saved {_mp} → {_inp}")
+        _db2.close()
+    except Exception as _me:
+        pass
+
+
 # ── Model performance dashboard ────────────────────────────────────────────────
 
 print()
