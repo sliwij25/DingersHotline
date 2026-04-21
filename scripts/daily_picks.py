@@ -199,6 +199,13 @@ if args.use_cache:
     with open(cache_file[0]) as f:
         homer._context = json.load(f)
 
+    # Restore ML weights snapshot from the morning run so scores are identical
+    _snap = homer._context.pop("_ml_weights_snapshot", None)
+    if _snap:
+        Homer._ml_weights = _snap
+        Homer._ml_weights_loaded = True
+        print(f"  [Lock] Using morning ML weights (AUC={_snap.get('cv_auc_mean',0):.3f}) — scores will not drift.")
+
     # Lock the top-20 player set from today's existing picks file.
     # Cache re-runs may only REMOVE scratched players — they cannot add new players
     # or drop existing ones due to ML weight changes or lineup confirmation shifts.
@@ -209,7 +216,9 @@ if args.use_cache:
         for _line in _picks_txt.read_text(encoding="utf-8").splitlines():
             _m = _re.match(r"^#\d+\s+(.+?)\s+[★☆]", _line.strip())
             if _m:
-                _locked.append(_m.group(1).strip())
+                # Strip inline status badges like [WAITING] or [LINEUP PENDING]
+                _pname = _re.sub(r"\s*\[[^\]]+\]\s*", " ", _m.group(1)).strip()
+                _locked.append(_pname)
         if _locked:
             print(f"  [Lock] Preserving today's top-20 player set ({len(_locked)} players locked).")
             _all_sig = homer._context.get("player_signals", {})
@@ -241,8 +250,13 @@ narrative = homer.run(
 if not args.use_cache:
     cache_file = Path(__file__).parent.parent / "cache" / f"debug_context_{TODAY}.json"
     try:
+        # Snapshot ML weights into the cache so re-runs use identical weights
+        _ctx_to_save = dict(homer._context)
+        _ml_w = Homer._load_ml_weights()
+        if _ml_w:
+            _ctx_to_save["_ml_weights_snapshot"] = _ml_w
         with open(cache_file, "w") as f:
-            json.dump(homer._context, f)
+            json.dump(_ctx_to_save, f)
         print(f"\n  [Cached context to {cache_file.name} for testing]")
     except Exception as e:
         pass  # silent fail, not critical
