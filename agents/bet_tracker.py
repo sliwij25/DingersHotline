@@ -327,13 +327,15 @@ def model_pnl_report() -> str:
         rows = conn.execute("""
             SELECT bet_date, player, rank, best_odds, homered
             FROM (
-                SELECT bet_date, player, rank, best_odds, homered,
-                       ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn
+                SELECT bet_date, player, rank, score, best_odds, homered,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY bet_date
+                           ORDER BY rank ASC, score DESC, player ASC
+                       ) AS rn
                 FROM pick_factors
                 WHERE homered IS NOT NULL
                   AND rank IS NOT NULL
                   AND algo_version NOT LIKE 'hist_%'
-                  AND (homered = 0 OR best_odds IS NOT NULL)
             )
             WHERE rn <= 20
             ORDER BY bet_date, rank
@@ -356,8 +358,8 @@ def model_pnl_report() -> str:
         if homered:
             dec = _to_decimal(best_odds)
             if dec is None:
-                continue  # win with unknown odds — skip rather than assume
-            pnl = round((dec - 1) * 10, 2)
+                dec = 4.5   # fallback: +350 avg HR prop when odds not captured
+            pnl = round(dec * 10 - 10, 2)
         else:
             pnl = -10.0
         if bet_date not in days:
@@ -400,6 +402,80 @@ def model_pnl_report() -> str:
     }, indent=2)
 
 
+def yesterday_results_snapshot(yesterday: str) -> dict:
+    """
+    Return the top-20 picks from yesterday with homered labels.
+    Used at the start of each daily run to display previous-day results.
+
+    Returns a dict with keys:
+      date        — the date queried
+      picks       — list of dicts: rank, player, stars, homered, best_odds, pnl
+      hr_count    — number who homered
+      day_pnl     — hypothetical $10/pick P&L for the day
+      labeled     — True if any homered labels exist yet
+    """
+    conn = get_db_conn()
+    try:
+        rows = conn.execute("""
+            SELECT player, rank, stars, homered, best_odds, score
+            FROM (
+                SELECT player, rank, stars, homered, best_odds, score,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY bet_date
+                           ORDER BY rank ASC, score DESC, player ASC
+                       ) AS rn
+                FROM pick_factors
+                WHERE bet_date = ?
+                  AND rank IS NOT NULL
+                  AND algo_version NOT LIKE 'hist_%'
+            )
+            WHERE rn <= 20
+            ORDER BY rank ASC, score DESC
+        """, (yesterday,)).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        return {"date": yesterday, "picks": [], "hr_count": 0, "day_pnl": 0.0, "labeled": False}
+
+    def _to_decimal(odds_str):
+        try:
+            o = int(odds_str)
+            return (o / 100 + 1) if o > 0 else (100 / abs(o) + 1)
+        except Exception:
+            return None
+
+    labeled = any(r[3] is not None for r in rows)
+    picks, day_pnl, hr_count = [], 0.0, 0
+    for player, rank, stars, homered, best_odds, score in rows:
+        if homered:
+            dec = _to_decimal(best_odds) or 4.5
+            pnl = round(dec * 10 - 10, 2)
+            hr_count += 1
+        elif homered == 0:
+            pnl = -10.0
+        else:
+            pnl = None  # not labeled yet
+        if pnl is not None:
+            day_pnl = round(day_pnl + pnl, 2)
+        picks.append({
+            "rank":    rank,
+            "player":  player,
+            "stars":   stars,
+            "homered": homered,
+            "odds":    best_odds or "—",
+            "pnl":     pnl,
+        })
+
+    return {
+        "date":     yesterday,
+        "picks":    picks,
+        "hr_count": hr_count,
+        "day_pnl":  day_pnl,
+        "labeled":  labeled,
+    }
+
+
 # Score thresholds mirroring predictor._star_rating — single source of truth.
 # Each entry: star_count → (min_score_inclusive, max_score_exclusive | None=unbounded)
 STAR_SCORE_RANGES: dict[int, tuple[float | None, float | None]] = {
@@ -431,7 +507,6 @@ def _top20_base_query(score_clause: str, params: list) -> str:
         f"  FROM pick_factors"
         f"  WHERE homered IS NOT NULL AND rank IS NOT NULL"
         f"    AND algo_version NOT LIKE 'hist_%'"
-        f"    AND (homered = 0 OR best_odds IS NOT NULL)"
         f") WHERE rn <= 20 AND {score_clause}",
         params,
     )
@@ -489,7 +564,7 @@ def score_bucket_pnl(min_score: float | None, max_score: float | None) -> float 
             dec = _to_decimal(best_odds)
             if dec is None:
                 continue
-            total += round((dec - 1) * 10, 2)
+            total += round(dec * 10 - 10, 2)
         else:
             total -= 10.0
     return round(total, 2)
@@ -530,7 +605,6 @@ def star_bucket_pnl(star_count: int) -> float | None:
               FROM pick_factors
               WHERE homered IS NOT NULL AND rank IS NOT NULL AND stars IS NOT NULL
                 AND algo_version NOT LIKE 'hist_%'
-                AND (homered = 0 OR best_odds IS NOT NULL)
             ) WHERE rn <= 20 AND stars = ?
             """,
             (star_count,),
@@ -553,8 +627,8 @@ def star_bucket_pnl(star_count: int) -> float | None:
         if homered:
             dec = _to_decimal(best_odds)
             if dec is None:
-                continue
-            total += round((dec - 1) * 10, 2)
+                dec = 4.5   # fallback: +350 avg HR prop when odds not captured
+            total += round(dec * 10 - 10, 2)
         else:
             total -= 10.0
     return round(total, 2) if rows else None

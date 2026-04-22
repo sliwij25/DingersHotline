@@ -69,7 +69,7 @@ print("=" * 60)
 
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
-from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, star_bucket_hit_rate, star_bucket_pnl
+from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, star_bucket_hit_rate, star_bucket_pnl, yesterday_results_snapshot
 from generate_html import generate_picks_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
@@ -89,11 +89,11 @@ def _auto_maintain():
         import io as _io, sys as _sys
         _old, _sys.stdout = _sys.stdout, _io.StringIO()
         try:
-            homers, homer_teams = fetch_homers_for_date(yesterday)
+            homers, homer_teams, active_players = fetch_homers_for_date(yesterday)
             # homers=None → off day / all games pending (skip labeling)
             # homers={} → games completed, nobody homered (still label everyone as 0)
             if homers is not None:
-                update_pick_factors(yesterday, homers, homer_teams, dry_run=False)
+                update_pick_factors(yesterday, homers, homer_teams, active_players, dry_run=False)
         finally:
             _sys.stdout = _old
         if homers is None:
@@ -184,6 +184,43 @@ def _auto_maintain():
 if not args.use_cache:
     _auto_maintain()
 
+# ── Yesterday's results snapshot ───────────────────────────────────────────────
+
+def _print_yesterday_snapshot():
+    from datetime import timedelta
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    snap = yesterday_results_snapshot(yesterday)
+    if not snap["picks"]:
+        print(f"  [Yesterday] No picks on record for {yesterday}.")
+        print()
+        return
+
+    star_map = {5: "★★★★★", 4: "★★★★☆", 3: "★★★☆☆", 2: "★★☆☆☆", 1: "★☆☆☆☆", None: "—"}
+    print(f"  YESTERDAY'S RESULTS — {yesterday}")
+    print("  " + "─" * 58)
+    for p in snap["picks"]:
+        if p["homered"] is None:
+            status = "  ?"
+        elif p["homered"]:
+            status = " HR"
+        else:
+            status = "   "
+        stars_str = star_map.get(p["stars"], "—")
+        pnl_str   = f"${p['pnl']:+.2f}" if p["pnl"] is not None else "  —  "
+        print(f"  #{p['rank']:>2}  {status}  {stars_str}  {p['player']:<28}  {p['odds']:>5}  {pnl_str}")
+
+    if snap["labeled"]:
+        hr_line  = f"{snap['hr_count']} HR{'s' if snap['hr_count'] != 1 else ''}"
+        pnl_line = f"${snap['day_pnl']:+.2f}"
+        print("  " + "─" * 58)
+        print(f"  {hr_line} out of {len(snap['picks'])} picks   Day P&L: {pnl_line}")
+    else:
+        print("  " + "─" * 58)
+        print("  (results not yet labeled — run after games complete)")
+    print()
+
+_print_yesterday_snapshot()
+
 # ── Get picks (narrative) ──────────────────────────────────────────────────────
 
 if args.use_cache:
@@ -233,6 +270,29 @@ if args.use_cache:
                     _locked_sig[_key] = _all_sig[_key]
                 else:
                     print(f"  [Lock] Warning: '{_name}' not found in cache signals — skipped.")
+
+            # Backfill: if scratches dropped us below 20, pull in next-best players
+            _needed = 20 - len(_locked_sig)
+            if _needed > 0:
+                _locked_names_lower = {k.split("|")[0].lower() for k in _locked_sig}
+                _scratch_lower = {s.lower() for s in SCRATCHED}
+                _backfill_pool = homer._rank_picks_python(_all_sig, top_n=40, verbose=False, scratched=SCRATCHED)
+                _added = 0
+                for _bp in _backfill_pool:
+                    if _added >= _needed:
+                        break
+                    _bname = _bp["player"]
+                    if _bname.lower() in _locked_names_lower:
+                        continue
+                    if any(s in _bname.lower() for s in _scratch_lower):
+                        continue
+                    _bkey = next((k for k in _all_sig if k.split("|")[0].lower() == _bname.lower()), None)
+                    if _bkey:
+                        _locked_sig[_bkey] = _all_sig[_bkey]
+                        print(f"  [Lock] Backfill #{len(_locked_sig)}: {_bname} (score={_bp.get('score', 0):.1f})")
+                        _locked_names_lower.add(_bname.lower())
+                        _added += 1
+
             homer._context["player_signals"] = _locked_sig
 else:
     print("Fetching picks — this takes about 30–60 seconds...\n")
@@ -278,8 +338,26 @@ else:
 # ── Export clean .txt file (shareable picks list) ──────────────────────────────
 if not args.use_cache:
     try:
+        from datetime import timedelta as _td
+        _yesterday = (date.today() - _td(days=1)).isoformat()
+        _snap = yesterday_results_snapshot(_yesterday)
+
         txt_path = Path(__file__).parent.parent / "picks" / f"picks_{TODAY}.txt"
         with open(txt_path, "w", encoding="utf-8") as _f:
+            # Prepend yesterday's snapshot so every picks file records prior-day history
+            if _snap["picks"]:
+                _star_map = {5: "★★★★★", 4: "★★★★☆", 3: "★★★☆☆", 2: "★★☆☆☆", 1: "★☆☆☆☆", None: "—"}
+                _f.write(f"Yesterday's Results — {_yesterday}\n")
+                _f.write("─" * 62 + "\n")
+                for _p in _snap["picks"]:
+                    _hr = " HR" if _p["homered"] else ("  ?" if _p["homered"] is None else "   ")
+                    _stars = _star_map.get(_p["stars"], "—")
+                    _pnl   = f"${_p['pnl']:+.2f}" if _p["pnl"] is not None else "  —  "
+                    _f.write(f"#{_p['rank']:>2}{_hr}  {_stars}  {_p['player']:<28}  {_p['odds']:>5}  {_pnl}\n")
+                if _snap["labeled"]:
+                    _f.write(f"{'─'*62}\n{_snap['hr_count']} HR(s) / {len(_snap['picks'])} picks   Day P&L: ${_snap['day_pnl']:+.2f}\n")
+                _f.write("\n")
+
             _f.write(f"Dingers Hotline — {TODAY}\n")
             _f.write("=" * 62 + "\n\n")
             _f.write(narrative)

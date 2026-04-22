@@ -727,6 +727,48 @@ _RETRACTABLE_STADIUMS: frozenset[str] = frozenset({
 # Union — used for display/scoring helpers that only need to know "is this ever a dome"
 _DOME_STADIUMS: frozenset[str] = _FIXED_DOMES | _RETRACTABLE_STADIUMS
 
+# Static venue constants — park HR factor and outfield size for every MLB park.
+# Used as fallback when BPP data is unavailable or when a player is added via roster
+# fallback before live park data has been fetched. Keyed by lowercase venue name.
+_VENUE_PARK_CONSTANTS: dict[str, dict] = {
+    "yankee stadium":                   {"park_hr_factor": 87.0,  "outfield_size": "Variable"},
+    "fenway park":                      {"park_hr_factor": 79.0,  "outfield_size": "Variable"},
+    "wrigley field":                    {"park_hr_factor": 103.0, "outfield_size": "Medium"},
+    "dodger stadium":                   {"park_hr_factor": 102.0, "outfield_size": "Medium"},
+    "uniqlo field at dodger stadium":   {"park_hr_factor": 102.0, "outfield_size": "Medium"},
+    "oracle park":                      {"park_hr_factor": 79.0,  "outfield_size": "Variable"},
+    "coors field":                      {"park_hr_factor": 113.0, "outfield_size": "X-Large"},
+    "oriole park at camden yards":      {"park_hr_factor": 105.0, "outfield_size": "Variable"},
+    "camden yards":                     {"park_hr_factor": 105.0, "outfield_size": "Variable"},
+    "citizens bank park":               {"park_hr_factor": 85.0,  "outfield_size": "Small"},
+    "truist park":                      {"park_hr_factor": 90.0,  "outfield_size": "Medium"},
+    "minute maid park":                 {"park_hr_factor": 106.0, "outfield_size": "Medium"},
+    "daikin park":                      {"park_hr_factor": 106.0, "outfield_size": "Medium"},
+    "citi field":                       {"park_hr_factor": 86.0,  "outfield_size": "Medium"},
+    "busch stadium":                    {"park_hr_factor": 103.0, "outfield_size": "Large"},
+    "comerica park":                    {"park_hr_factor": 83.0,  "outfield_size": "Large"},
+    "pnc park":                         {"park_hr_factor": 76.0,  "outfield_size": "Variable"},
+    "petco park":                       {"park_hr_factor": 95.0,  "outfield_size": "Medium"},
+    "t-mobile park":                    {"park_hr_factor": 110.0, "outfield_size": "Small"},
+    "target field":                     {"park_hr_factor": 65.0,  "outfield_size": "Medium"},
+    "american family field":            {"park_hr_factor": 103.0, "outfield_size": "Small"},
+    "globe life field":                 {"park_hr_factor": 90.0,  "outfield_size": "Large"},
+    "angel stadium":                    {"park_hr_factor": 99.0,  "outfield_size": "Small"},
+    "sutter health park":               {"park_hr_factor": 132.0, "outfield_size": "Large"},
+    "athletics ballpark":               {"park_hr_factor": 105.0, "outfield_size": "Medium"},
+    "tropicana field":                  {"park_hr_factor": 96.0,  "outfield_size": "Medium"},
+    "rogers centre":                    {"park_hr_factor": 100.0, "outfield_size": "Medium"},
+    "guaranteed rate field":            {"park_hr_factor": 119.0, "outfield_size": "Small"},
+    "rate field":                       {"park_hr_factor": 119.0, "outfield_size": "Small"},
+    "progressive field":                {"park_hr_factor": 90.0,  "outfield_size": "Small"},
+    "kauffman stadium":                 {"park_hr_factor": 115.0, "outfield_size": "X-Large"},
+    "nationals park":                   {"park_hr_factor": 88.0,  "outfield_size": "Medium"},
+    "loandepot park":                   {"park_hr_factor": 81.0,  "outfield_size": "Large"},
+    "loanDepot park":                   {"park_hr_factor": 81.0,  "outfield_size": "Large"},
+    "great american ball park":         {"park_hr_factor": 114.0, "outfield_size": "Small"},
+    "chase field":                      {"park_hr_factor": 95.0,  "outfield_size": "Large"},
+}
+
 
 # Venue → OWM city query string (used to fetch wind direction when BPP doesn't provide degrees)
 _VENUE_CITY: dict[str, str] = {
@@ -2129,7 +2171,9 @@ class Homer:
         data["player_signals"] = player_signals
 
         # ── Backfill batting order for waiting players in partial lineups ─────
-        player_signals = self._add_roster_fallback(lineups_json, player_signals, batter_stats)
+        player_signals = self._add_roster_fallback(lineups_json, player_signals, batter_stats,
+                                                     pitcher_form=pitcher_form,
+                                                     recent_form=recent_form)
         data["player_signals"] = player_signals
 
         # ── Merge odds signals (EV, Kelly, value_edge, Pinnacle) ─────────────
@@ -2549,7 +2593,8 @@ class Homer:
         return result
 
     def _add_roster_fallback(self, lineups_json: str, player_signals: dict,
-                            batter_stats: dict) -> dict:
+                            batter_stats: dict, pitcher_form: dict | None = None,
+                            recent_form: list | None = None) -> dict:
         """
         For each team/game where lineup is not confirmed, use the batting order
         from the team's most recent completed game as a fallback.
@@ -2599,6 +2644,25 @@ class Homer:
                         else ("platoon-" if bat_side == sp_throws else "unknown")
                     )
 
+                    # Pitcher recent form — opposing pitcher ID is in the game object
+                    opp_key    = "home" if side_key == "away" else "away"
+                    opp_pid    = game.get(opp_key, {}).get("pitcher_id")
+                    pf_data    = (pitcher_form or {}).get(opp_pid) or {}
+                    p_hr_per_9 = pf_data.get("hr_per_9")
+
+                    # Recent batter form — match by last name fragment
+                    p_name_lower = player_name.lower()
+                    form_hrs = next(
+                        (r.get("hr_last_14d") for r in (recent_form or [])
+                         if any(part in r.get("player", "").lower()
+                                for part in p_name_lower.split() if len(part) > 3)),
+                        0,
+                    )
+
+                    # Static venue constants as baseline (overridden by live BPP data later)
+                    venue_name = game.get("venue", "")
+                    vc = _VENUE_PARK_CONSTANTS.get(venue_name.lower(), {})
+
                     player_signals[sig_key] = {
                         "player_name":      player_name,
                         "team":             team_abbrev,
@@ -2608,7 +2672,7 @@ class Homer:
                         "platoon":          platoon,
                         "matchup":          (f"{game.get('away',{}).get('team','')} @ "
                                              f"{game.get('home',{}).get('team','')}"),
-                        "venue":            game.get("venue", ""),
+                        "venue":            venue_name,
                         "pa":               _safe_int(sc_data.get("pa")),
                         "barrel_rate":      _safe_float(sc_data.get("barrel_batted_rate")),
                         "hard_hit_pct":     _safe_float(sc_data.get("hard_hit_percent")),
@@ -2620,8 +2684,9 @@ class Homer:
                         "launch_angle":     _safe_float(sc_data.get("launch_angle_avg")),
                         "ev_avg":           _safe_float(sc_data.get("exit_velocity_avg")),
                         "sweet_spot_pct":   _safe_float(sc_data.get("sweet_spot_percent")),
-                        "recent_form_14d":    0,
-                        "pitcher_hr_per_9":   None,
+                        "season_hr":        _safe_int(sc_data.get("home_run")),
+                        "recent_form_14d":  form_hrs,
+                        "pitcher_hr_per_9": p_hr_per_9,
                         "pitcher_hr_vs_hand": None,
                         "pitcher_barrel_pct": None,
                         "h2h_hr":            None,
@@ -2630,12 +2695,12 @@ class Homer:
                         "venue_slugging":   None,
                         "bpp_hr_pct":       None,
                         "bpp_proj_rank":    None,
-                        "park_hr_factor":   None,
+                        "park_hr_factor":   vc.get("park_hr_factor"),
                         "temp_f":           None,
                         "wind_mph":         None,
                         "wind_receptiveness": None,
                         "weather_hr_factor": None,
-                        "outfield_size":    None,
+                        "outfield_size":    vc.get("outfield_size"),
                         "stadium_description": None,
                     }
 
@@ -2731,11 +2796,11 @@ class Homer:
         status = sig.get("status", "unknown")
         status_penalty = 0.0
         if status == "waiting":
-            # Extra -1 when no odds found: books don't post HR props for scratched/unconfirmed players,
-            # so absence of odds means they're likely not in the lineup.
-            status_penalty = -2.0 if sig.get("ev_10") is None else -1.0
+            # Small nudge so confirmed batters rank above equally-scored unconfirmed ones.
+            # Kept tiny so a genuinely good unconfirmed hitter still outranks a weak confirmed one.
+            status_penalty = -0.5 if sig.get("ev_10") is None else -0.25
         elif status == "unknown":
-            status_penalty = -3.0
+            status_penalty = -1.5
         score += status_penalty
 
         # EV — most important (Pinnacle probability as ground truth)
@@ -2975,6 +3040,10 @@ class Homer:
         # Added <=85 tier after T-Mobile (82%) was only getting -1 (fell in <=90 bucket)
         # while suppressing picks like Canzone/Raley/Seager who all missed on Apr-16.
         park_hr = sig.get("park_hr_factor")
+        if park_hr is None:
+            venue_const = _VENUE_PARK_CONSTANTS.get((sig.get("venue") or "").lower())
+            if venue_const:
+                park_hr = venue_const["park_hr_factor"]
         if park_hr is not None:
             if park_hr >= 120:   score += 2
             elif park_hr >= 110: score += 1
@@ -2987,8 +3056,12 @@ class Homer:
         wind_mph = sig.get("wind_mph")
         wind_receptiveness = (sig.get("wind_receptiveness") or "").lower()
         weather_hr_factor = sig.get("weather_hr_factor")
-        outfield_size = sig.get("outfield_size", "").lower()
-        stadium_desc = sig.get("stadium_description", "").lower()
+        outfield_size = (sig.get("outfield_size") or "").lower()
+        if not outfield_size:
+            venue_const = _VENUE_PARK_CONSTANTS.get((sig.get("venue") or "").lower())
+            if venue_const:
+                outfield_size = (venue_const.get("outfield_size") or "").lower()
+        stadium_desc = (sig.get("stadium_description") or "").lower()
         carry_ft = sig.get("carry_ft")
 
         # True if indoor: fixed dome OR retractable with roof currently closed.
