@@ -3232,6 +3232,49 @@ class Homer:
         stars = min(base, ceiling)
         return "★" * stars + "☆" * (5 - stars)
 
+    @staticmethod
+    def _load_score_percentiles(max_stars: int, lookback_days: int = 30, min_samples: int = 20) -> list:
+        """
+        Compute score percentile thresholds from recent pick_factors history.
+        Returns a list of (min_score, star_count) pairs sorted descending — first
+        match wins. Falls back to legacy absolute thresholds if insufficient data.
+
+        Percentile cutpoints by AUC ceiling:
+          5-star: p92, p78, p62, p45  → 5, 4, 3, 2 stars
+          4-star: p90, p75, p50       → 4, 3, 2 stars
+          3-star: p75, p50            → 3, 2 stars
+        """
+        CUTPOINTS = {
+            5: [(92, 5), (78, 4), (62, 3), (45, 2)],
+            4: [(90, 4), (75, 3), (50, 2)],
+            3: [(75, 3), (50, 2)],
+        }
+        cutpoints = CUTPOINTS.get(max_stars, CUTPOINTS[4])
+
+        try:
+            conn = get_db_conn()
+            cur = conn.execute(
+                "SELECT score FROM pick_factors WHERE score IS NOT NULL "
+                "AND bet_date >= date('now', ?)",
+                (f"-{lookback_days} days",),
+            )
+            scores = sorted(r[0] for r in cur.fetchall())
+            conn.close()
+        except Exception:
+            scores = []
+
+        if len(scores) < min_samples:
+            # Fallback: legacy absolute thresholds (capped by max_stars)
+            legacy = [(25, 5), (19, 4), (16, 3), (13, 2)]
+            return [(t, min(s, max_stars)) for t, s in legacy if min(s, max_stars) >= 1]
+
+        n = len(scores)
+        result = []
+        for pct, star_count in cutpoints:
+            idx = max(0, int(n * pct / 100) - 1)
+            result.append((scores[idx], star_count))
+        return result  # already sorted descending by star_count (highest first)
+
     def _rank_picks_python(self, player_signals: dict, top_n: int = 8, verbose: bool = False, scratched: set = None) -> list:
         """
         Score every player (confirmed and roster) and return the top_n as a list of dicts.
@@ -3354,10 +3397,9 @@ class Homer:
         # Pure score sort — best picks first regardless of game
         scored.sort(key=lambda x: x["score"], reverse=True)
 
-        # Assign star ratings using natural score breaks within top_n.
-        # Find the 3 largest gaps between consecutive scores — those become tier
-        # boundaries. Tiers map to stars top-down from the AUC ceiling, so the
-        # spread reflects actual quality clustering, not fixed rank positions.
+        # Assign star ratings using percentile thresholds from recent score history.
+        # Thresholds are computed from pick_factors over the last 30 days so ratings
+        # reflect absolute quality rather than rank within today's pool.
         auc = 0.5
         try:
             weights = Homer._ml_weights or {}
@@ -3366,26 +3408,22 @@ class Homer:
             pass
         max_stars = 5 if auc >= 0.65 else 4 if auc >= 0.55 else 3
 
-        top_scores = [p["score"] for p in scored[:top_n]]
-        gaps = sorted(
-            [(top_scores[i] - top_scores[i + 1], i + 1)
-             for i in range(len(top_scores) - 1)],
-            reverse=True,
-        )
-        # 3 biggest gaps → 4 tiers; sort break indices ascending
-        tier_breaks = sorted(idx for _, idx in gaps[:3])
+        thresholds = Homer._load_score_percentiles(max_stars)
 
-        for rank_i, pick in enumerate(scored[:top_n], 1):
-            tier = next(
-                (t for t, b in enumerate(tier_breaks, 1) if rank_i <= b),
-                len(tier_breaks) + 1,
-            )
-            stars = max(1, max_stars - (tier - 1))
-            pick["stars"] = "★" * stars + "☆" * (5 - stars)
+        def _stars_from_percentiles(score):
+            for min_score, star_count in thresholds:
+                if score >= min_score:
+                    return star_count
+            return 1
+
+        for pick in scored[:top_n]:
+            s = _stars_from_percentiles(pick["score"])
+            pick["stars"] = "★" * s + "☆" * (5 - s)
 
         # Picks beyond top_n still get score-based rating (for fallback callers)
         for pick in scored[top_n:]:
-            pick["stars"] = Homer._star_rating(pick["score"], auc)
+            s = _stars_from_percentiles(pick["score"])
+            pick["stars"] = "★" * s + "☆" * (5 - s)
 
         if verbose:
             print(f"\n  [SCORING DEBUG] Total players scored: {len(player_signals)}")
