@@ -1536,6 +1536,46 @@ def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
     }
 
 
+def _fetch_pitcher_career_splits(pitcher_id: int) -> dict:
+    """
+    Fetch career HR/9 vs LHB (sitCode=vl) and vs RHB (sitCode=vr) from MLB Stats API.
+    Career totals give a large, reliable sample — more stable than season splits in April.
+    Returns {"vs_lhb_hr9": float, "vs_rhb_hr9": float} or {} if insufficient data (< 20 IP).
+    """
+    if not pitcher_id:
+        return {}
+    try:
+        resp = requests.get(
+            f"{MLB_API_BASE}/people/{pitcher_id}/stats",
+            params={"stats": "careerStatSplits", "group": "pitching",
+                    "sitCodes": "vl,vr", "gameType": "R"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception:
+        return {}
+
+    result = {}
+    for group in data.get("stats", []):
+        for split in group.get("splits", []):
+            code = split.get("split", {}).get("code", "")
+            stat = split.get("stat", {})
+            try:
+                ip = float(stat.get("inningsPitched") or 0)
+            except (ValueError, TypeError):
+                ip = 0
+            if ip < 20:
+                continue
+            hr  = int(stat.get("homeRuns") or 0)
+            hr9 = round(hr / ip * 9, 2)
+            if code == "vl":
+                result["vs_lhb_hr9"] = hr9
+            elif code == "vr":
+                result["vs_rhb_hr9"] = hr9
+    return result
+
+
 def _fetch_head_to_head(batter_id: int, pitcher_id: int) -> dict:
     """
     Fetch career batter-vs-pitcher stats from the MLB Stats API.
@@ -1728,7 +1768,8 @@ class Homer:
     def _build_game_cards(self, lineups_json: str, batter_stats: dict,
                           pitcher_stats: dict, our_history: list,
                           recent_form: list, pitcher_form: dict,
-                          home_away: dict) -> tuple:
+                          home_away: dict,
+                          pitcher_career_splits: dict | None = None) -> tuple:
         """
         Build a compact per-game card for every batter (confirmed and roster).
         Includes: Statcast, pitcher vulnerability, platoon edge, pitcher recent form,
@@ -1774,9 +1815,10 @@ class Homer:
                 # Statcast pitcher season stats
                 sp_key  = sp.lower()
                 sp_data = _find_best_name_match(sp, pitcher_stats)
-                p_hr_fb  = sp_data.get("hr_flyball_rate") or "—"
-                p_fb_pct = sp_data.get("fb_percent") or "—"
-                p_xfip   = sp_data.get("xfip") or "—"
+                p_hr_fb     = sp_data.get("hr_flyball_rate") or "—"
+                p_fb_pct    = sp_data.get("fb_percent") or "—"
+                p_xfip      = sp_data.get("xfip") or "—"
+                sp_barrel_allowed = _safe_float(sp_data.get("barrel_batted_rate"))
 
                 # Pitch-type mix buckets
                 _pct = lambda f: (_safe_float(sp_data.get(f)) or 0.0)
@@ -1786,6 +1828,7 @@ class Homer:
 
                 # Pitcher recent form (last 3 starts)
                 pf       = pitcher_form.get(sp_id) or {}
+                pcs      = (pitcher_career_splits or {}).get(sp_id) or {}
                 pf_str   = (f"L3-starts: {pf['hr_per_9']:.1f}HR/9 over {pf['total_hr']}HR/{pf['starts_sampled']}GS"
                             if pf else "recent form: n/a")
 
@@ -1894,9 +1937,17 @@ class Homer:
                             "pull_pct":         _safe_float(b_data.get("pull_percent")),
                             "recent_form_14d":  _safe_int(form_hrs),
                             "pitcher_hr_per_9":    round(pf["hr_per_9"], 2) if pf else None,
-                            "pitcher_fb_pct":      sp_fb_pct,
-                            "pitcher_breaking_pct": sp_breaking_pct,
-                            "pitcher_offspeed_pct": sp_offspeed_pct,
+                            "pitcher_hr_vs_hand":  (
+                                pcs.get("vs_lhb_hr9") if (
+                                    bat_side == "L" or (bat_side == "S" and sp_throws == "R")
+                                ) else pcs.get("vs_rhb_hr9") if (
+                                    bat_side == "R" or (bat_side == "S" and sp_throws == "L")
+                                ) else None
+                            ),
+                            "pitcher_fb_pct":        sp_fb_pct,
+                            "pitcher_breaking_pct":  sp_breaking_pct,
+                            "pitcher_offspeed_pct":  sp_offspeed_pct,
+                            "pitcher_barrel_pct":    sp_barrel_allowed,
                             "h2h_hr":           h2h.get("hr") if h2h else None,
                             "h2h_ab":           h2h.get("ab") if h2h else None,
                             "is_home":          is_home,
@@ -2050,14 +2101,20 @@ class Homer:
             pass
 
         pitcher_form: dict[int, dict] = {}
-        with ThreadPoolExecutor(max_workers=8) as executor:
-            futures = {executor.submit(_fetch_pitcher_recent_form, pid): pid
-                       for pid in pitcher_ids}
-            for fut in as_completed(futures):
-                pid  = futures[fut]
+        pitcher_career_splits: dict[int, dict] = {}
+        with ThreadPoolExecutor(max_workers=12) as executor:
+            form_futs   = {executor.submit(_fetch_pitcher_recent_form,   pid): pid for pid in pitcher_ids}
+            splits_futs = {executor.submit(_fetch_pitcher_career_splits, pid): pid for pid in pitcher_ids}
+            for fut in as_completed(form_futs):
+                pid  = form_futs[fut]
                 form = fut.result()
                 if form:
                     pitcher_form[pid] = form
+            for fut in as_completed(splits_futs):
+                pid    = splits_futs[fut]
+                splits = fut.result()
+                if splits:
+                    pitcher_career_splits[pid] = splits
 
         print("  [8/9] Fetching home/away splits for confirmed batters...")
         home_away = _fetch_home_away_splits_batch(list(set(batter_ids)))
@@ -2065,7 +2122,8 @@ class Homer:
         print("  [9/9] Building per-game player cards...")
         cards_text, player_signals = self._build_game_cards(
             lineups_json, batter_stats, pitcher_stats,
-            [], recent_form, pitcher_form, home_away
+            [], recent_form, pitcher_form, home_away,
+            pitcher_career_splits
         )
         data["game_cards"]     = cards_text
         data["player_signals"] = player_signals
@@ -2149,6 +2207,16 @@ class Homer:
                 print(f"[ODDS] Merged odds signals for {matched_count} players")
         except Exception as e:
             print(f"[ODDS] Exception merging odds signals: {e}")
+
+        # ── Upgrade waiting→confirmed when odds exist (books don't post props for scratched players) ──
+        upgraded = []
+        for sig_key, sig in player_signals.items():
+            if sig.get("status") == "waiting" and sig.get("ev_10") is not None:
+                sig["status"] = "confirmed"
+                sig["lineup_confirmed"] = True
+                upgraded.append(sig.get("player_name", sig_key.split("|")[0]))
+        if upgraded:
+            print(f"[ODDS] Confirmed via odds presence: {', '.join(upgraded)}")
 
         # ── Merge blast rate (bat-tracking leaderboard) ───────────────────────
         try:
@@ -2552,9 +2620,11 @@ class Homer:
                         "launch_angle":     _safe_float(sc_data.get("launch_angle_avg")),
                         "ev_avg":           _safe_float(sc_data.get("exit_velocity_avg")),
                         "sweet_spot_pct":   _safe_float(sc_data.get("sweet_spot_percent")),
-                        "recent_form_14d":  0,
-                        "pitcher_hr_per_9": None,
-                        "h2h_hr":           None,
+                        "recent_form_14d":    0,
+                        "pitcher_hr_per_9":   None,
+                        "pitcher_hr_vs_hand": None,
+                        "pitcher_barrel_pct": None,
+                        "h2h_hr":            None,
                         "h2h_ab":           None,
                         "is_home":          side_key == "home",
                         "venue_slugging":   None,
@@ -2657,12 +2727,16 @@ class Homer:
         """
         score = 0.0
 
-        # Status-based penalty
+        # Status-based penalty (tracked separately so it's excluded from power gate)
         status = sig.get("status", "unknown")
+        status_penalty = 0.0
         if status == "waiting":
-            score -= 1.0  # Small penalty for unconfirmed lineup status
+            # Extra -1 when no odds found: books don't post HR props for scratched/unconfirmed players,
+            # so absence of odds means they're likely not in the lineup.
+            status_penalty = -2.0 if sig.get("ev_10") is None else -1.0
         elif status == "unknown":
-            score -= 3.0  # Large penalty for unknown status
+            status_penalty = -3.0
+        score += status_penalty
 
         # EV — most important (Pinnacle probability as ground truth)
         ev = sig.get("ev_10")
@@ -2698,6 +2772,24 @@ class Homer:
             if p_hr9 >= 2.0:   score += 3
             elif p_hr9 >= 1.0: score += 2
             elif p_hr9 >= 0.5: score += 1
+
+        # Pitcher barrel rate allowed — % of batted balls vs this pitcher that are barrels.
+        # Stronger predictor than HR/9 because it strips park and luck: a pitcher allowing
+        # lots of barrels will keep giving up HRs regardless of whether they've been hit yet.
+        p_barrel = sig.get("pitcher_barrel_pct")
+        if p_barrel is not None:
+            if p_barrel >= 12:    score += 3   # Elite vulnerability (top ~5% worst pitchers)
+            elif p_barrel >= 9:   score += 2
+            elif p_barrel >= 7:   score += 1
+            elif p_barrel <= 3:   score -= 1   # Pitcher suppresses hard contact well
+
+        # Career pitcher HR/9 vs this batter's handedness — structural vulnerability, not recency bias.
+        # A pitcher who gives up HRs to lefties will keep doing so regardless of recent form.
+        p_vs_hand = sig.get("pitcher_hr_vs_hand")
+        if p_vs_hand is not None:
+            if p_vs_hand >= 1.5:    score += 2   # Structurally vulnerable to this side
+            elif p_vs_hand >= 1.0:  score += 1
+            elif p_vs_hand <= 0.25: score -= 1   # Dominates this handedness historically
 
         # Pitcher pitch mix (directional — fastball favors HR, breaking/offspeed suppresses)
         fb_pct       = sig.get("pitcher_fb_pct")
@@ -2993,6 +3085,19 @@ class Homer:
         # Prevents model from undervaluing proven power hitters with moderate day signals.
         if sig.get("is_top10_leaderboard"):
             score += 2
+
+        # ── Power floor gate ──────────────────────────────────────────────────
+        # Conditions help power hitters hit HRs; they don't turn contact hitters
+        # into power hitters. If Statcast says weak power (sc_statcast <= -2),
+        # scale down the contextual portion (EV, platoon, pitcher, park, etc.)
+        # so favorable conditions can't override a genuinely weak power profile.
+        # Gate only applies when we have real Statcast data (pa_scale > 0).
+        if pa_scale > 0 and sc_statcast <= -2:
+            statcast_component = sc_statcast * pa_scale
+            ctx_component = score - status_penalty - statcast_component
+            # ctx_scale: 0.75 at sc=-2, 0.625 at sc=-3, 0.5 at sc<=-4
+            ctx_scale = max(0.5, 1.0 + (sc_statcast + 2) * 0.125)
+            score = status_penalty + ctx_component * ctx_scale + statcast_component
 
         # ── ML blend (active only when ml_weights.json exists) ────────────────
         # Blends the hand-tuned heuristic score with the logistic regression score.

@@ -153,8 +153,10 @@ _MIGRATION_COLUMNS = [
     ("altitude_ft",      "REAL"),
     ("humidity_pct",     "REAL"),
     ("pressure_mb",      "REAL"),
-    ("carry_ft",         "REAL"),
-    ("stars",            "INTEGER"),
+    ("carry_ft",              "REAL"),
+    ("stars",                 "INTEGER"),
+    ("pitcher_hr_vs_hand",    "REAL"),
+    ("pitcher_barrel_pct",    "REAL"),
 ]
 
 
@@ -204,10 +206,10 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                platoon, barrel_rate, hard_hit_pct, hr_fb_ratio,
                xiso, xslg, xhr_rate, fb_pct, launch_angle, ev_avg, sweet_spot_pct,
                bpp_hr_pct, park_hr_factor,
-               recent_form_14d, pitcher_hr_per_9,
+               recent_form_14d, pitcher_hr_per_9, pitcher_hr_vs_hand, pitcher_barrel_pct,
                h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging,
                team, blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
@@ -234,6 +236,8 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             signals.get("park_hr_factor"),
             signals.get("recent_form_14d"),
             signals.get("pitcher_hr_per_9"),
+            signals.get("pitcher_hr_vs_hand"),
+            signals.get("pitcher_barrel_pct"),
             signals.get("h2h_hr"),
             signals.get("h2h_ab"),
             1 if signals.get("is_home") else 0,

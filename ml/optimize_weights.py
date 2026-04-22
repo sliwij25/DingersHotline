@@ -53,8 +53,10 @@ FEATURES = [
     ("ev_10",            None),
     ("value_edge",       None),
     ("recent_form_14d",  None),
-    ("pitcher_hr_per_9", None),
-    ("is_home",          None),
+    ("pitcher_hr_per_9",   None),
+    ("pitcher_hr_vs_hand", None),
+    ("pitcher_barrel_pct", None),
+    ("is_home",            None),
     ("platoon",          "platoon"),
     ("h2h_hr",           None),
 ]
