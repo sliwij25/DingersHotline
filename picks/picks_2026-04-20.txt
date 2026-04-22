@@ -1,256 +1,278 @@
+Dingers Hotline — 2026-04-20
+==============================================================
+
 TOP HR PICKS — 2026-04-20
 ==============================================================
 
 ──────────────────────────────────────────────────────────────
-  ★★★★☆  —  ranks 1–7  —  31% HR rate  (29 picks)
+  ★★★★☆  —  29% HR rate  (21 picks)
 
 ──────────────────────────────────────────────────────────────
-#1  Shohei Ohtani  [WAITING]  ★★★★☆
-   Los Angeles Dodgers @ Colorado Rockies
-   LHB vs Jose Quintana (L)  •  Coors Field  •  Away
+#1  Yordan Alvarez  ★★★★☆
+   Houston Astros @ Cleveland Guardians
+   LHB vs Slade Cecconi (R)  •  Progressive Field  •  Away  ✓ PLATOON+
 
-   Season:  5 HR          Lineup:  #11 in order
-   Barrel:  26.3%         Hard Hit: 54.4%         xISO: 0.300
-   EV avg:  94.6          Sweet Sp: 40.4%         FB%:  40.4%
-   Park 129% (HR-friendly) | 77°F | wind 4mph ↗ | weather 108% HR factor
-   Pitcher L3: 1.2 HR/9
-   Why: xISO 0.300, pitcher L3: 1.2HR/9, barrel 26.3%, park 129%, calm 4mph
+   Season:  10 HR         Lineup:  #2 in order
+   Barrel:  21.1%         Hard Hit: 47.9%         xISO: 0.480
+   EV avg:  93.5          Sweet Sp: 47.9%         FB%:  46.5%
+   Park 59% (HR-suppressor) | 45°F | wind 3mph ↖ | weather 63% HR factor
+   Pitcher L3: 1.8 HR/9
+   Pinnacle +345 | EV $+1.69 | Kelly $8.03
+   Why: xISO 0.480, PLATOON+, EV +$1.69, pitcher L3: 1.8HR/9, barrel 21.1%, park 59%, 45°F, calm 3mph (wind receptive), weather 63% HR factor, Small outfield
 
 ──────────────────────────────────────────────────────────────
-#2  Luke Raley  [WAITING]  ★★★★☆
+#2  Luke Raley  ★★★★☆
    Athletics @ Seattle Mariners
-   LHB vs J.T. Ginn (R)  •  T-Mobile Park  •  Home
+   LHB vs J.T. Ginn (R)  •  T-Mobile Park  •  Home  ✓ PLATOON+
 
-   Season:  5 HR          Lineup:  #10 in order
+   Season:  5 HR          Lineup:  #1 in order
    Barrel:  21.4%         Hard Hit: 52.4%         xISO: 0.340
    EV avg:  93.5          Sweet Sp: 52.4%         FB%:  26.2%
-   Park 106% (neutral) | 68°F | wind 2mph ↓ | weather 104% HR factor
+   Park 104% (neutral) | 70°F | wind 1mph → | weather 102% HR factor
    Pitcher L3: 0.7 HR/9 | H2H: 0 HR / — AB | BPP rank #66
-   Why: xISO 0.340, barrel 21.4%, calm 2mph, Small outfield
+   Pinnacle — | EV $+1.50 | Kelly $5.45
+   Why: xISO 0.340, PLATOON+, EV +$1.50, barrel 21.4%, calm 1mph, Small outfield
 
 ──────────────────────────────────────────────────────────────
-#3  Jordan Walker  [WAITING]  ★★★★☆
+  ★★★☆☆  —  24% HR rate  (29 picks)
+
+──────────────────────────────────────────────────────────────
+#3  Alec Burleson  ★★★☆☆
    St. Louis Cardinals @ Miami Marlins
-   RHB vs Max Meyer (R)  •  loanDepot park  •  Away
+   LHB vs Max Meyer (R)  •  loanDepot park  •  Away  ✓ PLATOON+
+
+   Season:  3 HR          Lineup:  #3 in order
+   Barrel:  12.5%         Hard Hit: 51.4%         xISO: 0.300
+   EV avg:  93.1          Sweet Sp: 30.6%         FB%:  30.6%
+   Park 87% (HR-suppressor) | Dome
+   Pitcher L3: 1.3 HR/9 | H2H: 0 HR / — AB | BPP rank #87
+   Pinnacle — | EV $+0.17 | Kelly $0.69
+   Why: xISO 0.300, PLATOON+, EV +$0.17, pitcher L3: 1.3HR/9, barrel 12.5%
+
+──────────────────────────────────────────────────────────────
+#4  Dominic Canzone  ★★★☆☆
+   Athletics @ Seattle Mariners
+   LHB vs J.T. Ginn (R)  •  T-Mobile Park  •  Home  ✓ PLATOON+
+
+   Season:  2 HR          Lineup:  #7 in order
+   Barrel:  15.8%         Hard Hit: 47.4%         xISO: 0.280
+   EV avg:  94.3          Sweet Sp: 44.7%         FB%:  42.1%
+   Park 104% (neutral) | 70°F | wind 1mph → | weather 102% HR factor
+   Pitcher L3: 0.7 HR/9 | H2H: 0 HR / — AB | BPP rank #71
+   Pinnacle — | EV $+0.17 | Kelly $0.69
+   Why: xISO 0.280, PLATOON+, EV +$0.17, barrel 15.8%, calm 1mph, Small outfield
+
+──────────────────────────────────────────────────────────────
+#5  Shohei Ohtani  ★★★☆☆
+   Los Angeles Dodgers @ Colorado Rockies
+   LHB vs Jose Quintana (L)  •  Coors Field  •  Away  ✗ platoon-
+
+   Season:  5 HR          Lineup:  #1 in order
+   Barrel:  26.3%         Hard Hit: 54.4%         xISO: 0.300
+   EV avg:  94.6          Sweet Sp: 40.4%         FB%:  40.4%
+   Park 119% (HR-friendly) | 75°F | wind 10mph ↗ | weather 98% HR factor
+   Pitcher L3: 1.2 HR/9 | H2H: 1 HR / 5 AB
+   Pinnacle +200 | EV $-0.00
+   Why: xISO 0.300, pitcher L3: 1.2HR/9, h2h 1HR/5AB, barrel 26.3%, park 119%
+
+──────────────────────────────────────────────────────────────
+#6  Kyle Schwarber  ★★★☆☆
+   Philadelphia Phillies @ Chicago Cubs
+   LHB vs Colin Rea (R)  •  Wrigley Field  •  Away  ✓ PLATOON+
+
+   Season:  7 HR          Lineup:  #2 in order
+   Barrel:  25.6%         Hard Hit: 55.8%         xISO: 0.330
+   EV avg:  93.2          Sweet Sp: 41.9%         FB%:  44.2%
+   Park 88% (HR-suppressor) | 55°F | wind 5mph ↓ | weather 88% HR factor
+   Pitcher L3: 0.8 HR/9 | H2H: 1 HR / 5 AB
+   Pinnacle +270 | EV $+0.00
+   Why: xISO 0.330, PLATOON+, h2h 1HR/5AB, barrel 25.6%, 55°F, calm 5mph, weather 88% HR factor
+
+──────────────────────────────────────────────────────────────
+  ★★☆☆☆  —  0% HR rate  (6 picks)
+
+──────────────────────────────────────────────────────────────
+#7  Jordan Walker  ★★☆☆☆
+   St. Louis Cardinals @ Miami Marlins
+   RHB vs Max Meyer (R)  •  loanDepot park  •  Away  ✗ platoon-
 
    Season:  8 HR          Lineup:  #4 in order
    Barrel:  23.6%         Hard Hit: 58.2%         xISO: 0.360
    EV avg:  95.0          Sweet Sp: 47.3%         FB%:  36.4%
    Park 87% (HR-suppressor) | Dome
-   Pitcher L3: 1.3 HR/9 | H2H: 0 HR / — AB | BPP rank #98
-   Why: xISO 0.360, pitcher L3: 1.3HR/9, barrel 23.6%
+   Pitcher L3: 1.3 HR/9 | H2H: 0 HR / — AB | BPP rank #97
+   Pinnacle — | EV $+0.42 | Kelly $1.52
+   Why: xISO 0.360, EV +$0.42, pitcher L3: 1.3HR/9, barrel 23.6%
 
 ──────────────────────────────────────────────────────────────
-#4  Alec Burleson  [WAITING]  ★★★★☆
-   St. Louis Cardinals @ Miami Marlins
-   LHB vs Max Meyer (R)  •  loanDepot park  •  Away
+#8  Mike Trout  ★★☆☆☆
+   Toronto Blue Jays @ Los Angeles Angels
+   RHB vs Dylan Cease (R)  •  Angel Stadium  •  Home  ✗ platoon-
 
-   Season:  3 HR          Lineup:  #1 in order
-   Barrel:  12.5%         Hard Hit: 51.4%         xISO: 0.300
-   EV avg:  93.1          Sweet Sp: 30.6%         FB%:  30.6%
-   Park 87% (HR-suppressor) | Dome
-   Pitcher L3: 1.3 HR/9 | H2H: 0 HR / — AB | BPP rank #88
-   Why: xISO 0.300, pitcher L3: 1.3HR/9, barrel 12.5%
-
-──────────────────────────────────────────────────────────────
-#5  Dominic Canzone  [WAITING]  ★★★★☆
-   Athletics @ Seattle Mariners
-   LHB vs J.T. Ginn (R)  •  T-Mobile Park  •  Home
-
-   Season:  2 HR          Lineup:  #5 in order
-   Barrel:  15.8%         Hard Hit: 47.4%         xISO: 0.280
-   EV avg:  94.3          Sweet Sp: 44.7%         FB%:  42.1%
-   Park 106% (neutral) | 68°F | wind 2mph ↓ | weather 104% HR factor
-   Pitcher L3: 0.7 HR/9 | H2H: 0 HR / — AB | BPP rank #72
-   Why: xISO 0.280, barrel 15.8%, calm 2mph, Small outfield
+   Season:  7 HR          Lineup:  #2 in order
+   Barrel:  25.9%         Hard Hit: 46.6%         xISO: 0.450
+   EV avg:  92.9          Sweet Sp: 36.2%         FB%:  44.8%
+   Park 102% (neutral) | 73°F | wind 10mph ↓ | weather 95% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / 9 AB
+   Pinnacle +345 | EV $+0.11 | Kelly $0.64
+   Why: xISO 0.450, EV +$0.11, barrel 25.9%, Small outfield
 
 ──────────────────────────────────────────────────────────────
-#6  Nick Kurtz  [WAITING]  ★★★★☆
+#9  Michael Harris II  ★★☆☆☆
+   Atlanta Braves @ Washington Nationals
+   LHB vs Jake Irvin (R)  •  Nationals Park  •  Away  ✓ PLATOON+
+
+   Season:  4 HR          Lineup:  #9 in order
+   Barrel:  16.7%         Hard Hit: 53.7%         xISO: 0.300
+   EV avg:  93.6          Sweet Sp: 31.5%         FB%:  22.2%
+   Park 57% (HR-suppressor) | 54°F | wind 13mph ← | weather 54% HR factor
+   Pitcher L3: 1.9 HR/9 | H2H: 0 HR / — AB | BPP rank #14
+   Pinnacle — | EV $+0.21 | Kelly $0.79
+   Why: xISO 0.300, BPP rank #14, PLATOON+, EV +$0.21, pitcher L3: 1.9HR/9, barrel 16.7%, park 57%, 54°F, weather 54% HR factor
+
+──────────────────────────────────────────────────────────────
+#10  Nick Kurtz  [WAITING]  ★★☆☆☆
    Athletics @ Seattle Mariners
    LHB vs Emerson Hancock (R)  •  T-Mobile Park  •  Away
 
-   Season:  2 HR          Lineup:  #10 in order
+   Season:  2 HR          Lineup:  #3 in order
    Barrel:  17.9%         Hard Hit: 64.1%         xISO: 0.240
    EV avg:  98.7          Sweet Sp: 41.0%         FB%:  35.9%
-   Park 106% (neutral) | 68°F | wind 2mph ↓ | weather 104% HR factor
-   Pitcher L3: 0.5 HR/9 | H2H: 0 HR / — AB | BPP rank #76
-   Why: xISO 0.240, barrel 17.9%, calm 2mph, Small outfield
+   Park 104% (neutral) | 70°F | wind 1mph → | weather 102% HR factor
+   Pitcher L3: 0.5 HR/9 | H2H: 0 HR / — AB | BPP rank #75
+   Pinnacle +357 | EV $+0.00
+   Why: xISO 0.240, barrel 17.9%, calm 1mph, Small outfield
 
 ──────────────────────────────────────────────────────────────
-#7  Mike Trout  [WAITING]  ★★★★☆
-   Toronto Blue Jays @ Los Angeles Angels
-   RHB vs Dylan Cease (R)  •  Angel Stadium  •  Home
-
-   Season:  7 HR          Lineup:  #7 in order
-   Barrel:  25.9%         Hard Hit: 46.6%         xISO: 0.450
-   EV avg:  92.9          Sweet Sp: 36.2%         FB%:  44.8%
-   Park 97% (neutral) | 70°F | wind 10mph ↗ | weather 90% HR factor
-   Pitcher L3: 0.0 HR/9
-   Why: xISO 0.450, barrel 25.9%, weather 90% HR factor, Small outfield
+  ★☆☆☆☆  —  0% HR rate  (1 picks)
 
 ──────────────────────────────────────────────────────────────
-  ★★★☆☆  —  ranks 8–12  —  21% HR rate  (19 picks)
+#11  Andy Pages  ★☆☆☆☆
+   Los Angeles Dodgers @ Colorado Rockies
+   RHB vs Jose Quintana (L)  •  Coors Field  •  Away  ✓ PLATOON+
+
+   Season:  5 HR          Lineup:  #5 in order
+   Barrel:  9.1%          Hard Hit: 58.2%         xISO: 0.180
+   EV avg:  92.2          Sweet Sp: 40.0%         FB%:  23.6%
+   Park 119% (HR-friendly) | 75°F | wind 10mph ↗ | weather 98% HR factor
+   Pitcher L3: 1.2 HR/9
+   Pinnacle — | EV $+0.50 | Kelly $2.22
+   Why: PLATOON+, EV +$0.50, pitcher L3: 1.2HR/9, park 119%
 
 ──────────────────────────────────────────────────────────────
-#8  Max Muncy  [WAITING]  ★★★☆☆
+#12  J.P. Crawford  ★☆☆☆☆
+   Athletics @ Seattle Mariners
+   LHB vs J.T. Ginn (R)  •  T-Mobile Park  •  Home  ✓ PLATOON+
+
+   Season:  1 HR          Lineup:  #7 in order
+   Barrel:  14.7%         Hard Hit: 44.1%         xISO: 0.230
+   EV avg:  90.4          Sweet Sp: 44.1%         FB%:  23.5%
+   Park 104% (neutral) | 70°F | wind 1mph → | weather 102% HR factor
+   Pitcher L3: 0.7 HR/9 | H2H: 0 HR / — AB | BPP rank #55
+   Pinnacle — | EV $+1.07 | Kelly $2.86
+   Why: xISO 0.230, PLATOON+, EV +$1.07, barrel 14.7%, calm 1mph, Small outfield
+
+──────────────────────────────────────────────────────────────
+#13  Matt Olson  ★☆☆☆☆
+   Atlanta Braves @ Washington Nationals
+   LHB vs Jake Irvin (R)  •  Nationals Park  •  Away  ✓ PLATOON+
+
+   Season:  5 HR          Lineup:  #3 in order
+   Barrel:  18.6%         Hard Hit: 44.1%         xISO: 0.310
+   EV avg:  91.6          Sweet Sp: 37.3%         FB%:  32.2%
+   Park 57% (HR-suppressor) | 54°F | wind 13mph ← | weather 54% HR factor
+   Pitcher L3: 1.9 HR/9 | H2H: 0 HR / 8 AB | BPP rank #3
+   Pinnacle +387 | EV $+0.27 | Kelly $1.33
+   Why: xISO 0.310, BPP rank #3, PLATOON+, EV +$0.27, pitcher L3: 1.9HR/9, barrel 18.6%, park 57%, 54°F, weather 54% HR factor
+
+──────────────────────────────────────────────────────────────
+#14  Dalton Rushing  ★☆☆☆☆
+   Los Angeles Dodgers @ Colorado Rockies
+   LHB vs Jose Quintana (L)  •  Coors Field  •  Away  ✗ platoon-
+
+   Season:  5 HR          Lineup:  #6 in order
+   Barrel:  25.0%         Hard Hit: 62.5%         xISO: 0.500
+   EV avg:  98.8          Sweet Sp: 37.5%         FB%:  43.8%
+   Park 119% (HR-friendly) | 75°F | wind 10mph ↗ | weather 98% HR factor
+   Pitcher L3: 1.2 HR/9
+   Why: xISO 0.500, pitcher L3: 1.2HR/9, barrel 25.0%, park 119%
+
+──────────────────────────────────────────────────────────────
+#15  Shea Langeliers  [WAITING]  ★☆☆☆☆
    Athletics @ Seattle Mariners
    RHB vs Emerson Hancock (R)  •  T-Mobile Park  •  Away
 
-   Season:  6 HR          Lineup:  #9 in order
-   Barrel:  17.0%         Hard Hit: 55.3%         xISO: 0.300
-   EV avg:  92.4          Sweet Sp: 29.8%         FB%:  36.2%
-   Park 106% (neutral) | 68°F | wind 2mph ↓ | weather 104% HR factor
-   Pitcher L3: 0.5 HR/9 | H2H: 0 HR / — AB | BPP rank #75
-   Why: xISO 0.300, barrel 17.0%, calm 2mph, Small outfield
+   Season:  6 HR          Lineup:  #2 in order
+   Barrel:  12.1%         Hard Hit: 46.6%         xISO: 0.240
+   EV avg:  92.1          Sweet Sp: 39.7%         FB%:  37.9%
+   Park 104% (neutral) | 70°F | wind 1mph → | weather 102% HR factor
+   Pitcher L3: 0.5 HR/9 | H2H: 0 HR / — AB | BPP rank #65
+   Pinnacle — | EV $+1.00 | Kelly $5.26
+   Why: xISO 0.240, EV +$1.00, barrel 12.1%, calm 1mph, Small outfield
 
 ──────────────────────────────────────────────────────────────
-#9  Sal Stewart  [WAITING]  ★★★☆☆
+#16  Sal Stewart  ★☆☆☆☆
    Cincinnati Reds @ Tampa Bay Rays
-   RHB vs TBD (?)  •  Tropicana Field  •  Away
+   RHB vs Jesse Scholtens (R)  •  Tropicana Field  •  Away  ✗ platoon-
 
-   Season:  7 HR          Lineup:  #9 in order
+   Season:  7 HR          Lineup:  #4 in order
    Barrel:  22.2%         Hard Hit: 49.2%         xISO: 0.290
    EV avg:  91.2          Sweet Sp: 39.7%         FB%:  36.5%
    Park 96% (neutral) | Dome
-   H2H: 0 HR / — AB | BPP rank #50
-   Why: xISO 0.290, barrel 22.2%
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #50
+   Pinnacle — | EV $+0.60 | Kelly $2.61
+   Why: xISO 0.290, EV +$0.60, barrel 22.2%
 
 ──────────────────────────────────────────────────────────────
-#10  Michael Harris II  [WAITING]  ★★★☆☆
-   Atlanta Braves @ Washington Nationals
-   LHB vs Jake Irvin (R)  •  Nationals Park  •  Away
-
-   Season:  4 HR          Lineup:  #10 in order
-   Barrel:  16.7%         Hard Hit: 53.7%         xISO: 0.300
-   EV avg:  93.6          Sweet Sp: 31.5%         FB%:  22.2%
-   Park 55% (HR-suppressor) | 52°F | wind 13mph ↘ | weather 53% HR factor
-   Pitcher L3: 1.9 HR/9 | H2H: 0 HR / — AB | BPP rank #14
-   Why: xISO 0.300, BPP rank #14, pitcher L3: 1.9HR/9, barrel 16.7%, park 55%, 52°F, weather 53% HR factor
-
-──────────────────────────────────────────────────────────────
-#11  Dalton Rushing  [WAITING]  ★★★☆☆
-   Los Angeles Dodgers @ Colorado Rockies
-   ?HB vs Jose Quintana (L)  •  Coors Field  •  Away
-
-   Season:  5 HR          Lineup:  #4 in order
-   Barrel:  25.0%         Hard Hit: 62.5%         xISO: 0.500
-   EV avg:  98.8          Sweet Sp: 37.5%         FB%:  43.8%
-   Park 129% (HR-friendly) | 77°F | wind 4mph ↗ | weather 108% HR factor
-   Pitcher L3: 1.2 HR/9
-   Why: xISO 0.500, pitcher L3: 1.2HR/9, barrel 25.0%, park 129%, calm 4mph
-
-──────────────────────────────────────────────────────────────
-#12  Kyle Schwarber  [WAITING]  ★★★☆☆
-   Philadelphia Phillies @ Chicago Cubs
-   LHB vs Colin Rea (R)  •  Wrigley Field  •  Away
-
-   Season:  7 HR          Lineup:  #11 in order
-   Barrel:  25.6%         Hard Hit: 55.8%         xISO: 0.330
-   EV avg:  93.2          Sweet Sp: 41.9%         FB%:  44.2%
-   Park 66% (HR-suppressor) | 48°F | wind 7mph ↓ | weather 67% HR factor
-   Pitcher L3: 0.8 HR/9
-   Why: xISO 0.330, barrel 25.6%, park 66%, 48°F, weather 67% HR factor
-
-──────────────────────────────────────────────────────────────
-  ★★☆☆☆  —  ranks 13–16  —  25% HR rate  (20 picks)
-
-──────────────────────────────────────────────────────────────
-#13  Shea Langeliers  [WAITING]  ★★☆☆☆
+#17  Max Muncy  [WAITING]  ★☆☆☆☆
    Athletics @ Seattle Mariners
    RHB vs Emerson Hancock (R)  •  T-Mobile Park  •  Away
 
-   Season:  6 HR          Lineup:  #11 in order
-   Barrel:  12.1%         Hard Hit: 46.6%         xISO: 0.240
-   EV avg:  92.1          Sweet Sp: 39.7%         FB%:  37.9%
-   Park 106% (neutral) | 68°F | wind 2mph ↓ | weather 104% HR factor
-   Pitcher L3: 0.5 HR/9 | H2H: 0 HR / — AB | BPP rank #65
-   Why: xISO 0.240, barrel 12.1%, calm 2mph, Small outfield
+   Season:  6 HR          Lineup:  #5 in order
+   Barrel:  17.0%         Hard Hit: 55.3%         xISO: 0.300
+   EV avg:  92.4          Sweet Sp: 29.8%         FB%:  36.2%
+   Park 104% (neutral) | 70°F | wind 1mph → | weather 102% HR factor
+   Pitcher L3: 0.5 HR/9 | H2H: 0 HR / — AB | BPP rank #74
+   Pinnacle +314 | EV $+0.00
+   Why: xISO 0.300, barrel 17.0%, calm 1mph, Small outfield
 
 ──────────────────────────────────────────────────────────────
-#14  Matt Olson  [WAITING]  ★★☆☆☆
+#18  James Wood  ★☆☆☆☆
    Atlanta Braves @ Washington Nationals
-   LHB vs Jake Irvin (R)  •  Nationals Park  •  Away
+   LHB vs Bryce Elder (R)  •  Nationals Park  •  Home  ✓ PLATOON+
 
-   Season:  5 HR          Lineup:  #8 in order
-   Barrel:  18.6%         Hard Hit: 44.1%         xISO: 0.310
-   EV avg:  91.6          Sweet Sp: 37.3%         FB%:  32.2%
-   Park 55% (HR-suppressor) | 52°F | wind 13mph ↘ | weather 53% HR factor
-   Pitcher L3: 1.9 HR/9 | H2H: 1 HR / — AB | BPP rank #3
-   Why: xISO 0.310, BPP rank #3, pitcher L3: 1.9HR/9, h2h 1HR/NoneAB, barrel 18.6%, park 55%, 52°F, weather 53% HR factor
+   Season:  7 HR          Lineup:  #1 in order
+   Barrel:  27.8%         Hard Hit: 64.8%         xISO: 0.340
+   EV avg:  96.2          Sweet Sp: 33.3%         FB%:  25.9%
+   Park 57% (HR-suppressor) | 54°F | wind 13mph ← | weather 54% HR factor
+   Pitcher L3: 0.5 HR/9 | H2H: 1 HR / 6 AB | BPP rank #24
+   Pinnacle — | EV $+0.73 | Kelly $3.24
+   Why: xISO 0.340, PLATOON+, EV +$0.73, h2h 1HR/6AB, barrel 27.8%, park 57%, 54°F, weather 54% HR factor
 
 ──────────────────────────────────────────────────────────────
-#15  Elly De La Cruz  [WAITING]  ★★☆☆☆
+#19  Elly De La Cruz  ★☆☆☆☆
    Cincinnati Reds @ Tampa Bay Rays
-   SHB vs TBD (?)  •  Tropicana Field  •  Away
+   SHB vs Jesse Scholtens (R)  •  Tropicana Field  •  Away  ✓ PLATOON+
 
-   Season:  6 HR          Lineup:  #2 in order
+   Season:  6 HR          Lineup:  #3 in order
    Barrel:  15.5%         Hard Hit: 53.4%         xISO: 0.250
    EV avg:  95.0          Sweet Sp: 36.2%         FB%:  29.3%
    Park 96% (neutral) | Dome
-   H2H: 0 HR / — AB | BPP rank #48
-   Why: xISO 0.250, barrel 15.5%
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #48
+   Pinnacle — | EV $+0.33 | Kelly $1.23
+   Why: xISO 0.250, PLATOON+, EV +$0.33, barrel 15.5%
 
 ──────────────────────────────────────────────────────────────
-#16  Andy Pages  [WAITING]  ★★☆☆☆
-   Los Angeles Dodgers @ Colorado Rockies
-   RHB vs Jose Quintana (L)  •  Coors Field  •  Away
-
-   Season:  5 HR          Lineup:  #3 in order
-   Barrel:  9.1%          Hard Hit: 58.2%         xISO: 0.180
-   EV avg:  92.2          Sweet Sp: 40.0%         FB%:  23.6%
-   Park 129% (HR-friendly) | 77°F | wind 4mph ↗ | weather 108% HR factor
-   Pitcher L3: 1.2 HR/9
-   Why: pitcher L3: 1.2HR/9, park 129%, calm 4mph
-
-──────────────────────────────────────────────────────────────
-  ★☆☆☆☆  —  ranks 17–20  —  16% HR rate  (25 picks)
-
-──────────────────────────────────────────────────────────────
-#17  Otto Lopez  [WAITING]  ★☆☆☆☆
+#20  Owen Caissie  ★☆☆☆☆
    St. Louis Cardinals @ Miami Marlins
-   RHB vs Michael McGreevy (R)  •  loanDepot park  •  Home
+   LHB vs Michael McGreevy (R)  •  loanDepot park  •  Home  ✓ PLATOON+
 
-   Season:  3 HR          Lineup:  #11 in order
-   Barrel:  13.6%         Hard Hit: 56.1%         xISO: 0.210
-   EV avg:  93.0          Sweet Sp: 22.7%         FB%:  28.8%
+   Season:  2 HR          Lineup:  #8 in order
+   Barrel:  17.6%         Hard Hit: 52.9%         xISO: 0.210
+   EV avg:  93.2          Sweet Sp: 52.9%         FB%:  32.4%
    Park 87% (HR-suppressor) | Dome
-   Pitcher L3: 0.6 HR/9 | H2H: 0 HR / — AB | BPP rank #87
-   Why: xISO 0.210, barrel 13.6%
-
-──────────────────────────────────────────────────────────────
-#18  Mickey Moniak  [WAITING]  ★☆☆☆☆
-   Los Angeles Dodgers @ Colorado Rockies
-   LHB vs Justin Wrobleski (L)  •  Coors Field  •  Home
-
-   Season:  6 HR          Lineup:  #9 in order
-   Barrel:  14.3%         Hard Hit: 38.1%         xISO: 0.280
-   EV avg:  89.2          Sweet Sp: 28.6%         FB%:  40.5%
-   Park 129% (HR-friendly) | 77°F | wind 4mph ↗ | weather 108% HR factor
-   Pitcher L3: 0.0 HR/9
-   Why: xISO 0.280, barrel 14.3%, park 129%, calm 4mph
-
-──────────────────────────────────────────────────────────────
-#19  James Wood  [WAITING]  ★☆☆☆☆
-   Atlanta Braves @ Washington Nationals
-   LHB vs Bryce Elder (R)  •  Nationals Park  •  Home
-
-   Season:  7 HR          Lineup:  #7 in order
-   Barrel:  27.8%         Hard Hit: 64.8%         xISO: 0.340
-   EV avg:  96.2          Sweet Sp: 33.3%         FB%:  25.9%
-   Park 55% (HR-suppressor) | 52°F | wind 13mph ↘ | weather 53% HR factor
-   Pitcher L3: 0.5 HR/9 | H2H: 1 HR / — AB | BPP rank #24
-   Why: xISO 0.340, h2h 1HR/NoneAB, barrel 27.8%, park 55%, 52°F, weather 53% HR factor
-
-──────────────────────────────────────────────────────────────
-#20  Drake Baldwin  [WAITING]  ★☆☆☆☆
-   Atlanta Braves @ Washington Nationals
-   LHB vs Jake Irvin (R)  •  Nationals Park  •  Away
-
-   Season:  5 HR          Lineup:  #3 in order
-   Barrel:  16.2%         Hard Hit: 44.6%         xISO: 0.260
-   EV avg:  89.9          Sweet Sp: 43.2%         FB%:  21.6%
-   Park 55% (HR-suppressor) | 52°F | wind 13mph ↘ | weather 53% HR factor
-   Pitcher L3: 1.9 HR/9 | H2H: 0 HR / — AB | BPP rank #22
-   Why: xISO 0.260, pitcher L3: 1.9HR/9, barrel 16.2%, park 55%, 52°F, weather 53% HR factor
+   Pitcher L3: 0.6 HR/9 | H2H: 0 HR / — AB | BPP rank #92
+   Pinnacle — | EV $+0.38 | Kelly $1.28
+   Why: xISO 0.210, PLATOON+, EV +$0.38, barrel 17.6%
 
 ──────────────────────────────────────────────────────────────
