@@ -5,6 +5,41 @@ can pick up without re-deriving the architecture.
 
 ---
 
+## Persistent Behavior Rules (Claude must follow without being asked)
+
+### Auto-push to site
+- After ANY change to `picks/*.html`, `picks/*.txt`, or `docs/index.html`, always push to GitHub.
+- A Stop hook at `.claude/hooks/auto-push-site.sh` handles this automatically.
+- Do NOT ask the user if they want to push — just do it.
+
+### Running picks
+- Always use `python scripts/daily_picks.py` (not `daily_picks.py` from root — that file is deleted).
+- Same for `record_results.py` → `python scripts/record_results.py`.
+- Debug tools live in `tools/` (e.g., `python tools/test_homer_prompt.py`).
+
+### Model P&L vs personal bets
+- The P&L shown in the picks dashboard and on the website is **hypothetical model P&L** — $10 on every top-20 pick.
+- There is no `singles` table. Personal bet tracking is done in the Jupyter notebook.
+- When discussing P&L, always clarify which number is which.
+- Many wins use a +350 fallback because Novig/ProphetX aren't on The Odds API — this is expected and not a bug.
+
+### Odds alignment
+- Novig and ProphetX are NOT on The Odds API. The odds table in picks output uses Pinnacle as the benchmark.
+- When the user says "odds don't match" they likely mean their ProphetX/Novig line differs from Pinnacle.
+- This is normal. The advice is: if you beat the Pinnacle line, you have extra edge.
+
+### Cache re-runs
+- After the first morning run, use `--use-cache` for any re-runs triggered by lineup updates.
+- The top-20 pool does NOT change on cache re-runs — only reordering or removal of scratched players.
+- Never add new players to the top-20 list mid-day.
+
+### Scratched players
+- Update `cache/scratched.json` whenever a player is scratched. Never ask the user to clear it manually.
+
+---
+
+---
+
 ## Project Purpose
 
 A home run betting tracker and AI prediction system used for wagering on MLB
