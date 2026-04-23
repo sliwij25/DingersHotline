@@ -200,7 +200,7 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
     try:
         _ensure_pick_factors_table(conn)
         conn.execute("""
-            INSERT OR IGNORE INTO pick_factors
+            INSERT INTO pick_factors
               (bet_date, player, algo_version, confidence, score, rank, stars,
                ev_10, kelly_size, value_edge, pinnacle_odds, best_odds,
                platoon, barrel_rate, hard_hit_pct, hr_fb_ratio,
@@ -210,6 +210,27 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging,
                team, blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ON CONFLICT(bet_date, player) DO UPDATE SET
+              rank=excluded.rank, score=excluded.score, stars=excluded.stars,
+              algo_version=excluded.algo_version, confidence=excluded.confidence,
+              ev_10=excluded.ev_10, kelly_size=excluded.kelly_size,
+              value_edge=excluded.value_edge, pinnacle_odds=excluded.pinnacle_odds,
+              best_odds=excluded.best_odds, platoon=excluded.platoon,
+              barrel_rate=excluded.barrel_rate, hard_hit_pct=excluded.hard_hit_pct,
+              hr_fb_ratio=excluded.hr_fb_ratio, xiso=excluded.xiso, xslg=excluded.xslg,
+              xhr_rate=excluded.xhr_rate, fb_pct=excluded.fb_pct,
+              launch_angle=excluded.launch_angle, ev_avg=excluded.ev_avg,
+              sweet_spot_pct=excluded.sweet_spot_pct, bpp_hr_pct=excluded.bpp_hr_pct,
+              park_hr_factor=excluded.park_hr_factor, recent_form_14d=excluded.recent_form_14d,
+              pitcher_hr_per_9=excluded.pitcher_hr_per_9,
+              pitcher_hr_vs_hand=excluded.pitcher_hr_vs_hand,
+              pitcher_barrel_pct=excluded.pitcher_barrel_pct,
+              h2h_hr=excluded.h2h_hr, h2h_ab=excluded.h2h_ab,
+              is_home=excluded.is_home, lineup_confirmed=excluded.lineup_confirmed,
+              venue_slugging=excluded.venue_slugging, team=excluded.team,
+              blast_rate=excluded.blast_rate, altitude_ft=excluded.altitude_ft,
+              humidity_pct=excluded.humidity_pct, pressure_mb=excluded.pressure_mb,
+              carry_ft=excluded.carry_ft
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
