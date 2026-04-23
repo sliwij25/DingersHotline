@@ -34,7 +34,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #1  Munetaka Murakami  [WAITING]  ★★★★☆
-   Chicago White Sox @ Arizona Diamondbacks  •  8:40 PM ET
+   Chicago White Sox @ Arizona Diamondbacks  •  3:40 PM ET
    LHB vs Michael Soroka (R)  •  Chase Field  •  Away
 
    Season:  10 HR         Lineup:  #3 in order
@@ -46,7 +46,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #2  Kyle Schwarber  ★★★★☆
-   Philadelphia Phillies @ Chicago Cubs  •  7:20 PM ET
+   Philadelphia Phillies @ Chicago Cubs  •  2:20 PM ET
    LHB vs Edward Cabrera (R)  •  Wrigley Field  •  Away
 
    Season:  8 HR          Lineup:  #1 in order
@@ -59,7 +59,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #3  James Wood  ★★★★☆
-   Atlanta Braves @ Washington Nationals  •  6:05 PM ET
+   Atlanta Braves @ Washington Nationals  •  1:05 PM ET
    LHB vs JR Ritchie (R)  •  Nationals Park  •  Home
 
    Season:  9 HR          Lineup:  #1 in order
@@ -72,7 +72,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #4  Carson Kelly  ★★★★☆
-   Philadelphia Phillies @ Chicago Cubs  •  7:20 PM ET
+   Philadelphia Phillies @ Chicago Cubs  •  2:20 PM ET
    RHB vs Cristopher Sánchez (L)  •  Wrigley Field  •  Home
 
    Season:  2 HR          Lineup:  #5 in order
@@ -88,7 +88,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #5  Matt Olson  ★★★☆☆
-   Atlanta Braves @ Washington Nationals  •  6:05 PM ET
+   Atlanta Braves @ Washington Nationals  •  1:05 PM ET
    LHB vs Cade Cavalli (R)  •  Nationals Park  •  Away
 
    Season:  7 HR          Lineup:  #3 in order
@@ -101,20 +101,20 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #6  Bryce Harper  ★★★☆☆
-   Philadelphia Phillies @ Chicago Cubs  •  7:20 PM ET
+   Philadelphia Phillies @ Chicago Cubs  •  2:20 PM ET
    LHB vs Edward Cabrera (R)  •  Wrigley Field  •  Away
 
    Season:  5 HR          Lineup:  #3 in order
    Barrel:  13.9%         Hard Hit: 40.3%         xISO: 0.320
    EV avg:  88.5          Sweet Sp: 37.5%         FB%:  31.9%
    Park 125% (HR-friendly) | 81°F | wind 11mph (out) | weather 125% HR factor
-   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / 5 AB
+   Pitcher L3: 0.0 HR/9 | H2H: 1 HR / 10 AB
    Pinnacle +420 | EV $+0.00 | VALUE +3.1pp
-   Why: xISO 0.320, VALUE +3.1pp, barrel 13.9%, park 125%, 81°F, weather 125% HR factor
+   Why: xISO 0.320, VALUE +3.1pp, h2h 1HR/10AB, barrel 13.9%, park 125%, 81°F, weather 125% HR factor
 
 ──────────────────────────────────────────────────────────────
 #7  Oneil Cruz  [WAITING]  ★★★☆☆
-   Pittsburgh Pirates @ Texas Rangers  •  1:05 AM ET
+   Pittsburgh Pirates @ Texas Rangers  •  8:05 PM ET
    LHB vs Jacob deGrom (R)  •  Globe Life Field  •  Away
 
    Season:  7 HR          Lineup:  #1 in order
@@ -126,7 +126,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #8  Drake Baldwin  ★★★☆☆
-   Atlanta Braves @ Washington Nationals  •  6:05 PM ET
+   Atlanta Braves @ Washington Nationals  •  1:05 PM ET
    LHB vs Cade Cavalli (R)  •  Nationals Park  •  Away
 
    Season:  7 HR          Lineup:  #2 in order
@@ -139,7 +139,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #9  Ian Happ  ★★★☆☆
-   Philadelphia Phillies @ Chicago Cubs  •  7:20 PM ET
+   Philadelphia Phillies @ Chicago Cubs  •  2:20 PM ET
    SHB vs Cristopher Sánchez (L)  •  Wrigley Field  •  Home
 
    Season:  6 HR          Lineup:  #3 in order
@@ -155,7 +155,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #10  Michael Harris II  ★★☆☆☆
-   Atlanta Braves @ Washington Nationals  •  6:05 PM ET
+   Atlanta Braves @ Washington Nationals  •  1:05 PM ET
    LHB vs Cade Cavalli (R)  •  Nationals Park  •  Away
 
    Season:  6 HR          Lineup:  #6 in order
@@ -168,7 +168,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #11  Hunter Goodman  [WAITING]  ★★☆☆☆
-   San Diego Padres @ Colorado Rockies  •  8:10 PM ET
+   San Diego Padres @ Colorado Rockies  •  3:10 PM ET
    RHB vs Matt Waldron (R)  •  Coors Field  •  Home
 
    Season:  6 HR          Lineup:  #3 in order
@@ -180,7 +180,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #12  Dillon Dingler  ★★☆☆☆
-   Milwaukee Brewers @ Detroit Tigers  •  6:10 PM ET
+   Milwaukee Brewers @ Detroit Tigers  •  1:10 PM ET
    RHB vs Brandon Sproat (R)  •  Comerica Park  •  Home
 
    Season:  5 HR          Lineup:  #5 in order
@@ -193,7 +193,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #13  Mickey Moniak  ★★☆☆☆
-   San Diego Padres @ Colorado Rockies  •  8:10 PM ET
+   San Diego Padres @ Colorado Rockies  •  3:10 PM ET
    LHB vs Matt Waldron (R)  •  Coors Field  •  Home
 
    Season:  6 HR          Lineup:  #2 in order
@@ -205,7 +205,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #14  Ramón Laureano  ★★☆☆☆
-   San Diego Padres @ Colorado Rockies  •  8:10 PM ET
+   San Diego Padres @ Colorado Rockies  •  3:10 PM ET
    RHB vs Ryan Feltner (R)  •  Coors Field  •  Away
 
    Season:  4 HR          Lineup:  #1 in order
@@ -220,7 +220,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #15  Dansby Swanson  ★☆☆☆☆
-   Philadelphia Phillies @ Chicago Cubs  •  7:20 PM ET
+   Philadelphia Phillies @ Chicago Cubs  •  2:20 PM ET
    RHB vs Cristopher Sánchez (L)  •  Wrigley Field  •  Home
 
    Season:  5 HR          Lineup:  #6 in order
@@ -233,7 +233,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #16  Jackson Merrill  ★☆☆☆☆
-   San Diego Padres @ Colorado Rockies  •  8:10 PM ET
+   San Diego Padres @ Colorado Rockies  •  3:10 PM ET
    LHB vs Ryan Feltner (R)  •  Coors Field  •  Away
 
    Season:  3 HR          Lineup:  #3 in order
@@ -245,7 +245,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #17  Ben Rice  [WAITING]  ★☆☆☆☆
-   New York Yankees @ Boston Red Sox  •  11:10 PM ET
+   New York Yankees @ Boston Red Sox  •  6:10 PM ET
    LHB vs Payton Tolle (L)  •  Fenway Park  •  Away
 
    Season:  8 HR          Lineup:  #4 in order
@@ -256,7 +256,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #18  Moisés Ballesteros  [WAITING]  ★☆☆☆☆
-   Philadelphia Phillies @ Chicago Cubs  •  7:20 PM ET
+   Philadelphia Phillies @ Chicago Cubs  •  2:20 PM ET
    LHB vs Cristopher Sánchez (L)  •  Wrigley Field  •  Home
 
    Season:  3 HR          Lineup:  #7 in order
@@ -268,7 +268,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #19  Corey Seager  [WAITING]  ★☆☆☆☆
-   Pittsburgh Pirates @ Texas Rangers  •  1:05 AM ET
+   Pittsburgh Pirates @ Texas Rangers  •  8:05 PM ET
    LHB vs Bubba Chandler (R)  •  Globe Life Field  •  Home
 
    Season:  5 HR          Lineup:  #2 in order
@@ -280,7 +280,7 @@ TOP HR PICKS — 2026-04-23
 
 ──────────────────────────────────────────────────────────────
 #20  Freddie Freeman  [WAITING]  ★☆☆☆☆
-   Los Angeles Dodgers @ San Francisco Giants  •  8:45 PM ET
+   Los Angeles Dodgers @ San Francisco Giants  •  3:45 PM ET
    LHB vs Logan Webb (R)  •  Oracle Park  •  Away
 
    Season:  3 HR          Lineup:  #4 in order
