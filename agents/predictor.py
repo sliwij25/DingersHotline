@@ -3183,6 +3183,14 @@ class Homer:
         # Positive = HR-friendly game environment; negative = suppressive.
         # Thresholds calibrated to today's range: Wrigley +0.56, Comerica -0.21, Fenway -0.58.
         # Scores separately from park_hr_factor — this captures the combined park+weather signal.
+        # Season HR penalty: batter who hasn't produced HRs this season is unlikely to
+        # exploit a vulnerable pitcher regardless of Statcast profile — especially in April
+        # when small sample Statcast metrics can mislead.
+        _shr = sig.get("season_hr") or 0
+        if   _shr == 0: score -= 3.0
+        elif _shr == 1: score -= 1.5
+        elif _shr <= 3: score -= 0.5
+
         hrn = sig.get("homerunsnumber")
         if hrn is not None and not is_dome_venue:
             if hrn >= 0.35:    score += 1.5   # Strongly favorable (Wrigley w/ tailwind)
