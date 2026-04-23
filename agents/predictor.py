@@ -1862,7 +1862,8 @@ class Homer:
             away_side = game.get("away", {})
             home_side = game.get("home", {})
             venue     = game.get("venue", "")
-            time_     = game.get("game_time", "")[:16] if game.get("game_time") else ""
+            time_raw  = game.get("game_time") or ""
+            time_     = time_raw[:16]   # display only (no tz — used in section headers)
 
             for side, opp, is_home in [(away_side, home_side, False),
                                        (home_side, away_side, True)]:
@@ -1984,7 +1985,7 @@ class Homer:
                             "status":           status,  # "confirmed", "waiting", or "unknown"
                             "platoon":          platoon,
                             "matchup":          matchup_str,
-                            "game_time":        time_,   # local game time string e.g. "2026-04-23T19:05"
+                            "game_time":        time_raw, # full UTC ISO string e.g. "2026-04-23T17:05:00Z"
                             "venue":            venue,   # stadium name for park-factor lookup
                             "bat_side":         bat_side,           # L / R / S
                             "pitcher_name":     sp,                 # starting pitcher name
@@ -2702,7 +2703,7 @@ class Homer:
                         "platoon":          platoon,
                         "matchup":          (f"{game.get('away',{}).get('team','')} @ "
                                              f"{game.get('home',{}).get('team','')}"),
-                        "game_time":        game.get("game_time", "")[:16] if game.get("game_time") else None,
+                        "game_time":        game.get("game_time") or None,
                         "venue":            venue_name,
                         "pa":               _safe_int(sc_data.get("pa")),
                         "barrel_rate":      _safe_float(sc_data.get("barrel_batted_rate")),
