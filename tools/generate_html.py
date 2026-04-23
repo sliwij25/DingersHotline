@@ -90,16 +90,11 @@ def _build_card(rank: int, pick: dict) -> str:
     park_hr   = sig.get("park_hr_factor")
     temp_f    = sig.get("temp_f")
     wind_mph  = sig.get("wind_mph")
-    wind_deg  = sig.get("wind_deg")
+    wind_dir  = sig.get("wind_direction_bpp")   # "in", "out", "cross", or None
     bpp_rank  = sig.get("bpp_proj_rank")
     ev_10     = sig.get("ev_10")
     h2h_hr    = sig.get("h2h_hr")
     h2h_ab    = sig.get("h2h_ab")
-
-    wind_arrow = ""
-    if wind_deg is not None:
-        arrows = ["↑","↗","→","↘","↓","↙","←","↖"]
-        wind_arrow = arrows[(round(wind_deg / 45) + 4) % 8]
 
     home_away_str = "Home" if is_home else "Away"
     waiting_badge = '<span class="badge-waiting">LINEUP PENDING</span>' if status == "waiting" else ""
@@ -119,8 +114,10 @@ def _build_card(rank: int, pick: dict) -> str:
     if temp_f is not None:
         cls = "tag-green" if temp_f >= 80 else ("tag-red" if temp_f <= 50 else "tag-dim")
         weather_tags += f'<span class="tag {cls}">{temp_f:.0f}°F</span>'
-    if wind_mph is not None and wind_arrow:
-        weather_tags += f'<span class="tag tag-dim">Wind {wind_mph:.0f}mph {wind_arrow}</span>'
+    if wind_mph is not None and wind_mph >= 1:
+        dir_label = f" ({wind_dir})" if wind_dir else ""
+        wind_cls  = "tag-green" if wind_dir == "out" else ("tag-red" if wind_dir == "in" else "tag-dim")
+        weather_tags += f'<span class="tag {wind_cls}">Wind {wind_mph:.0f}mph{dir_label}</span>'
 
     form_html = ""
     if form and form >= 1:
