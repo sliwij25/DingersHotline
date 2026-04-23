@@ -87,33 +87,7 @@ TOP HR PICKS — 2026-04-23
   ★★★☆☆  —  24% HR rate  (41 picks)
 
 ──────────────────────────────────────────────────────────────
-#5  Bryce Harper  ★★★☆☆
-   Philadelphia Phillies @ Chicago Cubs
-   LHB vs Edward Cabrera (R)  •  Wrigley Field  •  Away
-
-   Season:  5 HR          Lineup:  #3 in order
-   Barrel:  13.9%         Hard Hit: 40.3%         xISO: 0.320
-   EV avg:  88.5          Sweet Sp: 37.5%         FB%:  31.9%
-   Park 125% (HR-friendly) | 81°F | wind 11mph (out) | weather 125% HR factor
-   Pitcher L3: 0.0 HR/9 | H2H: 1 HR / 10 AB
-   Pinnacle +420 | EV $+0.00 | VALUE +3.1pp
-   Why: xISO 0.320, VALUE +3.1pp, h2h 1HR/10AB, barrel 13.9%, park 125%, 81°F, weather 125% HR factor
-
-──────────────────────────────────────────────────────────────
-#6  Ian Happ  ★★★☆☆
-   Philadelphia Phillies @ Chicago Cubs
-   SHB vs Cristopher Sánchez (L)  •  Wrigley Field  •  Home
-
-   Season:  6 HR          Lineup:  #3 in order
-   Barrel:  16.1%         Hard Hit: 44.6%         xISO: 0.250
-   EV avg:  90.3          Sweet Sp: 33.9%         FB%:  33.9%
-   Park 125% (HR-friendly) | 81°F | wind 11mph (out) | weather 125% HR factor
-   Pitcher L3: 0.1 HR/9 | H2H: 1 HR / 5 AB
-   Pinnacle +468 | EV $+1.27 | Kelly $4.69
-   Why: xISO 0.250, h2h 1HR/5AB, barrel 16.1%, park 125%, 81°F, weather 125% HR factor
-
-──────────────────────────────────────────────────────────────
-#7  Matt Olson  ★★★☆☆
+#5  Matt Olson  ★★★☆☆
    Atlanta Braves @ Washington Nationals
    LHB vs Cade Cavalli (R)  •  Nationals Park  •  Away
 
@@ -126,48 +100,32 @@ TOP HR PICKS — 2026-04-23
    Why: xISO 0.350, BPP rank #3, barrel 19.7%, 82°F
 
 ──────────────────────────────────────────────────────────────
-#8  Michael Harris II  ★★★☆☆
-   Atlanta Braves @ Washington Nationals
-   LHB vs Cade Cavalli (R)  •  Nationals Park  •  Away
+#6  Bryce Harper  ★★★☆☆
+   Philadelphia Phillies @ Chicago Cubs
+   LHB vs Edward Cabrera (R)  •  Wrigley Field  •  Away
 
-   Season:  6 HR          Lineup:  #6 in order
-   Barrel:  18.2%         Hard Hit: 57.6%         xISO: 0.330
-   EV avg:  94.8          Sweet Sp: 30.3%         FB%:  21.2%
-   Park 97% (neutral) | 82°F | wind 9mph (in) | weather 94% HR factor
-   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #14
-   Pinnacle — | EV $+0.60 | Kelly $2.00
-   Why: xISO 0.330, BPP rank #14, barrel 18.2%, 82°F
-
-──────────────────────────────────────────────────────────────
-  ★★☆☆☆  —  0% HR rate  (10 picks)
+   Season:  5 HR          Lineup:  #3 in order
+   Barrel:  13.9%         Hard Hit: 40.3%         xISO: 0.320
+   EV avg:  88.5          Sweet Sp: 37.5%         FB%:  31.9%
+   Park 125% (HR-friendly) | 81°F | wind 11mph (out) | weather 125% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / 5 AB
+   Pinnacle +420 | EV $+0.00 | VALUE +3.1pp
+   Why: xISO 0.320, VALUE +3.1pp, barrel 13.9%, park 125%, 81°F, weather 125% HR factor
 
 ──────────────────────────────────────────────────────────────
-#9  Hunter Goodman  [WAITING]  ★★☆☆☆
-   San Diego Padres @ Colorado Rockies
-   RHB vs Matt Waldron (R)  •  Coors Field  •  Home
+#7  Oneil Cruz  [WAITING]  ★★★☆☆
+   Pittsburgh Pirates @ Texas Rangers
+   LHB vs Jacob deGrom (R)  •  Globe Life Field  •  Away
 
-   Season:  6 HR          Lineup:  #3 in order
-   Barrel:  13.7%         Hard Hit: 51.0%         xISO: 0.210
-   EV avg:  93.3          Sweet Sp: 39.2%         FB%:  43.1%
-   Park 117% (HR-friendly) | 61°F | wind 2mph (in) | weather 96% HR factor
-   Pitcher L3: 2.8 HR/9
-   Why: xISO 0.210, pitcher L3: 2.8HR/9, barrel 13.7%, park 117%, calm 2mph
-
-──────────────────────────────────────────────────────────────
-#10  Dillon Dingler  ★★☆☆☆
-   Milwaukee Brewers @ Detroit Tigers
-   RHB vs Brandon Sproat (R)  •  Comerica Park  •  Home
-
-   Season:  5 HR          Lineup:  #5 in order
-   Barrel:  20.7%         Hard Hit: 56.9%         xISO: 0.360
-   EV avg:  92.2          Sweet Sp: 46.6%         FB%:  31.0%
-   Park 90% (HR-suppressor) | 75°F | wind 7mph (in) | weather 101% HR factor
-   Pitcher L3: 3.2 HR/9
-   Pinnacle — | EV $+0.62 | Kelly $2.17
-   Why: xISO 0.360, pitcher L3: 3.2HR/9, barrel 20.7%
+   Season:  7 HR          Lineup:  #1 in order
+   Barrel:  22.6%         Hard Hit: 64.5%         xISO: 0.290
+   EV avg:  97.8          Sweet Sp: 37.1%         FB%:  27.4%
+   Park 110% (HR-friendly) | 79°F | wind 13mph (out) | weather 120% HR factor
+   Pitcher L3: 1.6 HR/9 | H2H: 0 HR / — AB | BPP rank #39
+   Why: xISO 0.290, pitcher L3: 1.6HR/9, barrel 22.6%, weather 120% HR factor
 
 ──────────────────────────────────────────────────────────────
-#11  Drake Baldwin  ★★☆☆☆
+#8  Drake Baldwin  ★★★☆☆
    Atlanta Braves @ Washington Nationals
    LHB vs Cade Cavalli (R)  •  Nationals Park  •  Away
 
@@ -180,31 +138,61 @@ TOP HR PICKS — 2026-04-23
    Why: xISO 0.280, barrel 16.9%, 82°F
 
 ──────────────────────────────────────────────────────────────
-#12  Ramón Laureano  [WAITING]  ★★☆☆☆
+#9  Ian Happ  ★★★☆☆
+   Philadelphia Phillies @ Chicago Cubs
+   SHB vs Cristopher Sánchez (L)  •  Wrigley Field  •  Home
+
+   Season:  6 HR          Lineup:  #3 in order
+   Barrel:  16.1%         Hard Hit: 44.6%         xISO: 0.250
+   EV avg:  90.3          Sweet Sp: 33.9%         FB%:  33.9%
+   Park 125% (HR-friendly) | 81°F | wind 11mph (out) | weather 125% HR factor
+   Pitcher L3: 0.1 HR/9 | H2H: 1 HR / 8 AB
+   Pinnacle +468 | EV $+1.27 | Kelly $4.69
+   Why: xISO 0.250, h2h 1HR/8AB, barrel 16.1%, park 125%, 81°F, weather 125% HR factor
+
+──────────────────────────────────────────────────────────────
+  ★★☆☆☆  —  0% HR rate  (10 picks)
+
+──────────────────────────────────────────────────────────────
+#10  Michael Harris II  ★★☆☆☆
+   Atlanta Braves @ Washington Nationals
+   LHB vs Cade Cavalli (R)  •  Nationals Park  •  Away
+
+   Season:  6 HR          Lineup:  #6 in order
+   Barrel:  18.2%         Hard Hit: 57.6%         xISO: 0.330
+   EV avg:  94.8          Sweet Sp: 30.3%         FB%:  21.2%
+   Park 97% (neutral) | 82°F | wind 9mph (in) | weather 94% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #14
+   Pinnacle — | EV $+0.60 | Kelly $2.00
+   Why: xISO 0.330, BPP rank #14, barrel 18.2%, 82°F
+
+──────────────────────────────────────────────────────────────
+#11  Hunter Goodman  [WAITING]  ★★☆☆☆
    San Diego Padres @ Colorado Rockies
-   RHB vs Ryan Feltner (R)  •  Coors Field  •  Away
+   RHB vs Matt Waldron (R)  •  Coors Field  •  Home
 
-   Season:  4 HR          Lineup:  #1 in order
-   Barrel:  15.0%         Hard Hit: 48.3%         xISO: 0.240
-   EV avg:  89.6          Sweet Sp: 35.0%         FB%:  36.7%
+   Season:  6 HR          Lineup:  #3 in order
+   Barrel:  13.7%         Hard Hit: 51.0%         xISO: 0.210
+   EV avg:  93.3          Sweet Sp: 39.2%         FB%:  43.1%
    Park 117% (HR-friendly) | 61°F | wind 2mph (in) | weather 96% HR factor
-   Pitcher L3: 2.4 HR/9
-   Why: xISO 0.240, pitcher L3: 2.4HR/9, barrel 15.0%, park 117%, calm 2mph
+   Pitcher L3: 2.8 HR/9
+   Why: xISO 0.210, pitcher L3: 2.8HR/9, barrel 13.7%, park 117%, calm 2mph
 
 ──────────────────────────────────────────────────────────────
-#13  Oneil Cruz  [WAITING]  ★★☆☆☆
-   Pittsburgh Pirates @ Texas Rangers
-   LHB vs Jacob deGrom (R)  •  Globe Life Field  •  Away
+#12  Dillon Dingler  ★★☆☆☆
+   Milwaukee Brewers @ Detroit Tigers
+   RHB vs Brandon Sproat (R)  •  Comerica Park  •  Home
 
-   Season:  7 HR          Lineup:  #1 in order
-   Barrel:  22.6%         Hard Hit: 64.5%         xISO: 0.290
-   EV avg:  97.8          Sweet Sp: 37.1%         FB%:  27.4%
-   Park 106% (neutral) | 77°F | wind 14mph (out) | weather 115% HR factor
-   Pitcher L3: 1.6 HR/9 | H2H: 0 HR / — AB | BPP rank #39
-   Why: xISO 0.290, pitcher L3: 1.6HR/9, barrel 22.6%, weather 115% HR factor
+   Season:  5 HR          Lineup:  #5 in order
+   Barrel:  20.7%         Hard Hit: 56.9%         xISO: 0.360
+   EV avg:  92.2          Sweet Sp: 46.6%         FB%:  31.0%
+   Park 90% (HR-suppressor) | 75°F | wind 7mph (in) | weather 101% HR factor
+   Pitcher L3: 3.2 HR/9
+   Pinnacle — | EV $+0.62 | Kelly $2.17
+   Why: xISO 0.360, pitcher L3: 3.2HR/9, barrel 20.7%
 
 ──────────────────────────────────────────────────────────────
-#14  Mickey Moniak  ★★☆☆☆
+#13  Mickey Moniak  ★★☆☆☆
    San Diego Padres @ Colorado Rockies
    LHB vs Matt Waldron (R)  •  Coors Field  •  Home
 
@@ -216,23 +204,22 @@ TOP HR PICKS — 2026-04-23
    Why: xISO 0.230, pitcher L3: 2.8HR/9, barrel 12.2%, park 117%, calm 2mph
 
 ──────────────────────────────────────────────────────────────
-#15  Kevin McGonigle  ★★☆☆☆
-   Milwaukee Brewers @ Detroit Tigers
-   LHB vs Brandon Sproat (R)  •  Comerica Park  •  Home
+#14  Ramón Laureano  ★★☆☆☆
+   San Diego Padres @ Colorado Rockies
+   RHB vs Ryan Feltner (R)  •  Coors Field  •  Away
 
-   Season:  1 HR          Lineup:  #1 in order
-   Barrel:  13.0%         Hard Hit: 40.3%         xISO: 0.270
-   EV avg:  88.4          Sweet Sp: 45.5%         FB%:  36.4%
-   Park 90% (HR-suppressor) | 75°F | wind 7mph (in) | weather 101% HR factor
-   Pitcher L3: 3.2 HR/9
-   Pinnacle — | EV $+0.83 | Kelly $2.78
-   Why: xISO 0.270, pitcher L3: 3.2HR/9, barrel 13.0%
+   Season:  4 HR          Lineup:  #1 in order
+   Barrel:  15.0%         Hard Hit: 48.3%         xISO: 0.240
+   EV avg:  89.6          Sweet Sp: 35.0%         FB%:  36.7%
+   Park 117% (HR-friendly) | 61°F | wind 2mph (in) | weather 96% HR factor
+   Pitcher L3: 2.4 HR/9
+   Why: xISO 0.240, pitcher L3: 2.4HR/9, barrel 15.0%, park 117%, calm 2mph
 
 ──────────────────────────────────────────────────────────────
   ★☆☆☆☆  —  0% HR rate  (1 picks)
 
 ──────────────────────────────────────────────────────────────
-#16  Dansby Swanson  ★☆☆☆☆
+#15  Dansby Swanson  ★☆☆☆☆
    Philadelphia Phillies @ Chicago Cubs
    RHB vs Cristopher Sánchez (L)  •  Wrigley Field  •  Home
 
@@ -245,16 +232,27 @@ TOP HR PICKS — 2026-04-23
    Why: xISO 0.210, barrel 14.3%, park 125%, 81°F, weather 125% HR factor
 
 ──────────────────────────────────────────────────────────────
-#17  Freddie Freeman  [WAITING]  ★☆☆☆☆
-   Los Angeles Dodgers @ San Francisco Giants
-   LHB vs Logan Webb (R)  •  Oracle Park  •  Away
+#16  Jackson Merrill  ★☆☆☆☆
+   San Diego Padres @ Colorado Rockies
+   LHB vs Ryan Feltner (R)  •  Coors Field  •  Away
 
-   Season:  3 HR          Lineup:  #4 in order
-   Barrel:  16.9%         Hard Hit: 51.9%         xISO: 0.320
-   EV avg:  92.7          Sweet Sp: 40.3%         FB%:  35.1%
-   Park 83% (HR-suppressor) | 66°F | wind 5mph (out) | weather 99% HR factor
-   Pitcher L3: 0.2 HR/9 | H2H: 0 HR / — AB | BPP rank #54
-   Why: xISO 0.320, barrel 16.9%, park 83%, calm 5mph
+   Season:  3 HR          Lineup:  #3 in order
+   Barrel:  12.9%         Hard Hit: 47.1%         xISO: 0.220
+   EV avg:  88.6          Sweet Sp: 31.4%         FB%:  25.7%
+   Park 117% (HR-friendly) | 61°F | wind 2mph (in) | weather 96% HR factor
+   Pitcher L3: 2.4 HR/9
+   Why: xISO 0.220, pitcher L3: 2.4HR/9, barrel 12.9%, park 117%, calm 2mph
+
+──────────────────────────────────────────────────────────────
+#17  Ben Rice  [WAITING]  ★☆☆☆☆
+   New York Yankees @ Boston Red Sox
+   LHB vs Payton Tolle (L)  •  Fenway Park  •  Away
+
+   Season:  8 HR          Lineup:  #4 in order
+   Barrel:  22.2%         Hard Hit: 64.4%         xISO: 0.340
+   EV avg:  94.8          Sweet Sp: 44.4%         FB%:  31.1%
+   Park 75% (HR-suppressor) | 63°F | wind 13mph (in) | weather 83% HR factor
+   Why: xISO 0.340, barrel 22.2%, park 75%, weather 83% HR factor
 
 ──────────────────────────────────────────────────────────────
 #18  Moisés Ballesteros  [WAITING]  ★☆☆☆☆
@@ -269,30 +267,28 @@ TOP HR PICKS — 2026-04-23
    Why: xISO 0.220, barrel 12.5%, park 125%, 81°F, weather 125% HR factor
 
 ──────────────────────────────────────────────────────────────
-#19  Riley Greene  ★☆☆☆☆
-   Milwaukee Brewers @ Detroit Tigers
-   LHB vs Brandon Sproat (R)  •  Comerica Park  •  Home
+#19  Corey Seager  [WAITING]  ★☆☆☆☆
+   Pittsburgh Pirates @ Texas Rangers
+   LHB vs Bubba Chandler (R)  •  Globe Life Field  •  Home
 
-   Season:  1 HR          Lineup:  #4 in order
-   Barrel:  12.7%         Hard Hit: 49.2%         xISO: 0.230
-   EV avg:  89.7          Sweet Sp: 39.7%         FB%:  30.2%
-   Park 90% (HR-suppressor) | 75°F | wind 7mph (in) | weather 101% HR factor
-   Pitcher L3: 3.2 HR/9
-   Pinnacle +560 | EV $+0.00
-   Why: xISO 0.230, pitcher L3: 3.2HR/9, barrel 12.7%
+   Season:  5 HR          Lineup:  #2 in order
+   Barrel:  15.3%         Hard Hit: 44.1%         xISO: 0.230
+   EV avg:  90.2          Sweet Sp: 37.3%         FB%:  30.5%
+   Park 110% (HR-friendly) | 79°F | wind 13mph (out) | weather 120% HR factor
+   Pitcher L3: 1.2 HR/9 | H2H: 0 HR / — AB | BPP rank #32
+   Why: xISO 0.230, pitcher L3: 1.2HR/9, barrel 15.3%, weather 120% HR factor
 
 ──────────────────────────────────────────────────────────────
-#20  Dominic Smith  ★☆☆☆☆
-   Atlanta Braves @ Washington Nationals
-   LHB vs Cade Cavalli (R)  •  Nationals Park  •  Away
+#20  Freddie Freeman  [WAITING]  ★☆☆☆☆
+   Los Angeles Dodgers @ San Francisco Giants
+   LHB vs Logan Webb (R)  •  Oracle Park  •  Away
 
-   Season:  4 HR          Lineup:  #7 in order
-   Barrel:  10.2%         Hard Hit: 40.8%         xISO: 0.250
-   EV avg:  90.1          Sweet Sp: 42.9%         FB%:  30.6%
-   Park 97% (neutral) | 82°F | wind 9mph (in) | weather 94% HR factor
-   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #6
-   Pinnacle — | EV $+0.62 | Kelly $1.56
-   Why: xISO 0.250, BPP rank #6, barrel 10.2%, 82°F
+   Season:  3 HR          Lineup:  #4 in order
+   Barrel:  16.9%         Hard Hit: 51.9%         xISO: 0.320
+   EV avg:  92.7          Sweet Sp: 40.3%         FB%:  35.1%
+   Park 84% (HR-suppressor) | 66°F | wind 5mph (out)
+   Pitcher L3: 0.2 HR/9 | H2H: 0 HR / — AB | BPP rank #54
+   Why: xISO 0.320, barrel 16.9%, park 84%, calm 5mph
 
 ──────────────────────────────────────────────────────────────
 
