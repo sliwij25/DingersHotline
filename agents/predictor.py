@@ -3183,13 +3183,20 @@ class Homer:
         # Positive = HR-friendly game environment; negative = suppressive.
         # Thresholds calibrated to today's range: Wrigley +0.56, Comerica -0.21, Fenway -0.58.
         # Scores separately from park_hr_factor — this captures the combined park+weather signal.
-        # Season HR penalty: batter who hasn't produced HRs this season is unlikely to
-        # exploit a vulnerable pitcher regardless of Statcast profile — especially in April
-        # when small sample Statcast metrics can mislead.
+        # HR pace penalty: penalize batters not on track to hit meaningful HRs this season.
+        # Uses projected pace (season_hr / PA * 500) so the threshold is season-invariant —
+        # 1 HR in 20 PA = 25 HR pace (no penalty), 1 HR in 100 PA = 5 HR pace (heavy penalty).
+        # Falls back to raw count with reduced penalties when PA < 30 (small sample).
         _shr = sig.get("season_hr") or 0
-        if   _shr == 0: score -= 3.0
-        elif _shr == 1: score -= 1.5
-        elif _shr <= 3: score -= 0.5
+        _pa  = sig.get("pa") or 0
+        if _pa >= 30:
+            _hr_pace = (_shr / _pa) * 500   # projected HRs over 500 PA season
+            if   _hr_pace <  8: score -= 2.5
+            elif _hr_pace < 15: score -= 1.0
+            elif _hr_pace < 22: score -= 0.5
+        else:
+            # Small sample: penalize only zero-HR players; 1+ HR in <30 PA is plausibly elite pace
+            if _shr == 0: score -= 1.5
 
         hrn = sig.get("homerunsnumber")
         if hrn is not None and not is_dome_venue:
