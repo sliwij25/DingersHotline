@@ -73,8 +73,9 @@ from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_perf
 from generate_html import generate_picks_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
-# Labels yesterday's pick_factors with actual HR results, refreshes 2026 training
-# data, and retrains ML weights when due. Zero manual steps required.
+# Labels yesterday's pick_factors with actual HR results and refreshes 2026 training data.
+# ML retraining happens in record_results.py (night run) — NOT here — so weights
+# are stable for the entire day and the morning top-20 is never blown up by a retrain.
 
 def _auto_maintain():
     import sqlite3 as _sqlite3
@@ -122,60 +123,15 @@ def _auto_maintain():
     except Exception as e:
         print(f"skipped ({e})")
 
-    # 3. Retrain ML weights if due ─────────────────────────────────────────────
+    # Show current ML weights status (retrain now happens in record_results.py at night)
     weights_path = Path(__file__).parent.parent / "ml_weights.json"
-    retrain, retrain_reason = False, ""
-
-    try:
-        conn = _sqlite3.connect(Path(__file__).parent.parent / "data" / "bets.db")
-        labeled_n = conn.execute(
-            "SELECT COUNT(*) FROM pick_factors WHERE homered IS NOT NULL"
-        ).fetchone()[0]
-        conn.close()
-    except Exception:
-        labeled_n = 0
-
-    if not weights_path.exists() and labeled_n >= 100:
-        retrain, retrain_reason = True, "first-time training"
-    elif weights_path.exists():
+    if weights_path.exists():
         try:
             with open(weights_path) as f:
                 w = json.load(f)
-            days_since = (_date.today() - _date.fromisoformat(w.get("trained_on", "2000-01-01"))).days
-            new_rows   = labeled_n - w.get("n_samples", 0)
-            if days_since >= 7 and new_rows >= 200:
-                retrain, retrain_reason = True, f"{days_since}d old, {new_rows:,} new rows"
-            elif new_rows >= 2000:
-                retrain, retrain_reason = True, f"{new_rows:,} new labeled rows"
-        except Exception:
-            pass
-
-    if retrain:
-        print(f"  [Auto] Retraining ML weights ({retrain_reason})...", end=" ", flush=True)
-        try:
-            from optimize_weights import load_training_data, train_and_save
-            import io as _io, sys as _sys
-            _old, _sys.stdout = _sys.stdout, _io.StringIO()
-            try:
-                X, y, _ = load_training_data()
-                weights  = train_and_save(X, y, save=True)
-            finally:
-                _sys.stdout = _old
-            auc = weights.get("cv_auc_mean", 0) if weights else 0
-            print(f"done  AUC={auc:.3f}")
-            # Invalidate Homer's cached weights so new model loads immediately
-            Homer._ml_weights_loaded = False
-            Homer._ml_weights        = None
-        except ImportError:
-            print("skipped — run: pip install scikit-learn scipy")
-        except Exception as e:
-            print(f"skipped ({e})")
-    elif weights_path.exists():
-        try:
-            with open(weights_path) as f:
-                w = json.load(f)
-            print(f"  [Auto] ML weights up to date  "
-                  f"(trained {w.get('trained_on','?')}, AUC={w.get('cv_auc_mean',0):.3f})")
+            print(f"  [Auto] ML weights  "
+                  f"(trained {w.get('trained_on','?')}, AUC={w.get('cv_auc_mean',0):.3f}, "
+                  f"v{w.get('algo_version','?')})")
         except Exception:
             pass
 
@@ -382,6 +338,14 @@ _is_rerun = _notify_flag.exists()
 if not picks:
     print("\nCould not generate structured picks.")
 else:
+    # Read algo_version from ml_weights.json so it auto-tracks model generations
+    _algo_version = "3.1"
+    try:
+        with open(Path(__file__).parent.parent / "ml_weights.json") as _avf:
+            _algo_version = json.load(_avf).get("algo_version", "3.1")
+    except Exception:
+        pass
+
     # Save ALL ranked players (not just top 8) for unbiased ML training data.
     # The model needs to see who didn't homer just as much as who did.
     player_signals = homer._context.get("player_signals", {})
@@ -393,7 +357,7 @@ else:
             try:
                 save_pick_factors(TODAY, p["player"], p["signals"],
                                   confidence=p.get("confidence"),
-                                  algo_version="3.1",
+                                  algo_version=_algo_version,
                                   score=p.get("score"),
                                   rank=rank_i,
                                   stars=p.get("stars", "").count("★") or None)
@@ -637,7 +601,7 @@ try:
             "ml/build_historical_dataset.py", "README.md", "requirements.txt",
             "tools/generate_html.py", "docs/index.html",
         ]
-        _commit_msg = f"Auto-update {TODAY} — picks run, ML weights refreshed"
+        _commit_msg = f"Auto-update {TODAY} — picks run"
     else:
         # Cache run: only commit HTML (picks changed, P&L/chips must stay correct)
         _git_files = ["docs/index.html", f"picks/picks_{TODAY}.html"]

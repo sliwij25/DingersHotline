@@ -3013,6 +3013,14 @@ class Homer:
             elif implied_hr_rate >= 6.0:
                 sc_statcast += 1  # FB% × HR/FB confirms genuine power production
 
+        # Conflicting signal penalty — high contact quality metrics but poor outcome
+        # metrics (low xiso + groundball profile) suggest the player hits it hard
+        # but on the ground. These profiles score well on barrel/HH/EV but rarely HR.
+        la = sig.get("launch_angle")
+        if xiso is not None and la is not None:
+            if xiso < 0.200 and la < 12:
+                sc_statcast -= 2  # Hits hard but into the ground — unlikely HR
+
         # Contact hitter penalty — if BOTH barrel and xISO indicate low power,
         # penalize regardless of contextual bonuses (platoon, pitcher, EV).
         if barrel is not None and xiso is not None:
