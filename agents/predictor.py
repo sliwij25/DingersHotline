@@ -1984,6 +1984,7 @@ class Homer:
                             "status":           status,  # "confirmed", "waiting", or "unknown"
                             "platoon":          platoon,
                             "matchup":          matchup_str,
+                            "game_time":        time_,   # local game time string e.g. "2026-04-23T19:05"
                             "venue":            venue,   # stadium name for park-factor lookup
                             "bat_side":         bat_side,           # L / R / S
                             "pitcher_name":     sp,                 # starting pitcher name
@@ -2701,6 +2702,7 @@ class Homer:
                         "platoon":          platoon,
                         "matchup":          (f"{game.get('away',{}).get('team','')} @ "
                                              f"{game.get('home',{}).get('team','')}"),
+                        "game_time":        game.get("game_time", "")[:16] if game.get("game_time") else None,
                         "venue":            venue_name,
                         "pa":               _safe_int(sc_data.get("pa")),
                         "barrel_rate":      _safe_float(sc_data.get("barrel_batted_rate")),
@@ -3670,7 +3672,19 @@ class Homer:
             p_name        = sig.get("pitcher_name") or "TBD"
             p_throws      = sig.get("pitcher_throws", "?")
             platoon       = sig.get("platoon", "")
-            lines.append(f"   {mu}")
+            # Parse game_time into a readable local time (ET)
+            _gt = sig.get("game_time") or ""
+            _time_str = ""
+            if _gt:
+                try:
+                    from datetime import datetime as _dt
+                    import pytz as _pytz
+                    _utc = _dt.fromisoformat(_gt.replace("Z", "+00:00"))
+                    _et  = _utc.astimezone(_pytz.timezone("America/New_York"))
+                    _time_str = f"  •  {_et.strftime('%-I:%M %p ET')}"
+                except Exception:
+                    _time_str = f"  •  {_gt[11:16]}"  # fallback: raw HH:MM
+            lines.append(f"   {mu}{_time_str}")
             lines.append(f"   {bat_label} vs {p_name} ({p_throws})  •  {venue}  •  {home_away_str}")
 
             # ── Stats grid ────────────────────────────────────────────

@@ -97,6 +97,19 @@ def _build_card(rank: int, pick: dict) -> str:
     h2h_ab    = sig.get("h2h_ab")
 
     home_away_str = "Home" if is_home else "Away"
+
+    # Parse game_time into readable ET time
+    _game_time_str = ""
+    _gt = sig.get("game_time") or ""
+    if _gt:
+        try:
+            from datetime import datetime as _dt
+            import pytz as _pytz
+            _utc = _dt.fromisoformat(_gt.replace("Z", "+00:00"))
+            _et  = _utc.astimezone(_pytz.timezone("America/New_York"))
+            _game_time_str = _et.strftime("%-I:%M %p ET")
+        except Exception:
+            _game_time_str = _gt[11:16]
     waiting_badge = '<span class="badge-waiting">LINEUP PENDING</span>' if status == "waiting" else ""
     conf_class    = _confidence_class(conf)
 
@@ -142,6 +155,8 @@ def _build_card(rank: int, pick: dict) -> str:
     score_class = "score-high" if score >= 18 else ("score-mid" if score >= 14 else "score-low")
 
     matchup_line = f"{_esc(matchup)}"
+    if _game_time_str:
+        matchup_line += f" &nbsp;·&nbsp; {_esc(_game_time_str)}"
     if venue:
         matchup_line += f" &nbsp;·&nbsp; {_esc(venue)}"
     matchup_line += f" &nbsp;·&nbsp; {home_away_str}"
