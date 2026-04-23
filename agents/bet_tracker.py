@@ -779,9 +779,18 @@ def model_performance_report() -> str:
                     "SELECT COUNT(*) FROM pick_factors WHERE homered IS NOT NULL AND bet_date > ?",
                     (trained_on,)
                 ).fetchone()[0]
-                next_retrain = max(0, 200 - new_since)
-                add(f"  {'New labeled picks:':<20} {new_since} since last training"
-                    f"  ({'retrain due!' if next_retrain == 0 else f'{next_retrain} until next retrain'})")
+                # Retrain triggers when: (≥7 days old AND ≥200 new rows) OR ≥2000 new rows
+                age_ok   = isinstance(days_since, int) and days_since >= 7
+                rows_ok  = new_since >= 200
+                bulk_ok  = new_since >= 2000
+                if bulk_ok or (age_ok and rows_ok):
+                    status = "retrain due tonight!"
+                elif rows_ok:
+                    days_left = max(0, 7 - (days_since if isinstance(days_since, int) else 0))
+                    status = f"rows ready, retrain in {days_left}d"
+                else:
+                    status = f"{max(0, 200 - new_since)} rows until retrain"
+                add(f"  {'New labeled picks:':<20} {new_since} since last training  ({status})")
 
             except Exception as e:
                 add(f"  Could not read ml_weights.json: {e}")

@@ -53,6 +53,8 @@ except Exception:
 parser = argparse.ArgumentParser()
 parser.add_argument("--use-cache", action="store_true",
                     help="Load cached context instead of fetching fresh data")
+parser.add_argument("--no-lock", action="store_true",
+                    help="Bypass the morning top-20 player lock; use with --use-cache after scoring changes")
 parser.add_argument("--brief", action="store_true",
                     help="Print only top 7 picks + summary; full list still saved to .txt and HTML")
 parser.add_argument("--no-notify", action="store_true",
@@ -202,9 +204,10 @@ if args.use_cache:
     # Lock the top-20 player set from today's existing picks file.
     # Cache re-runs may only REMOVE scratched players — they cannot add new players
     # or drop existing ones due to ML weight changes or lineup confirmation shifts.
+    # Pass --no-lock to bypass this when you've intentionally changed scoring logic.
     import re as _re
     _picks_txt = Path(__file__).parent.parent / "picks" / f"picks_{TODAY}.txt"
-    if _picks_txt.exists():
+    if _picks_txt.exists() and not args.no_lock:
         _locked: list[str] = []
         for _line in _picks_txt.read_text(encoding="utf-8").splitlines():
             _m = _re.match(r"^#\d+\s+(.+?)\s+[★☆]", _line.strip())

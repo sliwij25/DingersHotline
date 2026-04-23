@@ -257,6 +257,23 @@ def fetch_park_factors() -> str:
         (th.get("data-column") or th.get("data-sort") or th.get_text(strip=True)).lower()
         for th in header_row.find_all(["th", "td"])
     ]
+    def _bpp_wind_direction(td) -> str | None:
+        """Extract BPP's stadium-relative wind direction from the SVG image filename.
+        SVG names: InCenter, InLeftCenter, OutLeft, FromLeft, etc.
+        Returns 'in', 'out', 'cross', or None if indeterminate."""
+        img = td.find("img")
+        if not img:
+            return None
+        src = (img.get("src") or "").lower()
+        name = src.rsplit("/", 1)[-1].replace(".svg", "")
+        if name.startswith("in"):
+            return "in"
+        if name.startswith("out"):
+            return "out"
+        if name.startswith("from"):
+            return "cross"
+        return None
+
     games = []
     for row in table.find_all("tr")[1:]:
         cells = row.find_all("td")
@@ -265,6 +282,14 @@ def fetch_park_factors() -> str:
         game = {(headers[i] if i < len(headers) else f"col{i}"):
                 (td.get("data-sort") or td.get_text(strip=True))
                 for i, td in enumerate(cells)}
+        # Enrich windforecast cells with BPP's stadium-relative direction (In/Out/Cross).
+        # data-sort only has the speed; direction is encoded in the SVG image filename.
+        for col_name in ("windforecast1", "windforecast2", "windforecast3"):
+            col_idx = next((i for i, h in enumerate(headers) if h == col_name), None)
+            if col_idx is not None and col_idx < len(cells):
+                direction = _bpp_wind_direction(cells[col_idx])
+                if direction:
+                    game[col_name.replace("forecast", "direction")] = direction
         if game:
             games.append(game)
 
@@ -2389,8 +2414,10 @@ class Homer:
                         "temp_f":             None if roof_closed else _safe_float(temp_str),
                         "wind_mph":           None if roof_closed else _safe_float(wind_str),
                         "wind_deg":           None,
+                        "wind_direction_bpp": None if roof_closed else g.get("winddirection1"),
                         "wind_receptiveness": wind_receptiveness,
                         "weather_hr_factor":  weather_hr_factor,
+                        "homerunsnumber":     None if roof_closed else _safe_float(g.get("homerunsnumber", "")),
                         "outfield_size":      outfield_size,
                         "stadium_description": short_description,
                         "roof_closed":        roof_closed,
@@ -2503,7 +2530,9 @@ class Homer:
                     signals["temp_f"]             = pk["temp_f"]
                     signals["wind_mph"]           = pk["wind_mph"]
                     signals["wind_deg"]           = pk.get("wind_deg")
+                    signals["wind_direction_bpp"] = pk.get("wind_direction_bpp")
                     signals["wind_receptiveness"] = pk.get("wind_receptiveness")
+                    signals["homerunsnumber"]     = pk.get("homerunsnumber")
                     signals["weather_hr_factor"]  = pk.get("weather_hr_factor")
                     signals["outfield_size"]      = pk.get("outfield_size")
                     signals["stadium_description"] = pk.get("stadium_description")
@@ -2831,12 +2860,40 @@ class Homer:
             elif form >= 2: score += 2
             elif form >= 1: score += 1
 
-        # Pitcher recent vulnerability (last 3 starts HR/9)
+        # Pitcher recent vulnerability (last 3 starts HR/9), scaled by batter power AND park.
+        # Two gates:
+        #   Power gate: strong (xISO>=0.270 or barrel>=15%) → full; moderate → half; weak → 0
+        #   Park gate:  suppressive parks (≤90%) cut the bonus — a vulnerable pitcher in a
+        #               HR-suppressing park still won't give up as many HRs as elsewhere.
+        #               HR-friendly parks (≥110%) amplify the bonus.
         p_hr9 = sig.get("pitcher_hr_per_9")
         if p_hr9 is not None:
-            if p_hr9 >= 2.0:   score += 3
-            elif p_hr9 >= 1.0: score += 2
-            elif p_hr9 >= 0.5: score += 1
+            _raw_xiso   = sig.get("xiso")
+            _raw_barrel = sig.get("barrel_rate")
+            _raw_park   = sig.get("park_hr_factor")
+            _season_hr  = sig.get("season_hr") or 0
+            _strong  = ((_raw_xiso   is not None and _raw_xiso   >= 0.270)
+                        or (_raw_barrel is not None and _raw_barrel >= 15))
+            _moderate = ((_raw_xiso   is not None and _raw_xiso   >= 0.210)
+                         or (_raw_barrel is not None and _raw_barrel >= 10))
+            # Park multiplier: 0.5 in strong suppressors, 1.25 in strong HR parks
+            if _raw_park is not None and _raw_park <= 92:   _park_mult = 0.5
+            elif _raw_park is not None and _raw_park >= 110: _park_mult = 1.25
+            else:                                             _park_mult = 1.0
+            # Season HR gate: pitcher vulnerability only matters if batter can hit HRs.
+            # Players with 0-1 season HRs get little/no pitcher bonus regardless of matchup.
+            if   _season_hr == 0: _hr_gate = 0.0
+            elif _season_hr == 1: _hr_gate = 0.25
+            elif _season_hr <= 3: _hr_gate = 0.5
+            else:                 _hr_gate = 1.0
+            _combined = _park_mult * _hr_gate
+            if _strong:
+                if p_hr9 >= 2.0:   score += 3 * _combined
+                elif p_hr9 >= 1.0: score += 2 * _combined
+                elif p_hr9 >= 0.5: score += 1 * _combined
+            elif _moderate:
+                if p_hr9 >= 2.0:   score += 1 * _combined
+                elif p_hr9 >= 1.0: score += 1 * _combined
 
         # Pitcher barrel rate allowed — % of batted balls vs this pitcher that are barrels.
         # Stronger predictor than HR/9 because it strips park and luck: a pitcher allowing
@@ -3082,25 +3139,57 @@ class Homer:
             if temp >= 85: score += 1
             elif temp <= 50: score -= 1
 
-        # Wind: use BPP's weather_hr_factor as the primary direction-aware signal.
-        # Amplify by wind_receptiveness + speed — but never score wind_mph alone
-        # since we don't know stadium orientation (can't distinguish wind-in vs wind-out).
+        # Wind scoring — two complementary signals:
+        #
+        # 1. BPP weather_hr_factor: combined weather effect (temp + humidity + wind).
+        #    Direction-aware because BPP knows the stadium orientation.
+        #    Primary signal for extreme weather (strong tail/headwind days).
+        #
+        # 2. wind_direction_bpp + speed + receptiveness: direct in/out signal.
+        #    Supplements weather_hr_factor for cases where temperature partially
+        #    offsets wind direction, keeping the combined number near neutral (92-108)
+        #    even though wind is definitively blowing in or out.
+        wind_dir_bpp = sig.get("wind_direction_bpp")
+        recep_hi = "extreme" in wind_receptiveness or "high" in wind_receptiveness
+
         if not is_dome_venue:
+            # Signal 1: BPP combined weather factor
             if weather_hr_factor is not None:
                 if weather_hr_factor >= 115:   score += 2
                 elif weather_hr_factor >= 108: score += 1
                 elif weather_hr_factor <= 85:  score -= 2
                 elif weather_hr_factor <= 92:  score -= 1
 
-                # High-receptiveness parks amplify the weather effect by 0.5 pts
-                if wind_receptiveness and "high" in wind_receptiveness:
+                # Receptiveness and strong wind amplify the combined effect
+                if recep_hi:
                     if weather_hr_factor >= 108:   score += 0.5
                     elif weather_hr_factor <= 92:  score -= 0.5
-
-                # Strong wind amplifies BPP's direction-aware forecast
                 if wind_mph is not None and wind_mph >= 15:
                     if weather_hr_factor >= 108:   score += 0.5
                     elif weather_hr_factor <= 92:  score -= 0.5
+
+            # Signal 2: direct wind direction (in vs out), scaled by speed + receptiveness.
+            # Intentional partial overlap with Signal 1 — both are valid direction signals.
+            # Threshold ≥10mph: below that, wind direction has negligible HR effect.
+            if wind_dir_bpp and wind_mph is not None and wind_mph >= 10:
+                if wind_dir_bpp == "out":
+                    if wind_mph >= 15:   score += 1.0 if recep_hi else 0.5
+                    else:                score += 0.5 if recep_hi else 0.0
+                elif wind_dir_bpp == "in":
+                    if wind_mph >= 15:   score -= 1.0 if recep_hi else 0.5
+                    else:                score -= 0.5 if recep_hi else 0.0
+
+        # BPP game environment: combined park + weather HR adjustment vs league average.
+        # Positive = HR-friendly game environment; negative = suppressive.
+        # Thresholds calibrated to today's range: Wrigley +0.56, Comerica -0.21, Fenway -0.58.
+        # Scores separately from park_hr_factor — this captures the combined park+weather signal.
+        hrn = sig.get("homerunsnumber")
+        if hrn is not None and not is_dome_venue:
+            if hrn >= 0.35:    score += 1.5   # Strongly favorable (Wrigley w/ tailwind)
+            elif hrn >= 0.15:  score += 0.5   # Mildly favorable
+            elif hrn <= -0.40: score -= 1.5   # Strongly suppressive (Fenway w/ headwind)
+            elif hrn <= -0.20: score -= 1.0   # Suppressive (Comerica, Oracle)
+            elif hrn <= -0.05: score -= 0.5   # Mildly suppressive
 
         # Ball carry (air density: altitude + humidity + pressure combined).
         # carry_ft = extra feet of ball distance vs sea-level neutral conditions.
@@ -3561,9 +3650,9 @@ class Homer:
             else:
                 if temp is not None: env_parts.append(f"{temp:.0f}°F")
                 if wind is not None:
-                    wind_deg = sig.get("wind_deg")
-                    arrow = f" {Homer._deg_to_arrow(wind_deg)}" if wind_deg is not None else ""
-                    env_parts.append(f"wind {wind:.0f}mph{arrow}")
+                    bpp_dir = sig.get("wind_direction_bpp")
+                    dir_label = f" ({bpp_dir})" if bpp_dir else ""
+                    env_parts.append(f"wind {wind:.0f}mph{dir_label}")
                 if whr is not None and whr != 100: env_parts.append(f"weather {whr:.0f}% HR factor")
             if env_parts:
                 lines.append(f"   {' | '.join(env_parts)}")
