@@ -1,4 +1,5 @@
 {
+  "algo_version": "3.1",
   "trained_on": "2026-04-20",
   "n_samples": 189215,
   "n_positives": 15273,
