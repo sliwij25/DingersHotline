@@ -71,7 +71,7 @@ print("=" * 60)
 
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
-from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, star_bucket_hit_rate, star_bucket_pnl, yesterday_results_snapshot
+from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, star_bucket_hit_rate, star_bucket_pnl, yesterday_results_snapshot, trending_picks
 from generate_html import generate_picks_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
@@ -461,6 +461,20 @@ if not args.brief and sys.stdin.isatty():
     except Exception as _me:
         pass
 
+
+# ── Trending picks alert ───────────────────────────────────────────────────────
+try:
+    _trending = trending_picks(min_streak=3, top_n_threshold=10)
+    if _trending:
+        print("\n" + "=" * 60)
+        print("  TRENDING — Top-10 for 3+ consecutive days")
+        print("=" * 60)
+        for _t in _trending:
+            _rank_str = "/".join(f"#{r}" for r in _t["ranks"])
+            print(f"  {_t['player']:<28} {_t['streak']}d streak  [{_rank_str}]  ({_t['dates'][0]} – {_t['dates'][-1]})")
+        print("=" * 60)
+except Exception:
+    pass
 
 # ── Model performance dashboard ────────────────────────────────────────────────
 

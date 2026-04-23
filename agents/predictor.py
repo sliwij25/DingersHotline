@@ -2714,6 +2714,7 @@ class Homer:
                         "ev_avg":           _safe_float(sc_data.get("exit_velocity_avg")),
                         "sweet_spot_pct":   _safe_float(sc_data.get("sweet_spot_percent")),
                         "season_hr":        _safe_int(sc_data.get("home_run")),
+                        "hr_luck":          None,   # filled below: actual − expected HRs
                         "recent_form_14d":  form_hrs,
                         "pitcher_hr_per_9": p_hr_per_9,
                         "pitcher_hr_vs_hand": None,
@@ -2732,6 +2733,16 @@ class Homer:
                         "outfield_size":    vc.get("outfield_size"),
                         "stadium_description": None,
                     }
+
+                    # Luck metric: actual HRs minus expected HRs from xHR%.
+                    # Requires >=50 PA for stable sample. Negative = unlucky (bounce-back),
+                    # positive = lucky (regression risk).
+                    _sig = player_signals[sig_key]
+                    _xhr_r = _sig.get("xhr_rate")
+                    _pa_v  = _sig.get("pa") or 0
+                    _shr_v = _sig.get("season_hr") or 0
+                    if _xhr_r is not None and _pa_v >= 50:
+                        _sig["hr_luck"] = round(_shr_v - _pa_v * (_xhr_r / 100), 2)
 
         return player_signals
 
@@ -2821,6 +2832,10 @@ class Homer:
         """
         score = 0.0
 
+        # Season HR leaderboard boost — set by _rank_picks_python() before scoring.
+        # Rewards elite proven power hitters so they're not undervalued on neutral days.
+        score += sig.pop("_elite_hr_boost", 0.0)
+
         # Status-based penalty (tracked separately so it's excluded from power gate)
         status = sig.get("status", "unknown")
         status_penalty = 0.0
@@ -2831,6 +2846,12 @@ class Homer:
         elif status == "unknown":
             status_penalty = -1.5
         score += status_penalty
+
+        # Roster fallback with no odds corroboration: extra skepticism.
+        # Books don't post HR props for scratched players — if odds exist, player is in.
+        # If no odds AND lineup_confirmed=False, we can't verify they're even playing.
+        if not sig.get("lineup_confirmed", True) and sig.get("ev_10") is None:
+            score -= 1.5
 
         # EV — most important (Pinnacle probability as ground truth)
         ev = sig.get("ev_10")
@@ -3089,6 +3110,19 @@ class Homer:
             sc_statcast -= 1
 
         score += sc_statcast * pa_scale
+
+        # HR luck: actual − expected HRs. Negative = unlucky → bounce-back candidate.
+        # Positive = overperforming → regression risk.
+        # Only meaningful at 50+ PA (computed during signal build).
+        hr_luck = sig.get("hr_luck")
+        if hr_luck is not None:
+            if   hr_luck <= -4: score += 2.0   # Massively unlucky — strong bounce-back signal
+            elif hr_luck <= -2: score += 1.0   # Noticeably unlucky
+            elif hr_luck <= -1: score += 0.5   # Slightly unlucky
+            elif hr_luck >= 4:  score -= 2.0   # Massively lucky — regression risk
+            elif hr_luck >= 2:  score -= 1.0   # Overperforming
+            elif hr_luck >= 1:  score -= 0.5   # Slightly lucky
+
 
         # BallparkPal batter-vs-pitcher matchup grade (0–10, higher = better for batter)
         # This grades the specific batter against today's opposing pitcher.
@@ -3399,8 +3433,22 @@ class Homer:
         - unknown: -3 penalty (status unclear)
         """
         _scratched = {s.lower() for s in (scratched or [])}
+
+        # Season HR leaderboard boost: top-10 in season HRs get +2 bonus.
+        # Prevents the model from undervaluing elite proven power hitters on
+        # off-Statcast days (e.g. when weather/park signals are neutral).
+        _hr_leaders: list[tuple[int, str]] = []
+        for _sk, _sg in player_signals.items():
+            _shr = _sg.get("season_hr") or 0
+            if _shr > 0:
+                _hr_leaders.append((_shr, _sk))
+        _hr_leaders.sort(reverse=True)
+        _top10_hr_keys = {k for _, k in _hr_leaders[:10]}
+
         scored = []
         for sig_key, sig in player_signals.items():
+            if sig_key in _top10_hr_keys:
+                sig["_elite_hr_boost"] = 2.0
             player = sig.get("player_name", sig_key.split("|")[0])
             if player.lower() in _scratched:
                 continue

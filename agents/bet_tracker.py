@@ -157,6 +157,7 @@ _MIGRATION_COLUMNS = [
     ("stars",                 "INTEGER"),
     ("pitcher_hr_vs_hand",    "REAL"),
     ("pitcher_barrel_pct",    "REAL"),
+    ("hr_luck",               "REAL"),
 ]
 
 
@@ -208,8 +209,8 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                bpp_hr_pct, park_hr_factor,
                recent_form_14d, pitcher_hr_per_9, pitcher_hr_vs_hand, pitcher_barrel_pct,
                h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging,
-               team, blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               team, blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft, hr_luck)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(bet_date, player) DO UPDATE SET
               rank=excluded.rank, score=excluded.score, stars=excluded.stars,
               algo_version=excluded.algo_version, confidence=excluded.confidence,
@@ -230,7 +231,7 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
               venue_slugging=excluded.venue_slugging, team=excluded.team,
               blast_rate=excluded.blast_rate, altitude_ft=excluded.altitude_ft,
               humidity_pct=excluded.humidity_pct, pressure_mb=excluded.pressure_mb,
-              carry_ft=excluded.carry_ft
+              carry_ft=excluded.carry_ft, hr_luck=excluded.hr_luck
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
@@ -270,6 +271,7 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             signals.get("humidity_pct"),
             signals.get("pressure_mb"),
             signals.get("carry_ft"),
+            signals.get("hr_luck"),
         ))
         # Backfill stars on existing rows that were saved before stars column existed
         if stars is not None:
@@ -653,6 +655,58 @@ def star_bucket_pnl(star_count: int) -> float | None:
         else:
             total -= 10.0
     return round(total, 2) if rows else None
+
+
+def trending_picks(min_streak: int = 3, top_n_threshold: int = 10) -> list[dict]:
+    """
+    Return players ranked in top_n_threshold for min_streak or more consecutive days.
+    Each entry: {"player": str, "streak": int, "ranks": list[int], "dates": list[str]}
+    Sorted by streak length descending.
+    """
+    conn = get_db_conn()
+    try:
+        rows = conn.execute(
+            """
+            SELECT player, bet_date, rank
+            FROM pick_factors
+            WHERE rank IS NOT NULL AND rank <= ?
+            ORDER BY player, bet_date
+            """,
+            (top_n_threshold,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    from itertools import groupby as _gb
+    from datetime import date as _date, timedelta as _td
+
+    results = []
+    for player, group in _gb(rows, key=lambda r: r[0]):
+        entries = [(r[1], r[2]) for r in group]  # (date_str, rank)
+        # Find max consecutive-day streaks
+        streak_dates, streak_ranks = [entries[0][0]], [entries[0][1]]
+        best = [(list(streak_dates), list(streak_ranks))]
+        for i in range(1, len(entries)):
+            prev_d = _date.fromisoformat(entries[i-1][0])
+            curr_d = _date.fromisoformat(entries[i][0])
+            if (curr_d - prev_d).days == 1:
+                streak_dates.append(entries[i][0])
+                streak_ranks.append(entries[i][1])
+            else:
+                streak_dates, streak_ranks = [entries[i][0]], [entries[i][1]]
+            if len(streak_dates) > len(best[0][0]):
+                best = [(list(streak_dates), list(streak_ranks))]
+        best_dates, best_ranks = best[0]
+        if len(best_dates) >= min_streak:
+            results.append({
+                "player": player,
+                "streak": len(best_dates),
+                "dates":  best_dates,
+                "ranks":  best_ranks,
+            })
+
+    results.sort(key=lambda x: x["streak"], reverse=True)
+    return results
 
 
 def model_performance_report() -> str:
