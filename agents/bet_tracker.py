@@ -203,6 +203,11 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
     conn = get_db_conn()
     try:
         _ensure_pick_factors_table(conn)
+        if rank is not None:
+            conn.execute(
+                "DELETE FROM pick_factors WHERE bet_date=? AND rank=? AND player!=?",
+                (bet_date, rank, player)
+            )
         conn.execute("""
             INSERT INTO pick_factors
               (bet_date, player, algo_version, confidence, score, rank, stars,

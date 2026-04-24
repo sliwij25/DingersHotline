@@ -203,8 +203,11 @@ def update_pick_factors(game_date: str, homers: dict[str, int],
         countable   = [r for r in results if r[1] != -1]
         hit_rate    = len(hr_players) / len(countable) * 100 if countable else 0
 
+        n_positions = conn.execute(
+            "SELECT COUNT(DISTINCT rank) FROM pick_factors WHERE bet_date=?", (game_date,)
+        ).fetchone()[0]
         print(f"\n  {'[DRY RUN] ' if dry_run else ''}Results for {game_date}")
-        print(f"  Total players scored by Homer: {len(results)}")
+        print(f"  Total players scored by Homer: {n_positions}")
         print(f"  Homered: {len(hr_players)} ({hit_rate:.1f}%)")
         print(f"  Did not homer: {len(no_hr)}")
         if scratched:
