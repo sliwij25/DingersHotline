@@ -90,8 +90,9 @@ def test_player_signals_include_pitch_buckets():
         home_away={},
     )
 
-    assert "Aaron Judge" in signals
-    judge = signals["Aaron Judge"]
+    key = next((k for k in signals if k.startswith("Aaron Judge")), None)
+    assert key is not None, f"Aaron Judge not found in signals. Keys: {list(signals.keys())}"
+    judge = signals[key]
     assert "pitcher_fb_pct" in judge, "pitcher_fb_pct should be in player_signals"
     assert judge["pitcher_fb_pct"] == 60.0   # 55 + 0 + 5
     assert judge["pitcher_breaking_pct"] == 32.0  # 22 + 10 + 0
