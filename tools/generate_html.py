@@ -154,16 +154,19 @@ def _build_card(rank: int, pick: dict) -> str:
 
     score_class = "score-high" if score >= 18 else ("score-mid" if score >= 14 else "score-low")
 
+    # Line 1: matchup + time
     matchup_line = f"{_esc(matchup)}"
     if _game_time_str:
-        matchup_line += f" &nbsp;·&nbsp; {_esc(_game_time_str)}"
+        matchup_line += f" &nbsp;·&nbsp; <strong>{_esc(_game_time_str)}</strong>"
+    # Line 2: venue + home/away + order
+    venue_line = ""
     if venue:
-        matchup_line += f" &nbsp;·&nbsp; {_esc(venue)}"
-    matchup_line += f" &nbsp;·&nbsp; {home_away_str}"
-    if bat_order:
-        matchup_line += f" &nbsp;·&nbsp; #{bat_order} in order"
+        venue_line += _esc(venue)
+    venue_line += f" &nbsp;·&nbsp; {home_away_str}"
 
     pitcher_line = f"{_esc(bat_side)}HB vs {_esc(pitcher)} ({_esc(p_throws)})"
+    if bat_order:
+        pitcher_line += f" &nbsp;·&nbsp; #{bat_order} in order"
 
     stats_row1 = ""
     stats_row2 = ""
@@ -205,6 +208,7 @@ def _build_card(rank: int, pick: dict) -> str:
                     <span class="score-badge {score_class}">{score:.1f}</span>
                 </div>
                 <div class="matchup-line">{matchup_line}</div>
+                <div class="venue-line">{venue_line}</div>
                 <div class="pitcher-line">{pitcher_line}</div>
                 {stats_html}
                 <div class="tags-row">{tags_html}</div>
@@ -229,6 +233,7 @@ def generate_picks_html(
     streak: str | None = None,
     tier_hit_rates: dict | None = None,
     tier_pnl: dict | None = None,
+    version: str = "",
 ) -> str:
     # tier_hit_rates: {star_count: (n_picks, n_homers)} — pre-computed by daily_picks.py
     # tier_pnl: {star_count: float | None} — cumulative hypothetical P&L per tier
@@ -360,7 +365,7 @@ def generate_picks_html(
     streak_tile = ""  # removed — streak now lives inside model_stats_tile
 
     return f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-version="{_esc(version)}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -832,11 +837,20 @@ def generate_picks_html(
 
   .matchup-line {{
     font-size: 12px;
-    color: var(--text-sub);
+    color: var(--text-main);
+    font-family: 'Source Serif 4', serif;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }}
+  .venue-line {{
+    font-size: 11px;
+    color: var(--text-sub);
     font-family: 'Source Serif 4', serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
   }}
 
   .pitcher-line {{
@@ -957,6 +971,14 @@ def generate_picks_html(
     gap: 8px;
     margin-top: 24px;
   }}
+  .disclaimer {{
+    width: 100%;
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.04em;
+    text-align: center;
+    margin-top: 4px;
+  }}
 
   /* ─── Responsive ─── */
   @media (max-width: 600px) {{
@@ -996,8 +1018,9 @@ def generate_picks_html(
 {sections_html}
 
 <footer class="site-footer">
-  <span>Dingers Hotline &nbsp;·&nbsp; github.com/sliwij25/DingersHotline</span>
+  <span>Dingers Hotline</span>
   <span>Generated {_esc(today)} &nbsp;·&nbsp; Model AUC {_esc(auc_str)}</span>
+  <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
 </body>

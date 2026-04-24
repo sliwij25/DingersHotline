@@ -3112,7 +3112,20 @@ class Homer:
         elif xiso is not None and xiso < 0.110:
             sc_statcast -= 1
 
-        score += sc_statcast * pa_scale
+        # If a player has 75+ PA but low HR pace, their contact quality metrics
+        # aren't translating to HRs — gap/line drive hitter profile. Scale down
+        # the Statcast contribution so these players don't overrank on contact alone.
+        _sc_pa  = sig.get("pa") or 0
+        _sc_shr = sig.get("season_hr") or 0
+        if _sc_pa >= 75:
+            _hr_pace_sc = (_sc_shr / _sc_pa) * 500
+            if   _hr_pace_sc < 5:  _sc_scale = 0.35
+            elif _hr_pace_sc < 8:  _sc_scale = 0.55
+            elif _hr_pace_sc < 15: _sc_scale = 0.80
+            else:                  _sc_scale = 1.0
+        else:
+            _sc_scale = 1.0
+        score += sc_statcast * pa_scale * _sc_scale
 
         # HR luck: actual − expected HRs. Negative = unlucky → bounce-back candidate.
         # Positive = overperforming → regression risk.

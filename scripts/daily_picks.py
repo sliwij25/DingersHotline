@@ -573,6 +573,9 @@ try:
         _tier_hit_rates = {_sc: star_bucket_hit_rate(_sc) for _sc in _present_tiers if _sc}
         _tier_pnl = {_sc: star_bucket_pnl(_sc) for _sc in _present_tiers if _sc}
 
+        import time as _time
+        _version = str(int(_time.time()))
+
         _html_str = generate_picks_html(
             _ranked_for_html,
             today=_timestamp,
@@ -588,7 +591,14 @@ try:
             streak=_streak,
             tier_hit_rates=_tier_hit_rates,
             tier_pnl=_tier_pnl,
+            version=_version,
         )
+
+        # Write version.txt — JS on the page fetches this from raw.githubusercontent.com
+        # (no CDN lag) and redirects with ?v=... to bust the GitHub Pages Fastly cache.
+        _version_file = Path(__file__).parent.parent / "docs" / "version.txt"
+        with open(_version_file, "w") as _vf:
+            _vf.write(_version + "\n")
 
         # Save dated copy
         _html_dated = Path(__file__).parent.parent / "picks" / f"picks_{TODAY}.html"
