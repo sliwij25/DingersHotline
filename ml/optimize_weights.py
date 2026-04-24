@@ -59,6 +59,10 @@ FEATURES = [
     ("is_home",            None),
     ("platoon",          "platoon"),
     ("h2h_hr",           None),
+    # Pitcher pitch mix
+    ("pitcher_fb_pct",       None),
+    ("pitcher_breaking_pct", None),
+    ("pitcher_offspeed_pct", None),
 ]
 
 FEATURE_NAMES = [name for name, _ in FEATURES]

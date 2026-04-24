@@ -201,3 +201,36 @@ def test_score_player_pitch_mix_none():
     assert score == base, (
         f"None pitch data should yield baseline {base}, got {score}"
     )
+
+
+def test_migration_columns_include_pitch_mix():
+    """pick_factors table should gain pitch-mix columns after migration."""
+    import sqlite3, tempfile, os
+    from agents.bet_tracker import _ensure_pick_factors_table, _MIGRATION_COLUMNS
+
+    col_names = [col for col, _ in _MIGRATION_COLUMNS]
+    assert "pitcher_fb_pct" in col_names
+    assert "pitcher_breaking_pct" in col_names
+    assert "pitcher_offspeed_pct" in col_names
+
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        db_path = f.name
+    try:
+        conn = sqlite3.connect(db_path)
+        _ensure_pick_factors_table(conn)
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(pick_factors)").fetchall()}
+        conn.close()
+        assert "pitcher_fb_pct" in cols
+        assert "pitcher_breaking_pct" in cols
+        assert "pitcher_offspeed_pct" in cols
+    finally:
+        os.unlink(db_path)
+
+
+def test_ml_features_include_pitch_mix():
+    """FEATURES list in optimize_weights.py should include the three pitch-mix columns."""
+    from ml.optimize_weights import FEATURES
+    feature_names = [name for name, _ in FEATURES]
+    assert "pitcher_fb_pct" in feature_names
+    assert "pitcher_breaking_pct" in feature_names
+    assert "pitcher_offspeed_pct" in feature_names

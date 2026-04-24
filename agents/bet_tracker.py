@@ -158,6 +158,9 @@ _MIGRATION_COLUMNS = [
     ("pitcher_hr_vs_hand",    "REAL"),
     ("pitcher_barrel_pct",    "REAL"),
     ("hr_luck",               "REAL"),
+    ("pitcher_fb_pct",        "REAL"),
+    ("pitcher_breaking_pct",  "REAL"),
+    ("pitcher_offspeed_pct",  "REAL"),
 ]
 
 
