@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Season HR Leaders — Dingers Hotline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #FAFAF7;
+    --surface:  #FFFFFF;
+    --border:   #E2DED6;
+    --navy:     #1B2A4A;
+    --red:      #C8102E;
+    --text:     #1A1A1A;
+    --text-sub: #6B6560;
+    --muted:    #A8A29E;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Source Serif 4', Georgia, serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+  .site-header {
+    background: var(--navy);
+    background-image: repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(255,255,255,0.04) 47px, rgba(255,255,255,0.04) 48px);
+    color: #fff; padding: 28px 36px 24px;
+    display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 20px;
+    border-bottom: 4px solid var(--red);
+  }
+  .header-left { display: flex; flex-direction: column; gap: 6px; }
+  .site-title { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: clamp(30px, 5vw, 52px); letter-spacing: 0.04em; text-transform: uppercase; color: #fff; line-height: 1; display: flex; align-items: center; gap: 12px; }
+  .title-ball { display: inline-block; width: 0.85em; height: 0.85em; flex-shrink: 0; opacity: 0.9; }
+  .site-date { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.12em; text-transform: uppercase; }
+  .nav-link { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.10); color: #fff; font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; padding: 10px 18px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.18); transition: background 0.15s; white-space: nowrap; }
+  .nav-link:hover { background: rgba(255,255,255,0.18); }
+
+  .page-body { max-width: 820px; margin: 32px auto 48px; padding: 0 20px; }
+  .page-title { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--navy); margin-bottom: 4px; }
+  .page-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; }
+
+  .lb-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .lb-table thead tr { background: var(--navy); color: rgba(255,255,255,0.75); }
+  .lb-table thead th { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 12px; text-align: left; }
+  .lb-table thead th.num { text-align: right; }
+  .lb-table tbody tr { border-bottom: 1px solid var(--border); }
+  .lb-table tbody tr:last-child { border-bottom: none; }
+  .lb-table tbody tr:hover { filter: brightness(0.97); }
+  .lb-table td { padding: 9px 12px; font-size: 13px; }
+  .td-rank { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); width: 36px; text-align: right; padding-right: 16px; }
+  .td-player { font-weight: 600; color: var(--text); min-width: 160px; }
+  .td-team { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-sub); width: 48px; }
+  .td-hr { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; color: var(--red); text-align: right; width: 52px; }
+  .td-stat { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; text-align: right; width: 72px; }
+
+  .cell-g { background: #DCF1E5; color: #155D33; }
+  .cell-y { background: #FEF3C7; color: #92400E; }
+  .cell-r { background: #FCE8EA; color: #9B1220; }
+
+  .metric-defs { margin-top: 16px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; gap: 10px; }
+  .metric-defs-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .color-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-sub); }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+  .swatch-g { background: #DCF1E5; border: 1px solid #A8D9BC; }
+  .swatch-y { background: #FEF3C7; border: 1px solid #F9D56E; }
+  .swatch-r { background: #FCE8EA; border: 1px solid #F0A8B0; }
+  .metric-rows { display: flex; flex-wrap: wrap; gap: 8px 32px; }
+  .metric-def { display: flex; align-items: baseline; gap: 6px; font-size: 12px; color: var(--text-sub); }
+  .metric-def-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--navy); white-space: nowrap; }
+
+  .site-footer { text-align: center; padding: 16px 24px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 40px; }
+  .disclaimer { margin-top: 6px; max-width: 540px; margin-left: auto; margin-right: auto; }
+
+  @media (max-width: 600px) {
+    .site-header { padding: 18px; }
+    .col-stat { display: none; }
+    .td-player { min-width: unset; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-left">
+    <div class="site-title">
+      <svg class="title-ball" fill="#ffffff" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g><path d="M455.857,56.144c-74.86-74.859-196.662-74.859-271.521,0C17.087,223.392-9.275,272.783,2.398,298.264c8.318,18.153,32.898,19.077,63.015,17.249l-36.537,97.203c-6.838,18.194-2.549,38.035,11.195,51.778c13.744,13.743,33.583,18.035,51.778,11.195L197.2,436.089c-2.507,34.987-3.349,64.4,16.534,73.511c3.325,1.524,7.055,2.4,11.403,2.4c28.973-0.002,85.294-38.91,230.72-184.335C530.715,252.806,530.715,131.003,455.857,56.144z M441.431,313.239C369.446,385.224,316.37,433.95,279.174,462.2c-41.868,31.797-54.167,30.124-56.94,28.854c-2.851-1.307-4.901-7.374-5.626-16.646c-0.922-11.81,0.244-27.541,1.479-44.196c0.209-2.826,0.421-5.681,0.625-8.557c0.247-3.466-1.288-6.82-4.073-8.899c-1.788-1.335-3.934-2.026-6.102-2.026c-1.209,0-2.424,0.214-3.589,0.652l-120.277,45.21c-10.765,4.047-22.043,1.608-30.174-6.524c-8.131-8.131-10.57-19.411-6.524-30.174l42.126-112.072c1.224-3.258,0.703-6.915-1.382-9.702c-2.085-2.787-5.444-4.321-8.919-4.06c-14.536,1.076-31.012,2.295-42.857,1.278c-8.892-0.763-14.721-2.793-15.994-5.572c-1.27-2.772-2.944-15.072,28.855-56.941c28.25-37.196,76.975-90.271,148.96-162.255c66.904-66.905,175.764-66.905,242.669,0C508.335,137.474,508.335,246.335,441.431,313.239z"/></g><g><path d="M320.096,28.297c-90.213,0-163.608,73.394-163.608,163.608s73.395,163.608,163.608,163.608s163.608-73.395,163.608-163.608S410.31,28.297,320.096,28.297z M320.096,48.698c36.338,0,69.551,13.613,94.828,35.995c-26.187,23.225-59.477,35.903-94.828,35.903c-35.351,0-68.641-12.679-94.828-35.903C250.544,62.309,283.758,48.698,320.096,48.698z M320.096,335.111c-36.338,0.001-69.552-13.611-94.829-35.995c26.187-23.225,59.478-35.903,94.829-35.903c35.351,0,68.641,12.679,94.828,35.903C389.647,321.499,356.433,335.111,320.096,335.111z M429.215,284.535c-30.034-26.977-68.377-41.722-109.12-41.722c-40.743,0-79.086,14.745-109.12,41.722c-21.246-24.99-34.087-57.336-34.087-92.631c0.001-35.293,12.842-67.64,34.088-92.63c30.034,26.977,68.377,41.722,109.12,41.722s79.086-14.745,109.119-41.722c21.246,24.99,34.087,57.336,34.087,92.63C463.302,227.198,450.46,259.545,429.215,284.535z"/></g></svg>
+      Dingers Hotline
+    </div>
+    <div class="site-date">Season HR Leaders &nbsp;·&nbsp; Updated 2026-04-24</div>
+  </div>
+  <a class="nav-link" href="index.html">← Today's Picks</a>
+</header>
+
+<div class="page-body">
+  <div class="page-title">2026 Home Run Leaders</div>
+  <div class="page-subtitle">Top 50 · Statcast data · Updated daily with morning picks</div>
+
+  <table class="lb-table">
+    <thead>
+      <tr>
+        <th style="width:36px">#</th>
+        <th>Player</th>
+        <th>Team</th>
+        <th class="num">HR</th>
+        <th class="num col-stat">Barrel%</th>
+        <th class="num col-stat">xISO</th>
+        <th class="num col-stat">EV Avg</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="td-rank">1</td><td class="td-player">Yordan Alvarez</td><td class="td-team">HOU</td><td class="td-hr">11</td><td class="td-stat cell-g col-stat">21.2%</td><td class="td-stat cell-g col-stat">.499</td><td class="td-stat cell-g col-stat">93.6</td></tr>
+      <tr><td class="td-rank">2</td><td class="td-player">Munetaka Murakami</td><td class="td-team">CWS</td><td class="td-hr">10</td><td class="td-stat cell-g col-stat">24.5%</td><td class="td-stat cell-g col-stat">.395</td><td class="td-stat cell-g col-stat">96.0</td></tr>
+      <tr><td class="td-rank">2</td><td class="td-player">James Wood</td><td class="td-team">WSH</td><td class="td-hr">10</td><td class="td-stat cell-g col-stat">30.2%</td><td class="td-stat cell-g col-stat">.387</td><td class="td-stat cell-g col-stat">96.9</td></tr>
+      <tr><td class="td-rank">4</td><td class="td-player">Aaron Judge</td><td class="td-team">NYY</td><td class="td-hr">9</td><td class="td-stat cell-g col-stat">25.4%</td><td class="td-stat cell-g col-stat">.367</td><td class="td-stat cell-y col-stat">92.2</td></tr>
+      <tr><td class="td-rank">5</td><td class="td-player">Shea Langeliers</td><td class="td-team">ATH</td><td class="td-hr">8</td><td class="td-stat cell-y col-stat">13.0%</td><td class="td-stat cell-y col-stat">.270</td><td class="td-stat cell-y col-stat">92.2</td></tr>
+      <tr><td class="td-rank">5</td><td class="td-player">Jordan Walker</td><td class="td-team">STL</td><td class="td-hr">8</td><td class="td-stat cell-g col-stat">22.4%</td><td class="td-stat cell-g col-stat">.331</td><td class="td-stat cell-g col-stat">95.0</td></tr>
+      <tr><td class="td-rank">5</td><td class="td-player">Mickey Moniak</td><td class="td-team">COL</td><td class="td-hr">8</td><td class="td-stat cell-y col-stat">13.2%</td><td class="td-stat cell-y col-stat">.260</td><td class="td-stat cell-y col-stat">90.7</td></tr>
+      <tr><td class="td-rank">5</td><td class="td-player">Kyle Schwarber</td><td class="td-team">PHI</td><td class="td-hr">8</td><td class="td-stat cell-g col-stat">20.8%</td><td class="td-stat cell-y col-stat">.278</td><td class="td-stat cell-g col-stat">92.7</td></tr>
+      <tr><td class="td-rank">5</td><td class="td-player">Ben Rice</td><td class="td-team">NYY</td><td class="td-hr">8</td><td class="td-stat cell-g col-stat">21.3%</td><td class="td-stat cell-g col-stat">.322</td><td class="td-stat cell-g col-stat">94.9</td></tr>
+      <tr><td class="td-rank">5</td><td class="td-player">Sal Stewart</td><td class="td-team">CIN</td><td class="td-hr">8</td><td class="td-stat cell-g col-stat">23.0%</td><td class="td-stat cell-g col-stat">.310</td><td class="td-stat cell-y col-stat">91.1</td></tr>
+      <tr><td class="td-rank">5</td><td class="td-player">Max Muncy</td><td class="td-team">LAD</td><td class="td-hr">8</td><td class="td-stat cell-y col-stat">17.2%</td><td class="td-stat cell-g col-stat">.286</td><td class="td-stat cell-y col-stat">92.0</td></tr>
+      <tr><td class="td-rank">5</td><td class="td-player">Elly De La Cruz</td><td class="td-team">CIN</td><td class="td-hr">8</td><td class="td-stat cell-y col-stat">15.9%</td><td class="td-stat cell-y col-stat">.265</td><td class="td-stat cell-g col-stat">95.2</td></tr>
+      <tr><td class="td-rank">5</td><td class="td-player">Mike Trout</td><td class="td-team">LAA</td><td class="td-hr">8</td><td class="td-stat cell-g col-stat">24.6%</td><td class="td-stat cell-g col-stat">.430</td><td class="td-stat cell-y col-stat">91.3</td></tr>
+      <tr><td class="td-rank">5</td><td class="td-player">Oneil Cruz</td><td class="td-team">PIT</td><td class="td-hr">8</td><td class="td-stat cell-g col-stat">23.4%</td><td class="td-stat cell-g col-stat">.301</td><td class="td-stat cell-g col-stat">98.0</td></tr>
+      <tr><td class="td-rank">15</td><td class="td-player">Colson Montgomery</td><td class="td-team">CWS</td><td class="td-hr">7</td><td class="td-stat cell-y col-stat">15.8%</td><td class="td-stat cell-y col-stat">.237</td><td class="td-stat cell-r col-stat">89.2</td></tr>
+      <tr><td class="td-rank">15</td><td class="td-player">CJ Abrams</td><td class="td-team">WSH</td><td class="td-hr">7</td><td class="td-stat cell-y col-stat">13.9%</td><td class="td-stat cell-y col-stat">.250</td><td class="td-stat cell-y col-stat">90.3</td></tr>
+      <tr><td class="td-rank">15</td><td class="td-player">Drake Baldwin</td><td class="td-team">ATL</td><td class="td-hr">7</td><td class="td-stat cell-y col-stat">16.7%</td><td class="td-stat cell-y col-stat">.269</td><td class="td-stat cell-y col-stat">90.1</td></tr>
+      <tr><td class="td-rank">15</td><td class="td-player">Dalton Rushing</td><td class="td-team">LAD</td><td class="td-hr">7</td><td class="td-stat cell-g col-stat">21.7%</td><td class="td-stat cell-g col-stat">.450</td><td class="td-stat cell-g col-stat">94.4</td></tr>
+      <tr><td class="td-rank">15</td><td class="td-player">Ian Happ</td><td class="td-team">CHC</td><td class="td-hr">7</td><td class="td-stat cell-y col-stat">16.4%</td><td class="td-stat cell-y col-stat">.265</td><td class="td-stat cell-r col-stat">89.9</td></tr>
+      <tr><td class="td-rank">15</td><td class="td-player">Gunnar Henderson</td><td class="td-team">BAL</td><td class="td-hr">7</td><td class="td-stat cell-r col-stat">9.9%</td><td class="td-stat cell-r col-stat">.160</td><td class="td-stat cell-y col-stat">90.0</td></tr>
+      <tr><td class="td-rank">15</td><td class="td-player">Brandon Lowe</td><td class="td-team">PIT</td><td class="td-hr">7</td><td class="td-stat cell-r col-stat">11.5%</td><td class="td-stat cell-r col-stat">.206</td><td class="td-stat cell-r col-stat">86.0</td></tr>
+      <tr><td class="td-rank">15</td><td class="td-player">Matt Olson</td><td class="td-team">ATL</td><td class="td-hr">7</td><td class="td-stat cell-g col-stat">18.9%</td><td class="td-stat cell-g col-stat">.341</td><td class="td-stat cell-g col-stat">92.5</td></tr>
+      <tr><td class="td-rank">23</td><td class="td-player">Carter Jensen</td><td class="td-team">KC</td><td class="td-hr">6</td><td class="td-stat cell-y col-stat">14.6%</td><td class="td-stat cell-y col-stat">.236</td><td class="td-stat cell-y col-stat">91.0</td></tr>
+      <tr><td class="td-rank">23</td><td class="td-player">Hunter Goodman</td><td class="td-team">COL</td><td class="td-hr">6</td><td class="td-stat cell-y col-stat">13.7%</td><td class="td-stat cell-r col-stat">.210</td><td class="td-stat cell-g col-stat">93.3</td></tr>
+      <tr><td class="td-rank">23</td><td class="td-player">José Ramírez</td><td class="td-team">CLE</td><td class="td-hr">6</td><td class="td-stat cell-r col-stat">12.8%</td><td class="td-stat cell-y col-stat">.260</td><td class="td-stat cell-y col-stat">90.7</td></tr>
+      <tr><td class="td-rank">23</td><td class="td-player">Junior Caminero</td><td class="td-team">TB</td><td class="td-hr">6</td><td class="td-stat cell-r col-stat">10.1%</td><td class="td-stat cell-r col-stat">.184</td><td class="td-stat cell-y col-stat">91.4</td></tr>
+      <tr><td class="td-rank">23</td><td class="td-player">Michael Harris II</td><td class="td-team">ATL</td><td class="td-hr">6</td><td class="td-stat cell-g col-stat">18.6%</td><td class="td-stat cell-g col-stat">.327</td><td class="td-stat cell-g col-stat">95.2</td></tr>
+      <tr><td class="td-rank">23</td><td class="td-player">Corey Seager</td><td class="td-team">TEX</td><td class="td-hr">6</td><td class="td-stat cell-y col-stat">16.1%</td><td class="td-stat cell-y col-stat">.238</td><td class="td-stat cell-y col-stat">90.3</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Dansby Swanson</td><td class="td-team">CHC</td><td class="td-hr">5</td><td class="td-stat cell-y col-stat">12.9%</td><td class="td-stat cell-r col-stat">.208</td><td class="td-stat cell-y col-stat">90.2</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Chase DeLauter</td><td class="td-team">CLE</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">11.3%</td><td class="td-stat cell-r col-stat">.212</td><td class="td-stat cell-r col-stat">89.8</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Byron Buxton</td><td class="td-team">MIN</td><td class="td-hr">5</td><td class="td-stat cell-y col-stat">16.4%</td><td class="td-stat cell-y col-stat">.216</td><td class="td-stat cell-r col-stat">88.5</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Jake Bauers</td><td class="td-team">MIL</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">10.0%</td><td class="td-stat cell-y col-stat">.232</td><td class="td-stat cell-g col-stat">93.3</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Ozzie Albies</td><td class="td-team">ATL</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">3.4%</td><td class="td-stat cell-r col-stat">.138</td><td class="td-stat cell-r col-stat">85.9</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Luke Raley</td><td class="td-team">SEA</td><td class="td-hr">5</td><td class="td-stat cell-g col-stat">20.9%</td><td class="td-stat cell-g col-stat">.320</td><td class="td-stat cell-g col-stat">93.8</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Jake Burger</td><td class="td-team">TEX</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">10.0%</td><td class="td-stat cell-r col-stat">.186</td><td class="td-stat cell-r col-stat">89.2</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Gary Sánchez</td><td class="td-team">MIL</td><td class="td-hr">5</td><td class="td-stat cell-g col-stat">17.9%</td><td class="td-stat cell-g col-stat">.315</td><td class="td-stat cell-y col-stat">90.0</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Bryce Harper</td><td class="td-team">PHI</td><td class="td-hr">5</td><td class="td-stat cell-y col-stat">13.2%</td><td class="td-stat cell-g col-stat">.311</td><td class="td-stat cell-r col-stat">88.7</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Christian Walker</td><td class="td-team">HOU</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">12.0%</td><td class="td-stat cell-r col-stat">.193</td><td class="td-stat cell-r col-stat">89.8</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Zach Neto</td><td class="td-team">LAA</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">11.9%</td><td class="td-stat cell-r col-stat">.208</td><td class="td-stat cell-y col-stat">90.1</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Cal Raleigh</td><td class="td-team">SEA</td><td class="td-hr">5</td><td class="td-stat cell-y col-stat">13.0%</td><td class="td-stat cell-y col-stat">.243</td><td class="td-stat cell-r col-stat">85.9</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Andy Pages</td><td class="td-team">LAD</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">7.6%</td><td class="td-stat cell-r col-stat">.169</td><td class="td-stat cell-y col-stat">90.8</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Jorge Soler</td><td class="td-team">LAA</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">12.2%</td><td class="td-stat cell-r col-stat">.182</td><td class="td-stat cell-r col-stat">88.9</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Shohei Ohtani</td><td class="td-team">LAD</td><td class="td-hr">5</td><td class="td-stat cell-g col-stat">22.1%</td><td class="td-stat cell-y col-stat">.255</td><td class="td-stat cell-g col-stat">94.1</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Kerry Carpenter</td><td class="td-team">DET</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">12.8%</td><td class="td-stat cell-r col-stat">.203</td><td class="td-stat cell-g col-stat">93.2</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Dillon Dingler</td><td class="td-team">DET</td><td class="td-hr">5</td><td class="td-stat cell-g col-stat">19.7%</td><td class="td-stat cell-g col-stat">.341</td><td class="td-stat cell-g col-stat">92.6</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Ildemaro Vargas</td><td class="td-team">AZ</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">8.2%</td><td class="td-stat cell-r col-stat">.204</td><td class="td-stat cell-r col-stat">87.3</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Miguel Vargas</td><td class="td-team">CWS</td><td class="td-hr">5</td><td class="td-stat cell-y col-stat">13.9%</td><td class="td-stat cell-y col-stat">.237</td><td class="td-stat cell-r col-stat">89.0</td></tr>
+      <tr><td class="td-rank">29</td><td class="td-player">Jeremiah Jackson</td><td class="td-team">BAL</td><td class="td-hr">5</td><td class="td-stat cell-r col-stat">10.0%</td><td class="td-stat cell-r col-stat">.191</td><td class="td-stat cell-r col-stat">88.3</td></tr>
+      <tr><td class="td-rank">49</td><td class="td-player">Liam Hicks</td><td class="td-team">MIA</td><td class="td-hr">4</td><td class="td-stat cell-r col-stat">5.3%</td><td class="td-stat cell-r col-stat">.117</td><td class="td-stat cell-r col-stat">87.3</td></tr>
+      <tr><td class="td-rank">49</td><td class="td-player">Willson Contreras</td><td class="td-team">BOS</td><td class="td-hr">4</td><td class="td-stat cell-y col-stat">14.3%</td><td class="td-stat cell-y col-stat">.236</td><td class="td-stat cell-y col-stat">91.5</td></tr>
+    </tbody>
+  </table>
+
+  <div class="metric-defs">
+    <div class="metric-defs-title">Metric Guide</div>
+    <div class="color-legend">
+      <div class="legend-item"><div class="legend-swatch swatch-g"></div> Top third of this leaderboard</div>
+      <div class="legend-item"><div class="legend-swatch swatch-y"></div> Middle third</div>
+      <div class="legend-item"><div class="legend-swatch swatch-r"></div> Bottom third</div>
+    </div>
+    <div class="metric-rows">
+      <div class="metric-def"><span class="metric-def-label">Barrel%</span> % of batted balls hit with elite exit velocity + launch angle. Strongest Statcast predictor of HR output (r=0.70). Top third: ≥17.9%.</div>
+      <div class="metric-def"><span class="metric-def-label">xISO</span> Expected isolated power based on quality of contact — park and luck neutral. Better than actual ISO for projecting future HR rate. Top third: ≥.286.</div>
+      <div class="metric-def"><span class="metric-def-label">EV Avg</span> Average exit velocity in mph. Measures raw power. Top third: ≥92.5 mph.</div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>Dingers Hotline &nbsp;·&nbsp; Season HR Leaders</span>
+  <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
+</footer>
+
+</body>
+</html>

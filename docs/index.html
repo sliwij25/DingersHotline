@@ -134,6 +134,26 @@
     align-items: center;
   }
 
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.10);
+    color: #fff;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.18);
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .nav-link:hover { background: rgba(255,255,255,0.18); }
+
   .chip {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
@@ -635,7 +655,7 @@
     <div class="site-date">Latest Update: 2026-04-24 08:26 AM &nbsp;·&nbsp; 20 Picks</div>
   </div>
   <div class="model-chips">
-    
+    <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
   </div>
   <div class="tg-join">
     <div class="tg-join-label">Get notified the moment today's picks are ready — join the free Telegram channel.</div>

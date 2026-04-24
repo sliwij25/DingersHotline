@@ -72,7 +72,7 @@ print("=" * 60)
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
 from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, star_bucket_hit_rate, star_bucket_pnl, yesterday_results_snapshot, trending_picks
-from generate_html import generate_picks_html
+from generate_html import generate_picks_html, generate_leaderboard_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
 # Labels yesterday's pick_factors with actual HR results and refreshes 2026 training data.
@@ -295,35 +295,35 @@ else:
     print(narrative)
 
 # ── Export clean .txt file (shareable picks list) ──────────────────────────────
-if not args.use_cache:
-    try:
-        from datetime import timedelta as _td
-        _yesterday = (date.today() - _td(days=1)).isoformat()
-        _snap = yesterday_results_snapshot(_yesterday)
+# Always write — cache re-runs update the file so the lock source and DB stay in sync.
+try:
+    from datetime import timedelta as _td
+    _yesterday = (date.today() - _td(days=1)).isoformat()
+    _snap = yesterday_results_snapshot(_yesterday)
 
-        txt_path = Path(__file__).parent.parent / "picks" / f"picks_{TODAY}.txt"
-        with open(txt_path, "w", encoding="utf-8") as _f:
-            # Prepend yesterday's snapshot so every picks file records prior-day history
-            if _snap["picks"]:
-                _star_map = {5: "★★★★★", 4: "★★★★☆", 3: "★★★☆☆", 2: "★★☆☆☆", 1: "★☆☆☆☆", None: "—"}
-                _f.write(f"Yesterday's Results — {_yesterday}\n")
-                _f.write("─" * 62 + "\n")
-                for _p in _snap["picks"]:
-                    _hr = " HR" if _p["homered"] else ("  ?" if _p["homered"] is None else "   ")
-                    _stars = _star_map.get(_p["stars"], "—")
-                    _pnl   = f"${_p['pnl']:+.2f}" if _p["pnl"] is not None else "  —  "
-                    _f.write(f"#{_p['rank']:>2}{_hr}  {_stars}  {_p['player']:<28}  {_p['odds']:>5}  {_pnl}\n")
-                if _snap["labeled"]:
-                    _f.write(f"{'─'*62}\n{_snap['hr_count']} HR(s) / {len(_snap['picks'])} picks   Day P&L: ${_snap['day_pnl']:+.2f}\n")
-                _f.write("\n")
-
-            _f.write(f"Dingers Hotline — {TODAY}\n")
-            _f.write("=" * 62 + "\n\n")
-            _f.write(narrative)
+    txt_path = Path(__file__).parent.parent / "picks" / f"picks_{TODAY}.txt"
+    with open(txt_path, "w", encoding="utf-8") as _f:
+        # Prepend yesterday's snapshot so every picks file records prior-day history
+        if _snap["picks"]:
+            _star_map = {5: "★★★★★", 4: "★★★★☆", 3: "★★★☆☆", 2: "★★☆☆☆", 1: "★☆☆☆☆", None: "—"}
+            _f.write(f"Yesterday's Results — {_yesterday}\n")
+            _f.write("─" * 62 + "\n")
+            for _p in _snap["picks"]:
+                _hr = " HR" if _p["homered"] else ("  ?" if _p["homered"] is None else "   ")
+                _stars = _star_map.get(_p["stars"], "—")
+                _pnl   = f"${_p['pnl']:+.2f}" if _p["pnl"] is not None else "  —  "
+                _f.write(f"#{_p['rank']:>2}{_hr}  {_stars}  {_p['player']:<28}  {_p['odds']:>5}  {_pnl}\n")
+            if _snap["labeled"]:
+                _f.write(f"{'─'*62}\n{_snap['hr_count']} HR(s) / {len(_snap['picks'])} picks   Day P&L: ${_snap['day_pnl']:+.2f}\n")
             _f.write("\n")
-        print(f"\n  [Export] Picks saved to {txt_path.name}")
-    except Exception as e:
-        print(f"  [Export] Could not save .txt: {e}")
+
+        _f.write(f"Dingers Hotline — {TODAY}\n")
+        _f.write("=" * 62 + "\n\n")
+        _f.write(narrative)
+        _f.write("\n")
+    print(f"\n  [Export] Picks saved to {txt_path.name}")
+except Exception as e:
+    print(f"  [Export] Could not save .txt: {e}")
 
 # ── Generate bet slips ─────────────────────────────────────────────────────────
 
@@ -610,7 +610,13 @@ try:
         with open(_html_pages, "w", encoding="utf-8") as _hf:
             _hf.write(_html_str)
 
-        print(f"  [HTML] GitHub Pages updated → docs/index.html")
+        # Generate leaderboard page
+        _lb_html = generate_leaderboard_html(today_str=TODAY)
+        _lb_path = Path(__file__).parent.parent / "docs" / "leaderboard.html"
+        with open(_lb_path, "w", encoding="utf-8") as _lf:
+            _lf.write(_lb_html)
+
+        print(f"  [HTML] GitHub Pages updated → docs/index.html + docs/leaderboard.html")
 except Exception as _he:
     print(f"  [HTML] Skipped: {_he}")
 
@@ -626,12 +632,12 @@ try:
             "agents/bet_tracker.py", "scripts/daily_picks.py",
             "ml/optimize_weights.py", "ml/fetch_actual_results.py",
             "ml/build_historical_dataset.py", "README.md", "requirements.txt",
-            "tools/generate_html.py", "docs/index.html",
+            "tools/generate_html.py", "docs/index.html", "docs/leaderboard.html",
         ]
         _commit_msg = f"Auto-update {TODAY} — picks run"
     else:
         # Cache run: only commit HTML (picks changed, P&L/chips must stay correct)
-        _git_files = ["docs/index.html", f"picks/picks_{TODAY}.html"]
+        _git_files = ["docs/index.html", "docs/leaderboard.html", f"picks/picks_{TODAY}.html"]
         _commit_msg = f"picks({TODAY}): re-run from cache — lineup update"
 
     _sp.run(["/usr/bin/git", "-C", _repo, "add"] + _git_files, capture_output=True)
