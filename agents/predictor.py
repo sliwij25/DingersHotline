@@ -1396,9 +1396,8 @@ def _compute_matchup_score(b_stats: dict, p_stats: dict) -> float:
 def fetch_recent_hr_form(days: int = 14) -> str:
     """Fetch HR leaders over the last N days from Baseball Savant HR events.
 
-    Uses the statcast search endpoint to get individual HR events, then
-    aggregates by player. The leaderboard CSV returns empty hr columns
-    when a date range filter is applied, so we count events directly.
+    Keyed by player_id (batter field) to avoid name collisions (e.g. two
+    active players named Max Muncy with different MLB IDs).
     """
     import datetime as _dt
     today  = date.today()
@@ -1421,11 +1420,21 @@ def fetch_recent_hr_form(days: int = 14) -> str:
     try:
         text   = resp.text.lstrip("\ufeff")
         reader = csv.DictReader(io.StringIO(text))
-        counts: dict[str, int] = {}
+        # Key by player_id — avoids name collisions (e.g. two players named "Muncy, Max")
+        counts: dict[int, int] = {}
+        id_to_name: dict[int, str] = {}
         for r in reader:
-            name = (r.get("player_name") or "").strip()
-            if name:
-                counts[name] = counts.get(name, 0) + 1
+            pid_raw = (r.get("batter") or "").strip()
+            name    = (r.get("player_name") or "").strip()
+            if not pid_raw:
+                continue
+            try:
+                pid = int(pid_raw)
+            except ValueError:
+                continue
+            counts[pid] = counts.get(pid, 0) + 1
+            if pid not in id_to_name and name:
+                id_to_name[pid] = name
     except Exception as exc:
         return json.dumps({"status": "error", "message": f"CSV parse error: {exc}"})
 
@@ -1434,8 +1443,8 @@ def fetch_recent_hr_form(days: int = 14) -> str:
                            "message": f"No HR data found for last {days} days."})
 
     leaders = [
-        {"player": name, "hr_last_14d": str(cnt)}
-        for name, cnt in sorted(counts.items(), key=lambda x: x[1], reverse=True)
+        {"player_id": pid, "player": id_to_name.get(pid, ""), "hr_last_14d": str(cnt)}
+        for pid, cnt in sorted(counts.items(), key=lambda x: x[1], reverse=True)
     ]
     return json.dumps({
         "status":       "success",
@@ -1925,11 +1934,17 @@ class Homer:
                     pull   = b_data.get("pull_percent") or "—"
                     ev_    = b_data.get("exit_velocity_avg") or "—"
 
-                    # Recent form
-                    form_hrs = next((str(p.get("hr_last_14d", ""))
-                                     for p in recent_form
-                                     if any(part in p.get("player","").lower()
-                                            for part in b_key.split() if len(part) > 3)), "—")
+                    # Recent form — match by player_id first to avoid name collisions
+                    # (e.g. two active players named "Max Muncy" with different MLB IDs)
+                    if batter_id:
+                        form_hrs = next((str(p.get("hr_last_14d", ""))
+                                         for p in recent_form
+                                         if p.get("player_id") == batter_id), "—")
+                    else:
+                        form_hrs = next((str(p.get("hr_last_14d", ""))
+                                         for p in recent_form
+                                         if any(part in p.get("player","").lower()
+                                                for part in b_key.split() if len(part) > 3)), "—")
 
                     # Platoon advantage (only for confirmed players with known bat_side)
                     platoon = ""
@@ -3557,33 +3572,26 @@ class Homer:
         # Pure score sort — best picks first regardless of game
         scored.sort(key=lambda x: x["score"], reverse=True)
 
-        # Assign star ratings using percentile thresholds from recent score history.
-        # Thresholds are computed from pick_factors over the last 30 days so ratings
-        # reflect absolute quality rather than rank within today's pool.
-        auc = 0.5
-        try:
-            weights = Homer._ml_weights or {}
-            auc = float(weights.get("cv_auc_mean", 0.5))
-        except Exception:
-            pass
-        max_stars = 5 if auc >= 0.65 else 4 if auc >= 0.55 else 3
-
-        thresholds = Homer._load_score_percentiles(max_stars)
-
-        def _stars_from_percentiles(score):
-            for min_score, star_count in thresholds:
-                if score >= min_score:
-                    return star_count
+        # Assign star ratings by fixed rank bands within the top-20:
+        #   #1–5   → ★★★★☆  Strong
+        #   #6–15  → ★★★☆☆  Solid
+        #   #16–20 → ★★☆☆☆  Speculative
+        # Picks beyond top_n (roster fallback overflows) get 1 star.
+        def _stars_from_rank(rank_1based: int) -> int:
+            if rank_1based <= 5:
+                return 4
+            if rank_1based <= 15:
+                return 3
+            if rank_1based <= 20:
+                return 2
             return 1
 
-        for pick in scored[:top_n]:
-            s = _stars_from_percentiles(pick["score"])
+        for i, pick in enumerate(scored[:top_n], 1):
+            s = _stars_from_rank(i)
             pick["stars"] = "★" * s + "☆" * (5 - s)
 
-        # Picks beyond top_n still get score-based rating (for fallback callers)
-        for pick in scored[top_n:]:
-            s = _stars_from_percentiles(pick["score"])
-            pick["stars"] = "★" * s + "☆" * (5 - s)
+        for i, pick in enumerate(scored[top_n:], top_n + 1):
+            pick["stars"] = "★☆☆☆☆"
 
         if verbose:
             print(f"\n  [SCORING DEBUG] Total players scored: {len(player_signals)}")
