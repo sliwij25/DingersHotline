@@ -792,6 +792,8 @@ _VENUE_PARK_CONSTANTS: dict[str, dict] = {
     "loanDepot park":                   {"park_hr_factor": 81.0,  "outfield_size": "Large"},
     "great american ball park":         {"park_hr_factor": 114.0, "outfield_size": "Small"},
     "chase field":                      {"park_hr_factor": 95.0,  "outfield_size": "Large"},
+    # Mexico City series (7,350 ft elevation — higher than Coors; very HR-friendly thin air)
+    "estadio alfredo harp helu":        {"park_hr_factor": 120.0, "outfield_size": "Medium"},
 }
 
 
@@ -1392,62 +1394,48 @@ def _compute_matchup_score(b_stats: dict, p_stats: dict) -> float:
 
 
 def fetch_recent_hr_form(days: int = 14) -> str:
-    """Fetch HR leaders and barrel rate leaders over the last N days from Baseball Savant.
+    """Fetch HR leaders over the last N days from Baseball Savant HR events.
 
-    Players with multiple HRs in the last two weeks are on a hot streak.
-    Barrel rate over that window shows whether the contact quality is real.
-
-    Args:
-        days: Rolling window in days (default 14).
+    Uses the statcast search endpoint to get individual HR events, then
+    aggregates by player. The leaderboard CSV returns empty hr columns
+    when a date range filter is applied, so we count events directly.
     """
-    today     = date.today()
-    start     = (today - __import__("datetime").timedelta(days=days)).isoformat()
-    end       = today.isoformat()
-    season    = today.year
+    import datetime as _dt
+    today  = date.today()
+    start  = (today - _dt.timedelta(days=days)).isoformat()
+    end    = today.isoformat()
+    season = today.year
 
     url = (
-        f"{SAVANT_BASE}/leaderboard/custom"
-        f"?year={season}&type=batter&filter=&sort=4&sortDir=desc&min=5"
-        f"&selections=hr,barrel_batted_rate,hard_hit_percent,exit_velocity_avg"
-        f"&chart=false&x=hr&y=hr&r=no&exactNameSearch=false"
+        f"{SAVANT_BASE}/statcast_search/csv"
+        f"?all=true&hfAB=home_run%7C&hfGT=R%7C&hfSea={season}%7C"
+        f"&player_type=batter&type=details"
         f"&game_date_gt={start}&game_date_lt={end}&csv=true"
     )
     try:
-        resp = requests.get(url, headers=_HEADERS, timeout=20)
+        resp = requests.get(url, headers=_HEADERS, timeout=30)
         resp.raise_for_status()
     except requests.RequestException as exc:
         return json.dumps({"status": "error", "message": str(exc)})
 
     try:
-        # Strip BOM — Savant CSV starts with \ufeff which corrupts the first column header
-        # Without this, "last_name, first_name" becomes "\ufeff\"last_name" and ALL names = ""
-        text = resp.text.lstrip('\ufeff')
+        text   = resp.text.lstrip("\ufeff")
         reader = csv.DictReader(io.StringIO(text))
-        rows   = []
+        counts: dict[str, int] = {}
         for r in reader:
-            try:
-                hr_val = int((r.get("hr") or "0").strip())
-                if hr_val >= 1:
-                    rows.append(r)
-            except (ValueError, AttributeError):
-                pass  # Skip rows with invalid HR values
-        rows.sort(key=lambda r: int((r.get("hr") or "0").strip()), reverse=True)
+            name = (r.get("player_name") or "").strip()
+            if name:
+                counts[name] = counts.get(name, 0) + 1
     except Exception as exc:
         return json.dumps({"status": "error", "message": f"CSV parse error: {exc}"})
 
-    if not rows:
+    if not counts:
         return json.dumps({"status": "no_data",
                            "message": f"No HR data found for last {days} days."})
 
     leaders = [
-        {
-            "player":       r.get("last_name, first_name") or r.get("player_name"),
-            "hr_last_14d":  r.get("hr"),
-            "barrel_rate":  r.get("barrel_batted_rate"),
-            "hard_hit_pct": r.get("hard_hit_percent"),
-            "avg_exit_velo":r.get("exit_velocity_avg"),
-        }
-        for r in rows[:30]
+        {"player": name, "hr_last_14d": str(cnt)}
+        for name, cnt in sorted(counts.items(), key=lambda x: x[1], reverse=True)
     ]
     return json.dumps({
         "status":       "success",
@@ -1456,8 +1444,6 @@ def fetch_recent_hr_form(days: int = 14) -> str:
         "end":          end,
         "hr_leaders":   leaders,
     }, indent=2)
-
-
 def check_lineup_availability(game_date: str = None) -> str:
     """Check how many teams have confirmed lineups posted for game_date."""
     target_date = game_date or date.today().isoformat()
@@ -1690,7 +1676,7 @@ def _fetch_home_away_splits_batch(player_ids: list) -> dict:
         resp = requests.get(
             f"{MLB_API_BASE}/stats",
             params={
-                "stats":     "splits",
+                "stats":     "statSplits",
                 "group":     "hitting",
                 "season":    date.today().year,
                 "playerIds": ",".join(str(p) for p in player_ids[:60]),
@@ -1719,7 +1705,7 @@ def _fetch_home_away_splits_batch(player_ids: list) -> dict:
             result[pid][key] = {
                 "hr":       int(stat.get("homeRuns") or 0),
                 "pa":       int(stat.get("plateAppearances") or 0),
-                "slugging": stat.get("slugging", ".000"),
+                "slugging": stat.get("slg", ".000"),
                 "ops":      stat.get("ops", ".000"),
             }
     return result
@@ -1956,7 +1942,7 @@ class Homer:
                     ha_data = ha.get(ha_key, {})
                     ha_str  = (f"{'home' if is_home else 'away'}: "
                                f"{ha_data.get('hr','—')}HR/{ha_data.get('pa','—')}PA "
-                               f"SLG={ha_data.get('slugging','—')}"
+                               f"SLG={ha_data.get('slg','—')}"
                                if ha_data else "splits: n/a")
 
                     # Head-to-head (only top 4 confirmed batters per side to limit API calls)
@@ -2020,7 +2006,7 @@ class Homer:
                             "h2h_hr":           h2h.get("hr") if h2h else None,
                             "h2h_ab":           h2h.get("ab") if h2h else None,
                             "is_home":          is_home,
-                            "venue_slugging":   ha_data.get("slugging") if ha_data else None,
+                            "venue_slugging":   ha_data.get("slg") if ha_data else None,
                             "bpp_vs_grade":     None,  # BallparkPal matchup grade (0-10)
                             "bpp_proj_rank":    None,  # BallparkPal matchup table rank
                             "bpp_hr_pct":       None,  # BallparkPal game HR prob % (future: separate endpoint)
@@ -2718,7 +2704,7 @@ class Homer:
                         "sweet_spot_pct":   _safe_float(sc_data.get("sweet_spot_percent")),
                         "season_hr":        _safe_int(sc_data.get("home_run")),
                         "hr_luck":          None,   # filled below: actual − expected HRs
-                        "recent_form_14d":  form_hrs,
+                        "recent_form_14d":  _safe_int(form_hrs),
                         "pitcher_hr_per_9": p_hr_per_9,
                         "pitcher_hr_vs_hand": None,
                         "pitcher_barrel_pct": None,
@@ -2839,22 +2825,20 @@ class Homer:
         # Rewards elite proven power hitters so they're not undervalued on neutral days.
         score += sig.pop("_elite_hr_boost", 0.0)
 
-        # Status-based penalty (tracked separately so it's excluded from power gate)
-        status = sig.get("status", "unknown")
+        # Status-based penalty — only applies when we can't verify the player is actually playing.
+        # Odds presence is equivalent to lineup confirmation: books don't post props for scratched players.
+        has_odds = sig.get("ev_10") is not None
         status_penalty = 0.0
-        if status == "waiting":
-            # Small nudge so confirmed batters rank above equally-scored unconfirmed ones.
-            # Kept tiny so a genuinely good unconfirmed hitter still outranks a weak confirmed one.
-            status_penalty = -0.5 if sig.get("ev_10") is None else -0.25
-        elif status == "unknown":
-            status_penalty = -1.5
+        if not has_odds:
+            status = sig.get("status", "unknown")
+            if status == "waiting":
+                status_penalty -= 0.5
+            elif status == "unknown":
+                status_penalty -= 1.5
+            # Roster fallback with no odds: extra skepticism (truly unverifiable).
+            if not sig.get("lineup_confirmed", True):
+                status_penalty -= 1.5
         score += status_penalty
-
-        # Roster fallback with no odds corroboration: extra skepticism.
-        # Books don't post HR props for scratched players — if odds exist, player is in.
-        # If no odds AND lineup_confirmed=False, we can't verify they're even playing.
-        if not sig.get("lineup_confirmed", True) and sig.get("ev_10") is None:
-            score -= 1.5
 
         # EV — most important (Pinnacle probability as ground truth)
         ev = sig.get("ev_10")
@@ -3529,7 +3513,7 @@ class Homer:
             outfield_size = sig.get("outfield_size")
             if outfield_size and outfield_size.lower() in ["small", "short"]:
                 reasons.append(f"{outfield_size} outfield")
-            stadium_desc = sig.get("stadium_description", "")
+            stadium_desc = sig.get("stadium_description") or ""
             bat_side = sig.get("bat_side", "?").upper()
             if bat_side == "?" :
                 bat_side = get_bat_side_by_name(player).upper()
