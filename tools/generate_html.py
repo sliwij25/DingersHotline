@@ -104,9 +104,9 @@ def _build_card(rank: int, pick: dict) -> str:
     if _gt:
         try:
             from datetime import datetime as _dt
-            import pytz as _pytz
+            from zoneinfo import ZoneInfo
             _utc = _dt.fromisoformat(_gt.replace("Z", "+00:00"))
-            _et  = _utc.astimezone(_pytz.timezone("America/New_York"))
+            _et  = _utc.astimezone(ZoneInfo("America/New_York"))
             _game_time_str = _et.strftime("%-I:%M %p ET")
         except Exception:
             _game_time_str = _gt[11:16]

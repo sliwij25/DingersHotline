@@ -295,33 +295,37 @@ else:
     print(narrative)
 
 # ── Export clean .txt file (shareable picks list) ──────────────────────────────
-# Always write — cache re-runs update the file so the lock source and DB stay in sync.
+# Skip on cache re-runs when the file already exists — the morning run owns the txt.
+# Cache re-runs only update HTML (lineup badges, odds) without altering the record.
 try:
-    from datetime import timedelta as _td
-    _yesterday = (date.today() - _td(days=1)).isoformat()
-    _snap = yesterday_results_snapshot(_yesterday)
-
     txt_path = Path(__file__).parent.parent / "picks" / f"picks_{TODAY}.txt"
-    with open(txt_path, "w", encoding="utf-8") as _f:
-        # Prepend yesterday's snapshot so every picks file records prior-day history
-        if _snap["picks"]:
-            _star_map = {5: "★★★★★", 4: "★★★★☆", 3: "★★★☆☆", 2: "★★☆☆☆", 1: "★☆☆☆☆", None: "—"}
-            _f.write(f"Yesterday's Results — {_yesterday}\n")
-            _f.write("─" * 62 + "\n")
-            for _p in _snap["picks"]:
-                _hr = " HR" if _p["homered"] else ("  ?" if _p["homered"] is None else "   ")
-                _stars = _star_map.get(_p["stars"], "—")
-                _pnl   = f"${_p['pnl']:+.2f}" if _p["pnl"] is not None else "  —  "
-                _f.write(f"#{_p['rank']:>2}{_hr}  {_stars}  {_p['player']:<28}  {_p['odds']:>5}  {_pnl}\n")
-            if _snap["labeled"]:
-                _f.write(f"{'─'*62}\n{_snap['hr_count']} HR(s) / {len(_snap['picks'])} picks   Day P&L: ${_snap['day_pnl']:+.2f}\n")
-            _f.write("\n")
+    if args.use_cache and txt_path.exists():
+        print(f"\n  [Export] Skipping txt rewrite on cache re-run (morning file preserved).")
+    else:
+        from datetime import timedelta as _td
+        _yesterday = (date.today() - _td(days=1)).isoformat()
+        _snap = yesterday_results_snapshot(_yesterday)
 
-        _f.write(f"Dingers Hotline — {TODAY}\n")
-        _f.write("=" * 62 + "\n\n")
-        _f.write(narrative)
-        _f.write("\n")
-    print(f"\n  [Export] Picks saved to {txt_path.name}")
+        with open(txt_path, "w", encoding="utf-8") as _f:
+            # Prepend yesterday's snapshot so every picks file records prior-day history
+            if _snap["picks"]:
+                _star_map = {5: "★★★★★", 4: "★★★★☆", 3: "★★★☆☆", 2: "★★☆☆☆", 1: "★☆☆☆☆", None: "—"}
+                _f.write(f"Yesterday's Results — {_yesterday}\n")
+                _f.write("─" * 62 + "\n")
+                for _p in _snap["picks"]:
+                    _hr = " HR" if _p["homered"] else ("  ?" if _p["homered"] is None else "   ")
+                    _stars = _star_map.get(_p["stars"], "—")
+                    _pnl   = f"${_p['pnl']:+.2f}" if _p["pnl"] is not None else "  —  "
+                    _f.write(f"#{_p['rank']:>2}{_hr}  {_stars}  {_p['player']:<28}  {_p['odds']:>5}  {_pnl}\n")
+                if _snap["labeled"]:
+                    _f.write(f"{'─'*62}\n{_snap['hr_count']} HR(s) / {len(_snap['picks'])} picks   Day P&L: ${_snap['day_pnl']:+.2f}\n")
+                _f.write("\n")
+
+            _f.write(f"Dingers Hotline — {TODAY}\n")
+            _f.write("=" * 62 + "\n\n")
+            _f.write(narrative)
+            _f.write("\n")
+        print(f"\n  [Export] Picks saved to {txt_path.name}")
 except Exception as e:
     print(f"  [Export] Could not save .txt: {e}")
 
