@@ -317,15 +317,15 @@ def generate_picks_html(
     bb_display = list(best_bets or [])
 
     # Also Watching: picks not in best bets, in model rank order
-    aw_display = [(i + 1, p) for i, p in enumerate(picks) if p.get("player") not in bb_names]
+    aw_display = [p for p in picks if p.get("player") not in bb_names]
 
     bb_cards = "".join(_build_card(i + 1, p) for i, p in enumerate(bb_display))
-    aw_cards = "".join(_build_card(rank, p) for rank, p in aw_display)
+    aw_cards = "".join(_build_card(len(bb_display) + i + 1, p) for i, p in enumerate(aw_display))
 
     gd_bb = (group_data or {}).get("best_bets")
     gd_aw = (group_data or {}).get("also_watching")
 
-    bb_header = _group_header_html("Best Bets", "Top picks by Expected Value", len(bb_display), gd_bb, accent=True)
+    bb_header = _group_header_html("Best Bets", "Top 7 by Expected Value", len(bb_display), gd_bb, accent=True)
     aw_header = _group_header_html("Also Watching", "Remaining top-20 by model score", len(aw_display), gd_aw, accent=False)
 
     sections_html = f"""
