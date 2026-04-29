@@ -71,7 +71,7 @@ print("=" * 60)
 
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
-from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, star_bucket_hit_rate, star_bucket_pnl, yesterday_results_snapshot, trending_picks
+from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, group_hit_rate, group_pnl, yesterday_results_snapshot, trending_picks
 from generate_html import generate_picks_html, generate_leaderboard_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
@@ -416,6 +416,7 @@ else:
     player_signals = homer._context.get("player_signals", {})
     all_ranked = homer._rank_picks_python(player_signals, top_n=20, verbose=not args.brief, scratched=SCRATCHED)
     _all_ranked = all_ranked
+    _best_bet_names = {p.get("player") for p in _best_bets}
     saved = 0
     for rank_i, p in enumerate(all_ranked[:20], 1):  # hard cap at exactly 20
         if p.get("signals"):
@@ -426,7 +427,8 @@ else:
                                   score=p.get("score"),
                                   rank=rank_i,
                                   stars=p.get("stars", "").count("★") or None,
-                                  game_pk=p.get("signals", {}).get("game_pk"))
+                                  game_pk=p.get("signals", {}).get("game_pk"),
+                                  is_best_bet=1 if p.get("player") in _best_bet_names else 0)
                 saved += 1
             except Exception:
                 pass
@@ -630,11 +632,12 @@ try:
         import datetime as _dt2
         _timestamp = _dt2.datetime.now().strftime("%Y-%m-%d %I:%M %p")
 
-        # Compute hit rates + P&L per star tier for HTML section headers
+        # Compute hit rates + P&L for the two groups (Best Bets / Also Watching)
         _ranked_for_html = _all_ranked or picks
-        _present_tiers = {(_p.get("stars") or "").count("★") for _p in _ranked_for_html}
-        _tier_hit_rates = {_sc: star_bucket_hit_rate(_sc) for _sc in _present_tiers if _sc}
-        _tier_pnl = {_sc: star_bucket_pnl(_sc) for _sc in _present_tiers if _sc}
+        _group_data = {
+            "best_bets":      {"hit_rate": group_hit_rate(True),  "pnl": group_pnl(True)},
+            "also_watching":  {"hit_rate": group_hit_rate(False), "pnl": group_pnl(False)},
+        }
 
         import time as _time
         _version = str(int(_time.time()))
@@ -652,8 +655,7 @@ try:
             model_cumulative_pnl=_model_cumulative_pnl,
             model_days_tracked=_model_days_tracked,
             streak=_streak,
-            tier_hit_rates=_tier_hit_rates,
-            tier_pnl=_tier_pnl,
+            group_data=_group_data,
             version=_version,
             best_bets=_best_bets,
         )

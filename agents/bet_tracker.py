@@ -163,6 +163,7 @@ _MIGRATION_COLUMNS = [
     ("pitcher_breaking_pct",  "REAL"),
     ("pitcher_offspeed_pct",  "REAL"),
     ("game_pk",               "TEXT"),  # doubleheader support
+    ("is_best_bet",           "INTEGER"),  # 1 = top-7 EV pick, 0 = also watching
 ]
 
 
@@ -215,7 +216,8 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                       score: float = None,
                       rank: int = None,
                       stars: int = None,
-                      game_pk: str = None) -> str:
+                      game_pk: str = None,
+                      is_best_bet: int = 0) -> str:
     """
     Persist the algorithmic signal snapshot for one pick.
     Called automatically by daily_picks.py for ALL ranked players (not just bets),
@@ -248,8 +250,8 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                recent_form_14d, pitcher_hr_per_9, pitcher_hr_vs_hand, pitcher_barrel_pct,
                h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging,
                team, blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft, hr_luck,
-               game_pk)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               game_pk, is_best_bet)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(bet_date, player, game_pk) DO UPDATE SET
               rank=excluded.rank, score=excluded.score, stars=excluded.stars,
               algo_version=excluded.algo_version, confidence=excluded.confidence,
@@ -271,7 +273,7 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
               blast_rate=excluded.blast_rate, altitude_ft=excluded.altitude_ft,
               humidity_pct=excluded.humidity_pct, pressure_mb=excluded.pressure_mb,
               carry_ft=excluded.carry_ft, hr_luck=excluded.hr_luck,
-              game_pk=excluded.game_pk
+              game_pk=excluded.game_pk, is_best_bet=excluded.is_best_bet
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
@@ -313,6 +315,7 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             signals.get("carry_ft"),
             signals.get("hr_luck"),
             game_pk or signals.get("game_pk"),
+            is_best_bet,
         ))
         # Backfill stars on existing rows that were saved before stars column existed
         if stars is not None:
@@ -697,6 +700,74 @@ def star_bucket_pnl(star_count: int) -> float | None:
         else:
             total -= 10.0
     return round(total, 2) if rows else None
+
+
+def group_hit_rate(best_bets: bool) -> tuple[int, int]:
+    """Return (n_picks, n_homers) for the Best Bets (is_best_bet=1) or Also Watching group.
+    Falls back to rank<=7 proxy for rows saved before is_best_bet column existed.
+    """
+    conn = get_db_conn()
+    try:
+        _ensure_pick_factors_table(conn)
+        row = conn.execute(
+            """
+            SELECT COUNT(*), SUM(homered) FROM (
+              SELECT homered,
+                     COALESCE(is_best_bet, CASE WHEN rank <= 7 THEN 1 ELSE 0 END) AS grp,
+                     ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn
+              FROM pick_factors
+              WHERE homered IS NOT NULL AND rank IS NOT NULL
+                AND algo_version NOT LIKE 'hist_%'
+            ) WHERE rn <= 20 AND grp = ?
+            """,
+            (1 if best_bets else 0,),
+        ).fetchone()
+        return (row[0], int(row[1] or 0))
+    finally:
+        conn.close()
+
+
+def group_pnl(best_bets: bool) -> float | None:
+    """Return cumulative hypothetical P&L ($10/pick) for Best Bets or Also Watching group."""
+    conn = get_db_conn()
+    try:
+        _ensure_pick_factors_table(conn)
+        rows = conn.execute(
+            """
+            SELECT best_odds, homered FROM (
+              SELECT best_odds, homered,
+                     COALESCE(is_best_bet, CASE WHEN rank <= 7 THEN 1 ELSE 0 END) AS grp,
+                     ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn
+              FROM pick_factors
+              WHERE homered IS NOT NULL AND rank IS NOT NULL
+                AND algo_version NOT LIKE 'hist_%'
+            ) WHERE rn <= 20 AND grp = ?
+            """,
+            (1 if best_bets else 0,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        return None
+
+    def _to_decimal(odds_str):
+        try:
+            o = int(odds_str)
+            return (o / 100 + 1) if o > 0 else (100 / abs(o) + 1)
+        except Exception:
+            return None
+
+    total = 0.0
+    for best_odds, homered in rows:
+        if homered:
+            dec = _to_decimal(best_odds)
+            if dec is None:
+                dec = 4.5   # +350 fallback when odds not captured
+            total += round(dec * 10 - 10, 2)
+        else:
+            total -= 10.0
+    return round(total, 2)
 
 
 def trending_picks(min_streak: int = 3, top_n_threshold: int = 10) -> list[dict]:

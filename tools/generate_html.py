@@ -275,31 +275,19 @@ def generate_picks_html(
     model_cumulative_pnl: float | None = None,
     model_days_tracked: int | None = None,
     streak: str | None = None,
-    tier_hit_rates: dict | None = None,
-    tier_pnl: dict | None = None,
+    group_data: dict | None = None,
     version: str = "",
     best_bets: list[dict] | None = None,
 ) -> str:
-    # tier_hit_rates: {star_count: (n_picks, n_homers)} — pre-computed by daily_picks.py
-    # tier_pnl: {star_count: float | None} — cumulative hypothetical P&L per tier
+    # Two-group layout: Best Bets (top-7 EV) and Also Watching (remaining top-20).
+    # Stars still appear on individual pick cards.
 
-    # Group picks by star count (descending)
-    buckets: dict[int, list[tuple[int, dict]]] = {}
-    for i, pick in enumerate(picks):
-        n = _star_count(pick.get("stars", ""))
-        buckets.setdefault(n, []).append((i + 1, pick))
-
-    sections_html = ""
-    for star_n in sorted(buckets.keys(), reverse=True):
-        label        = _bucket_label(star_n)
-        filled_stars = "★" * star_n
-        empty_stars  = "☆" * (5 - star_n)
-        group_picks  = buckets[star_n]
-
-        # Hit rate badge for this tier
+    def _group_header_html(label: str, subtitle: str, n: int, gd: dict | None, accent: bool) -> str:
         hit_rate_html = ""
-        if tier_hit_rates and star_n in tier_hit_rates:
-            n_picks, n_homers = tier_hit_rates[star_n]
+        pnl_html = ""
+        if gd:
+            n_picks, n_homers = gd.get("hit_rate", (0, 0))
+            pv = gd.get("pnl")
             if n_picks > 0:
                 rate = n_homers / n_picks * 100
                 hit_rate_html = (
@@ -308,40 +296,54 @@ def generate_picks_html(
                     f'<span class="tier-hit-count"> ({n_picks} picks)</span>'
                     f'</span>'
                 )
-            else:
-                hit_rate_html = '<span class="tier-hit-rate tier-no-history">no history yet</span>'
-
-        # P&L badge for this tier
-        pnl_html = ""
-        if tier_pnl and star_n in tier_pnl:
-            pv = tier_pnl[star_n]
             if pv is not None:
                 pnl_css = "tier-pnl-pos" if pv > 0 else "tier-pnl-neg" if pv < 0 else "tier-pnl-flat"
-                pnl_html = f'<span class="tier-pnl {pnl_css}">{pv:+.2f}</span>'
+                pnl_html = f'<span class="tier-pnl {pnl_css}">${pv:+.2f}</span>'
+        accent_class = " tier-header-accent" if accent else ""
+        return (
+            f'<div class="tier-header{accent_class}">'
+            f'<span class="tier-label">{_esc(label)}</span>'
+            f'<span class="tier-subtitle">{_esc(subtitle)}</span>'
+            f'<span class="tier-count">{n} pick{"s" if n != 1 else ""}</span>'
+            f'{hit_rate_html}{pnl_html}'
+            f'<div class="tier-rule"></div>'
+            f'</div>'
+        )
 
-        cards = "".join(_build_card(rank, pick) for rank, pick in group_picks)
+    # Split: best-bet names from best_bets list (EV order), rest in model-rank order
+    bb_names = {p.get("player") for p in (best_bets or [])}
 
-        sections_html += f"""
-    <section class="tier-section">
-        <div class="tier-header">
-            <span class="tier-stars">
-                <span class="star-filled">{filled_stars}</span><span class="star-empty">{empty_stars}</span>
-            </span>
-            <span class="tier-label">{_esc(label)}</span>
-            <span class="tier-count">{len(group_picks)} pick{"s" if len(group_picks) != 1 else ""}</span>
-            {hit_rate_html}
-            {pnl_html}
-            <div class="tier-rule"></div>
-        </div>
+    # Best Bets: display in EV order using best_bets list (already sorted)
+    bb_display = list(best_bets or [])
+
+    # Also Watching: picks not in best bets, in model rank order
+    aw_display = [(i + 1, p) for i, p in enumerate(picks) if p.get("player") not in bb_names]
+
+    bb_cards = "".join(_build_card(i + 1, p) for i, p in enumerate(bb_display))
+    aw_cards = "".join(_build_card(rank, p) for rank, p in aw_display)
+
+    gd_bb = (group_data or {}).get("best_bets")
+    gd_aw = (group_data or {}).get("also_watching")
+
+    bb_header = _group_header_html("Best Bets", "Top picks by Expected Value", len(bb_display), gd_bb, accent=True)
+    aw_header = _group_header_html("Also Watching", "Remaining top-20 by model score", len(aw_display), gd_aw, accent=False)
+
+    sections_html = f"""
+    <section class="tier-section tier-section-accent">
+        {bb_header}
         <div class="picks-grid">
-{cards}
+{bb_cards}
+        </div>
+    </section>
+    <section class="tier-section">
+        {aw_header}
+        <div class="picks-grid">
+{aw_cards}
         </div>
     </section>"""
 
     auc_str = f"{auc:.3f}" if auc else "—"
     ml_str  = f"{ml_influence * 100:.0f}%" if ml_influence else "—"
-
-    best_bets_html = _build_best_bets_html(best_bets) if best_bets else ""
 
     def _pnl_chip(label: str, value: float | None, since: str = "") -> str:
         if value is None:
@@ -702,6 +704,12 @@ def generate_picks_html(
     padding: 28px 36px 8px;
   }}
 
+  .tier-section-accent {{
+    border-left: 3px solid var(--gold);
+    padding-left: 33px;
+    margin-left: 12px;
+  }}
+
   .tier-header {{
     display: flex;
     align-items: center;
@@ -709,12 +717,7 @@ def generate_picks_html(
     margin-bottom: 16px;
   }}
 
-  .tier-stars {{
-    font-size: 16px;
-    letter-spacing: 2px;
-    line-height: 1;
-    flex-shrink: 0;
-  }}
+  .tier-header-accent .tier-label {{ color: var(--gold); }}
 
   .star-filled {{ color: var(--gold); }}
   .star-empty  {{ color: var(--border-dark); }}
@@ -726,6 +729,12 @@ def generate_picks_html(
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--navy);
+    white-space: nowrap;
+  }}
+
+  .tier-subtitle {{
+    font-size: 11px;
+    color: var(--text-sub);
     white-space: nowrap;
   }}
 
@@ -1100,7 +1109,8 @@ def generate_picks_html(
   /* ─── Responsive ─── */
   @media (max-width: 600px) {{
     .site-header   {{ padding: 18px; }}
-    .tier-section  {{ padding: 20px 16px 4px; }}
+    .tier-section          {{ padding: 20px 16px 4px; }}
+    .tier-section-accent   {{ padding-left: 13px; margin-left: 4px; }}
     .picks-grid    {{ gap: 8px; }}
     .site-footer   {{ padding: 12px 16px; }}
     .stat          {{ min-width: 54px; }}
@@ -1134,8 +1144,6 @@ def generate_picks_html(
 
 {model_stats_tile}
 {streak_tile}
-
-{best_bets_html}
 
 {sections_html}
 
