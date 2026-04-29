@@ -270,13 +270,17 @@ narrative = homer.run(
 
 # ── Compute Best Bets (top-7 by EV) ──────────────────────────────────────────
 # Rank top-20 model picks by expected value. Three tiers:
-#   Tier 0: ev_10 exists AND Pinnacle odds present  → Pinnacle-anchored EV
-#   Tier 1: ev_10 exists but no Pinnacle (consensus) → estimated EV (~)
-#   Tier 2: no odds at all                           → model score proxy (~)
+#   Tier 0: ev_10 ≥ $0.50 AND Pinnacle odds present → meaningful Pinnacle-anchored EV
+#   Tier 1: ev_10 ≥ $0.50 but no Pinnacle (consensus) → meaningful estimated EV (~)
+#   Tier 2: ev_10 < $0.50 or no odds → model score proxy
+# Minimum threshold prevents near-zero EV picks ($+0.02) from jumping
+# over high-model-score players who have no odds yet.
+_MIN_EV = 0.50
+
 def _ev_sort_key(p: dict) -> tuple:
     sig = p.get("signals", {}) or {}
     ev  = sig.get("ev_10")
-    if ev is not None:
+    if ev is not None and ev >= _MIN_EV:
         tier = 0 if sig.get("pinnacle_odds") else 1
         return (tier, -ev)
     return (2, -(p.get("score") or 0))
