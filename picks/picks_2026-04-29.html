@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-version="1777477853">
+<html lang="en" data-version="1777481310">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -289,6 +289,12 @@
     padding: 28px 36px 8px;
   }
 
+  .tier-section-accent {
+    border-left: 3px solid var(--gold);
+    padding-left: 33px;
+    margin-left: 12px;
+  }
+
   .tier-header {
     display: flex;
     align-items: center;
@@ -296,12 +302,7 @@
     margin-bottom: 16px;
   }
 
-  .tier-stars {
-    font-size: 16px;
-    letter-spacing: 2px;
-    line-height: 1;
-    flex-shrink: 0;
-  }
+  .tier-header-accent .tier-label { color: var(--gold); }
 
   .star-filled { color: var(--gold); }
   .star-empty  { color: var(--border-dark); }
@@ -313,6 +314,12 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--navy);
+    white-space: nowrap;
+  }
+
+  .tier-subtitle {
+    font-size: 11px;
+    color: var(--text-sub);
     white-space: nowrap;
   }
 
@@ -634,13 +641,66 @@
     margin-top: 4px;
   }
 
+  /* ─── Best Bets ─── */
+  .best-bets-section {
+    max-width: 960px; margin: 0 auto 28px; padding: 0 24px;
+  }
+  .bb-header {
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px;
+  }
+  .bb-title {
+    font-family: 'Oswald', sans-serif; font-size: 1.05rem; font-weight: 600;
+    color: var(--navy); text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .bb-sub {
+    font-size: 0.72rem; color: var(--text-sub);
+  }
+  .bb-grid {
+    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;
+  }
+  .bb-card {
+    flex: 0 0 auto; width: 148px; background: var(--surface);
+    border: 1.5px solid var(--gold); border-radius: 8px;
+    padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
+    cursor: default; transition: box-shadow 0.15s;
+  }
+  .bb-card:hover { box-shadow: 0 2px 10px rgba(212,160,23,0.25); }
+  .bb-rank {
+    font-size: 0.65rem; font-weight: 700; color: var(--gold);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .bb-name {
+    font-family: 'Oswald', sans-serif; font-size: 0.88rem; font-weight: 600;
+    color: var(--navy); line-height: 1.2;
+  }
+  .bb-matchup {
+    font-size: 0.65rem; color: var(--text-sub); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .bb-stars { font-size: 0.75rem; }
+  .bb-ev-row {
+    display: flex; align-items: center; gap: 6px; margin-top: 2px;
+  }
+  .bb-ev {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
+  }
+  .bb-ev-confirmed { color: var(--green); }
+  .bb-ev-est       { color: var(--amber); }
+  .bb-ev-model     { color: var(--text-dim); }
+  .bb-overall {
+    font-size: 0.62rem; color: var(--text-dim);
+  }
+
   /* ─── Responsive ─── */
   @media (max-width: 600px) {
     .site-header   { padding: 18px; }
-    .tier-section  { padding: 20px 16px 4px; }
+    .tier-section          { padding: 20px 16px 4px; }
+    .tier-section-accent   { padding-left: 13px; margin-left: 4px; }
     .picks-grid    { gap: 8px; }
     .site-footer   { padding: 12px 16px; }
     .stat          { min-width: 54px; }
+    .best-bets-section { padding: 0 16px; }
+    .bb-card       { width: 132px; }
   }
 </style>
 </head>
@@ -652,7 +712,7 @@
       <svg class="title-ball" fill="#ffffff" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g><path d="M455.857,56.144c-74.86-74.859-196.662-74.859-271.521,0C17.087,223.392-9.275,272.783,2.398,298.264c8.318,18.153,32.898,19.077,63.015,17.249l-36.537,97.203c-6.838,18.194-2.549,38.035,11.195,51.778c13.744,13.743,33.583,18.035,51.778,11.195L197.2,436.089c-2.507,34.987-3.349,64.4,16.534,73.511c3.325,1.524,7.055,2.4,11.403,2.4c28.973-0.002,85.294-38.91,230.72-184.335C530.715,252.806,530.715,131.003,455.857,56.144z M441.431,313.239C369.446,385.224,316.37,433.95,279.174,462.2c-41.868,31.797-54.167,30.124-56.94,28.854c-2.851-1.307-4.901-7.374-5.626-16.646c-0.922-11.81,0.244-27.541,1.479-44.196c0.209-2.826,0.421-5.681,0.625-8.557c0.247-3.466-1.288-6.82-4.073-8.899c-1.788-1.335-3.934-2.026-6.102-2.026c-1.209,0-2.424,0.214-3.589,0.652l-120.277,45.21c-10.765,4.047-22.043,1.608-30.174-6.524c-8.131-8.131-10.57-19.411-6.524-30.174l42.126-112.072c1.224-3.258,0.703-6.915-1.382-9.702c-2.085-2.787-5.444-4.321-8.919-4.06c-14.536,1.076-31.012,2.295-42.857,1.278c-8.892-0.763-14.721-2.793-15.994-5.572c-1.27-2.772-2.944-15.072,28.855-56.941c28.25-37.196,76.975-90.271,148.96-162.255c66.904-66.905,175.764-66.905,242.669,0C508.335,137.474,508.335,246.335,441.431,313.239z"/></g><g><path d="M320.096,28.297c-90.213,0-163.608,73.394-163.608,163.608s73.395,163.608,163.608,163.608s163.608-73.395,163.608-163.608S410.31,28.297,320.096,28.297z M320.096,48.698c36.338,0,69.551,13.613,94.828,35.995c-26.187,23.225-59.477,35.903-94.828,35.903c-35.351,0-68.641-12.679-94.828-35.903C250.544,62.309,283.758,48.698,320.096,48.698z M320.096,335.111c-36.338,0.001-69.552-13.611-94.829-35.995c26.187-23.225,59.478-35.903,94.829-35.903c35.351,0,68.641,12.679,94.828,35.903C389.647,321.499,356.433,335.111,320.096,335.111z M429.215,284.535c-30.034-26.977-68.377-41.722-109.12-41.722c-40.743,0-79.086,14.745-109.12,41.722c-21.246-24.99-34.087-57.336-34.087-92.631c0.001-35.293,12.842-67.64,34.088-92.63c30.034,26.977,68.377,41.722,109.12,41.722s79.086-14.745,109.119-41.722c21.246,24.99,34.087,57.336,34.087,92.63C463.302,227.198,450.46,259.545,429.215,284.535z"/></g></svg>
       Dingers Hotline
     </div>
-    <div class="site-date">Latest Update: 2026-04-29 10:50 AM &nbsp;·&nbsp; 20 Picks</div>
+    <div class="site-date">Latest Update: 2026-04-29 11:48 AM &nbsp;·&nbsp; 20 Picks</div>
   </div>
   <div class="model-chips">
     
@@ -703,42 +763,13 @@
 
 
 
-    <section class="tier-section">
-        <div class="tier-header">
-            <span class="tier-stars">
-                <span class="star-filled">★★★★</span><span class="star-empty">☆</span>
-            </span>
-            <span class="tier-label">Strong Plays</span>
-            <span class="tier-count">5 picks</span>
-            <span class="tier-hit-rate tier-no-history">no history yet</span>
-            
-            <div class="tier-rule"></div>
-        </div>
+    <section class="tier-section tier-section-accent">
+        <div class="tier-header tier-header-accent"><span class="tier-label">Best Bets</span><span class="tier-subtitle">Top picks by Expected Value</span><span class="tier-count">7 picks</span><span class="tier-hit-rate">28% HR rate<span class="tier-hit-count"> (86 picks)</span></span><span class="tier-pnl tier-pnl-pos">$+208.30</span><div class="tier-rule"></div></div>
         <div class="picks-grid">
 
         <div class="pick-card" style="animation-delay:0.00s">
             <div class="card-rank">
                 <span class="rank-num">#1</span>
-                <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
-                <span class="badge-waiting">LINEUP PENDING</span>
-            </div>
-            <div class="card-body">
-                <div class="player-row">
-                    <span class="player-name">Elly De La Cruz</span>
-                    <span class="score-badge score-high">29.6</span>
-                </div>
-                <div class="matchup-line">Colorado Rockies @ Cincinnati Reds &nbsp;·&nbsp; <strong>6:40 PM ET</strong></div>
-                <div class="venue-line">Great American Ball Park &nbsp;·&nbsp; Home</div>
-                <div class="pitcher-line">SHB vs Tomoyuki Sugano (R) &nbsp;·&nbsp; #3 in order</div>
-                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.280</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">17.5%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">56.3%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">95.8 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">32.5%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">32.5%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">10</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">Park 111%</span><span class="tag tag-dim">61°F</span><span class="tag tag-green">Wind 8mph (out)</span><span class="tag tag-amber">5HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.0 HR/9</span></div>
-                
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.280, 5HR last 14d, pitcher L3: 2.0HR/9, barrel 17.5%, Small outfield</div>
-            </div>
-        </div>
-        <div class="pick-card" style="animation-delay:0.04s">
-            <div class="card-rank">
-                <span class="rank-num">#2</span>
                 <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
                 
             </div>
@@ -756,50 +787,10 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.430, 4HR last 14d, pitcher L3: 1.1HR/9, barrel 25.6%, 52°F, weather 88% HR factor, Small outfield</div>
             </div>
         </div>
-        <div class="pick-card" style="animation-delay:0.08s">
+        <div class="pick-card" style="animation-delay:0.04s">
             <div class="card-rank">
-                <span class="rank-num">#3</span>
-                <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
-                
-            </div>
-            <div class="card-body">
-                <div class="player-row">
-                    <span class="player-name">Aaron Judge</span>
-                    <span class="score-badge score-high">27.3</span>
-                </div>
-                <div class="matchup-line">New York Yankees @ Texas Rangers &nbsp;·&nbsp; <strong>2:35 PM ET</strong></div>
-                <div class="venue-line">Globe Life Field &nbsp;·&nbsp; Away</div>
-                <div class="pitcher-line">RHB vs Nathan Eovaldi (R) &nbsp;·&nbsp; #3 in order</div>
-                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.420</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">27.8%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">55.6%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">93.6 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">38.9%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">31.9%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">12</span></div></div>
-                <div class="tags-row"><span class="tag tag-red">Park 90%</span><span class="tag tag-amber">6HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.5 HR/9</span></div>
-                
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.420, 6HR last 14d, pitcher L3: 2.5HR/9, barrel 27.8%</div>
-            </div>
-        </div>
-        <div class="pick-card" style="animation-delay:0.12s">
-            <div class="card-rank">
-                <span class="rank-num">#4</span>
-                <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
-                <span class="badge-waiting">LINEUP PENDING</span>
-            </div>
-            <div class="card-body">
-                <div class="player-row">
-                    <span class="player-name">Sal Stewart</span>
-                    <span class="score-badge score-high">26.8</span>
-                </div>
-                <div class="matchup-line">Colorado Rockies @ Cincinnati Reds &nbsp;·&nbsp; <strong>6:40 PM ET</strong></div>
-                <div class="venue-line">Great American Ball Park &nbsp;·&nbsp; Home</div>
-                <div class="pitcher-line">RHB vs Tomoyuki Sugano (R) &nbsp;·&nbsp; #4 in order</div>
-                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.300</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">22.1%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">47.7%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">91.6 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">41.9%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">34.9%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">9</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">Park 111%</span><span class="tag tag-dim">61°F</span><span class="tag tag-green">Wind 8mph (out)</span><span class="tag tag-amber">4HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.0 HR/9</span></div>
-                
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.300, 4HR last 14d, pitcher L3: 2.0HR/9, barrel 22.1%, Small outfield</div>
-            </div>
-        </div>
-        <div class="pick-card" style="animation-delay:0.16s">
-            <div class="card-rank">
-                <span class="rank-num">#5</span>
-                <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
+                <span class="rank-num">#2</span>
+                <span class="stars"><span class="star-filled">★★★</span><span class="star-empty">☆☆</span></span>
                 
             </div>
             <div class="card-body">
@@ -816,31 +807,16 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.340, 7HR last 14d, barrel 21.9%, 52°F, weather 88% HR factor, Small outfield</div>
             </div>
         </div>
-        </div>
-    </section>
-    <section class="tier-section">
-        <div class="tier-header">
-            <span class="tier-stars">
-                <span class="star-filled">★★★</span><span class="star-empty">☆☆</span>
-            </span>
-            <span class="tier-label">Solid Looks</span>
-            <span class="tier-count">10 picks</span>
-            <span class="tier-hit-rate tier-no-history">no history yet</span>
-            
-            <div class="tier-rule"></div>
-        </div>
-        <div class="picks-grid">
-
-        <div class="pick-card" style="animation-delay:0.20s">
+        <div class="pick-card" style="animation-delay:0.08s">
             <div class="card-rank">
-                <span class="rank-num">#6</span>
-                <span class="stars"><span class="star-filled">★★★</span><span class="star-empty">☆☆</span></span>
+                <span class="rank-num">#3</span>
+                <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
                 
             </div>
             <div class="card-body">
                 <div class="player-row">
                     <span class="player-name">Ben Rice</span>
-                    <span class="score-badge score-high">24.8</span>
+                    <span class="score-badge score-high">26.5</span>
                 </div>
                 <div class="matchup-line">New York Yankees @ Texas Rangers &nbsp;·&nbsp; <strong>2:35 PM ET</strong></div>
                 <div class="venue-line">Globe Life Field &nbsp;·&nbsp; Away</div>
@@ -851,6 +827,92 @@
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.320, 6HR last 14d, pitcher L3: 2.5HR/9, barrel 21.5%</div>
             </div>
         </div>
+        <div class="pick-card" style="animation-delay:0.12s">
+            <div class="card-rank">
+                <span class="rank-num">#4</span>
+                <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
+                
+            </div>
+            <div class="card-body">
+                <div class="player-row">
+                    <span class="player-name">Aaron Judge</span>
+                    <span class="score-badge score-high">26.4</span>
+                </div>
+                <div class="matchup-line">New York Yankees @ Texas Rangers &nbsp;·&nbsp; <strong>2:35 PM ET</strong></div>
+                <div class="venue-line">Globe Life Field &nbsp;·&nbsp; Away</div>
+                <div class="pitcher-line">RHB vs Nathan Eovaldi (R) &nbsp;·&nbsp; #3 in order</div>
+                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.420</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">27.8%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">55.6%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">93.6 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">38.9%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">31.9%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">12</span></div></div>
+                <div class="tags-row"><span class="tag tag-red">Park 90%</span><span class="tag tag-amber">6HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.5 HR/9</span></div>
+                
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.420, 6HR last 14d, pitcher L3: 2.5HR/9, barrel 27.8%</div>
+            </div>
+        </div>
+        <div class="pick-card" style="animation-delay:0.16s">
+            <div class="card-rank">
+                <span class="rank-num">#5</span>
+                <span class="stars"><span class="star-filled">★★</span><span class="star-empty">☆☆☆</span></span>
+                
+            </div>
+            <div class="card-body">
+                <div class="player-row">
+                    <span class="player-name">Trent Grisham</span>
+                    <span class="score-badge score-high">18.4</span>
+                </div>
+                <div class="matchup-line">New York Yankees @ Texas Rangers &nbsp;·&nbsp; <strong>2:35 PM ET</strong></div>
+                <div class="venue-line">Globe Life Field &nbsp;·&nbsp; Away</div>
+                <div class="pitcher-line">LHB vs Nathan Eovaldi (R) &nbsp;·&nbsp; #1 in order</div>
+                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.220</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">14.3%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">52.9%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">91.8 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">27.1%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">34.3%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">4</span></div></div>
+                <div class="tags-row"><span class="tag tag-red">Park 90%</span><span class="tag tag-amber">2HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.5 HR/9</span></div>
+                
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.220, 2HR last 14d, pitcher L3: 2.5HR/9, barrel 14.3%</div>
+            </div>
+        </div>
+        <div class="pick-card" style="animation-delay:0.20s">
+            <div class="card-rank">
+                <span class="rank-num">#6</span>
+                <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
+                <span class="badge-waiting">LINEUP PENDING</span>
+            </div>
+            <div class="card-body">
+                <div class="player-row">
+                    <span class="player-name">Elly De La Cruz</span>
+                    <span class="score-badge score-high">29.6</span>
+                </div>
+                <div class="matchup-line">Colorado Rockies @ Cincinnati Reds &nbsp;·&nbsp; <strong>6:40 PM ET</strong></div>
+                <div class="venue-line">Great American Ball Park &nbsp;·&nbsp; Home</div>
+                <div class="pitcher-line">SHB vs Tomoyuki Sugano (R) &nbsp;·&nbsp; #3 in order</div>
+                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.280</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">17.5%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">56.3%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">95.8 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">32.5%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">32.5%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">10</span></div></div>
+                <div class="tags-row"><span class="tag tag-green">Park 111%</span><span class="tag tag-dim">66°F</span><span class="tag tag-green">Wind 13mph (out)</span><span class="tag tag-amber">5HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.0 HR/9</span></div>
+                
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.280, 5HR last 14d, pitcher L3: 2.0HR/9, barrel 17.5%, Small outfield</div>
+            </div>
+        </div>
+        <div class="pick-card" style="animation-delay:0.24s">
+            <div class="card-rank">
+                <span class="rank-num">#7</span>
+                <span class="stars"><span class="star-filled">★★★★</span><span class="star-empty">☆</span></span>
+                <span class="badge-waiting">LINEUP PENDING</span>
+            </div>
+            <div class="card-body">
+                <div class="player-row">
+                    <span class="player-name">Sal Stewart</span>
+                    <span class="score-badge score-high">26.8</span>
+                </div>
+                <div class="matchup-line">Colorado Rockies @ Cincinnati Reds &nbsp;·&nbsp; <strong>6:40 PM ET</strong></div>
+                <div class="venue-line">Great American Ball Park &nbsp;·&nbsp; Home</div>
+                <div class="pitcher-line">RHB vs Tomoyuki Sugano (R) &nbsp;·&nbsp; #4 in order</div>
+                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.300</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">22.1%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">47.7%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">91.6 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">41.9%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">34.9%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">9</span></div></div>
+                <div class="tags-row"><span class="tag tag-green">Park 111%</span><span class="tag tag-dim">66°F</span><span class="tag tag-green">Wind 13mph (out)</span><span class="tag tag-amber">4HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.0 HR/9</span></div>
+                
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.300, 4HR last 14d, pitcher L3: 2.0HR/9, barrel 22.1%, Small outfield</div>
+            </div>
+        </div>
+        </div>
+    </section>
+    <section class="tier-section">
+        <div class="tier-header"><span class="tier-label">Also Watching</span><span class="tier-subtitle">Remaining top-20 by model score</span><span class="tier-count">13 picks</span><span class="tier-hit-rate">22% HR rate<span class="tier-hit-count"> (147 picks)</span></span><span class="tier-pnl tier-pnl-pos">$+239.50</span><div class="tier-rule"></div></div>
+        <div class="picks-grid">
+
         <div class="pick-card" style="animation-delay:0.24s">
             <div class="card-rank">
                 <span class="rank-num">#7</span>
@@ -880,13 +942,13 @@
             <div class="card-body">
                 <div class="player-row">
                     <span class="player-name">Yordan Alvarez</span>
-                    <span class="score-badge score-high">23.1</span>
+                    <span class="score-badge score-high">22.4</span>
                 </div>
                 <div class="matchup-line">Houston Astros @ Baltimore Orioles &nbsp;·&nbsp; <strong>6:35 PM ET</strong></div>
                 <div class="venue-line">Oriole Park at Camden Yards &nbsp;·&nbsp; Away</div>
                 <div class="pitcher-line">LHB vs TBD (?) &nbsp;·&nbsp; #2 in order</div>
                 <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.450</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">18.0%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">49.0%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">93.8 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">46.0%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">43.0%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">11</span></div></div>
-                <div class="tags-row"><span class="tag tag-dim">Park 91%</span><span class="tag tag-dim">61°F</span><span class="tag tag-green">Wind 11mph (out)</span><span class="tag tag-amber">5HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.4 HR/9</span></div>
+                <div class="tags-row"><span class="tag tag-red">Park 89%</span><span class="tag tag-dim">68°F</span><span class="tag tag-green">Wind 11mph (out)</span><span class="tag tag-amber">5HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.4 HR/9</span></div>
                 
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.450, 5HR last 14d, barrel 18.0%</div>
             </div>
@@ -926,7 +988,7 @@
                 <div class="venue-line">Great American Ball Park &nbsp;·&nbsp; Home</div>
                 <div class="pitcher-line">RHB vs Tomoyuki Sugano (R) &nbsp;·&nbsp; #5 in order</div>
                 <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.260</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">16.7%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">37.9%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">90.0 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">39.4%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">40.9%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">5</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">Park 111%</span><span class="tag tag-dim">61°F</span><span class="tag tag-green">Wind 8mph (out)</span><span class="tag tag-amber">2HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.0 HR/9</span></div>
+                <div class="tags-row"><span class="tag tag-green">Park 111%</span><span class="tag tag-dim">66°F</span><span class="tag tag-green">Wind 13mph (out)</span><span class="tag tag-amber">2HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.0 HR/9</span></div>
                 
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.260, 2HR last 14d, pitcher L3: 2.0HR/9, barrel 16.7%, Small outfield</div>
             </div>
@@ -939,16 +1001,16 @@
             </div>
             <div class="card-body">
                 <div class="player-row">
-                    <span class="player-name">Shea Langeliers</span>
-                    <span class="score-badge score-high">21.1</span>
+                    <span class="player-name">Nathaniel Lowe</span>
+                    <span class="score-badge score-high">19.8</span>
                 </div>
-                <div class="matchup-line">Kansas City Royals @ Athletics &nbsp;·&nbsp; <strong>9:40 PM ET</strong></div>
-                <div class="venue-line">Sutter Health Park &nbsp;·&nbsp; Home</div>
-                <div class="pitcher-line">RHB vs Michael Wacha (R) &nbsp;·&nbsp; #2 in order</div>
-                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.270</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">14.0%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">48.8%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">92.8 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">41.9%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">32.6%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">8</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">Park 124%</span><span class="tag tag-dim">73°F</span><span class="tag tag-green">Wind 9mph (out)</span><span class="tag tag-amber">3HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.6 HR/9</span></div>
+                <div class="matchup-line">Colorado Rockies @ Cincinnati Reds &nbsp;·&nbsp; <strong>6:40 PM ET</strong></div>
+                <div class="venue-line">Great American Ball Park &nbsp;·&nbsp; Home</div>
+                <div class="pitcher-line">LHB vs Tomoyuki Sugano (R) &nbsp;·&nbsp; #6 in order</div>
+                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.260</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">10.3%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">48.7%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">91.4 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">46.2%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">23.1%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">4</span></div></div>
+                <div class="tags-row"><span class="tag tag-green">Park 111%</span><span class="tag tag-dim">66°F</span><span class="tag tag-green">Wind 13mph (out)</span><span class="tag tag-amber">4HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.0 HR/9</span></div>
                 
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.270, 3HR last 14d, barrel 14.0%, park 124%</div>
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.260, 4HR last 14d, pitcher L3: 2.0HR/9, barrel 10.3%, Small outfield</div>
             </div>
         </div>
         <div class="pick-card" style="animation-delay:0.44s">
@@ -959,16 +1021,16 @@
             </div>
             <div class="card-body">
                 <div class="player-row">
-                    <span class="player-name">Dalton Rushing</span>
-                    <span class="score-badge score-high">20.1</span>
+                    <span class="player-name">Shea Langeliers</span>
+                    <span class="score-badge score-high">19.8</span>
                 </div>
-                <div class="matchup-line">Miami Marlins @ Los Angeles Dodgers &nbsp;·&nbsp; <strong>3:10 PM ET</strong></div>
-                <div class="venue-line">UNIQLO Field at Dodger Stadium &nbsp;·&nbsp; Home</div>
-                <div class="pitcher-line">LHB vs Sandy Alcantara (R) &nbsp;·&nbsp; #1 in order</div>
-                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.340</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">16.1%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">54.8%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">92.7 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">35.5%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">38.7%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">7</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">Park 117%</span><span class="tag tag-dim">79°F</span><span class="tag tag-green">Wind 7mph (out)</span><span class="tag tag-amber">4HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.3 HR/9</span></div>
+                <div class="matchup-line">Kansas City Royals @ Athletics &nbsp;·&nbsp; <strong>9:40 PM ET</strong></div>
+                <div class="venue-line">Sutter Health Park &nbsp;·&nbsp; Home</div>
+                <div class="pitcher-line">RHB vs Michael Wacha (R) &nbsp;·&nbsp; #2 in order</div>
+                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.270</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">14.0%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">48.8%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">92.8 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">41.9%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">32.6%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">8</span></div></div>
+                <div class="tags-row"><span class="tag tag-green">Park 124%</span><span class="tag tag-dim">73°F</span><span class="tag tag-green">Wind 9mph (out)</span><span class="tag tag-amber">3HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.6 HR/9</span></div>
                 
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.340, 4HR last 14d, barrel 16.1%, park 117%</div>
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.270, 3HR last 14d, barrel 14.0%, park 124%</div>
             </div>
         </div>
         <div class="pick-card" style="animation-delay:0.48s">
@@ -979,41 +1041,21 @@
             </div>
             <div class="card-body">
                 <div class="player-row">
-                    <span class="player-name">Nathaniel Lowe</span>
-                    <span class="score-badge score-high">19.8</span>
+                    <span class="player-name">Oneil Cruz</span>
+                    <span class="score-badge score-high">19.7</span>
                 </div>
-                <div class="matchup-line">Colorado Rockies @ Cincinnati Reds &nbsp;·&nbsp; <strong>6:40 PM ET</strong></div>
-                <div class="venue-line">Great American Ball Park &nbsp;·&nbsp; Home</div>
-                <div class="pitcher-line">LHB vs Tomoyuki Sugano (R) &nbsp;·&nbsp; #6 in order</div>
-                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.260</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">10.3%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">48.7%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">91.4 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">46.2%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">23.1%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">4</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">Park 111%</span><span class="tag tag-dim">61°F</span><span class="tag tag-green">Wind 8mph (out)</span><span class="tag tag-amber">4HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.0 HR/9</span></div>
+                <div class="matchup-line">St. Louis Cardinals @ Pittsburgh Pirates &nbsp;·&nbsp; <strong>6:40 PM ET</strong></div>
+                <div class="venue-line">PNC Park &nbsp;·&nbsp; Home</div>
+                <div class="pitcher-line">LHB vs Andre Pallante (R) &nbsp;·&nbsp; #1 in order</div>
+                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.290</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">23.6%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">62.5%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">96.3 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">37.5%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">27.8%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">9</span></div></div>
+                <div class="tags-row"><span class="tag tag-dim">Park 94%</span><span class="tag tag-dim">59°F</span><span class="tag tag-green">Wind 6mph (out)</span><span class="tag tag-amber">4HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.8 HR/9</span></div>
                 
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.260, 4HR last 14d, pitcher L3: 2.0HR/9, barrel 10.3%, Small outfield</div>
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.290, 4HR last 14d, barrel 23.6%</div>
             </div>
         </div>
         <div class="pick-card" style="animation-delay:0.52s">
             <div class="card-rank">
                 <span class="rank-num">#14</span>
-                <span class="stars"><span class="star-filled">★★★</span><span class="star-empty">☆☆</span></span>
-                <span class="badge-waiting">LINEUP PENDING</span>
-            </div>
-            <div class="card-body">
-                <div class="player-row">
-                    <span class="player-name">Max Muncy</span>
-                    <span class="score-badge score-high">19.6</span>
-                </div>
-                <div class="matchup-line">Miami Marlins @ Los Angeles Dodgers &nbsp;·&nbsp; <strong>3:10 PM ET</strong></div>
-                <div class="venue-line">UNIQLO Field at Dodger Stadium &nbsp;·&nbsp; Home</div>
-                <div class="pitcher-line">LHB vs Sandy Alcantara (R) &nbsp;·&nbsp; #5 in order</div>
-                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.290</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">17.1%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">52.9%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">92.1 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">32.9%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">34.3%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">9</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">Park 117%</span><span class="tag tag-dim">79°F</span><span class="tag tag-green">Wind 7mph (out)</span><span class="tag tag-amber">5HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.3 HR/9</span></div>
-                
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.290, 5HR last 14d, barrel 17.1%, park 117%</div>
-            </div>
-        </div>
-        <div class="pick-card" style="animation-delay:0.56s">
-            <div class="card-rank">
-                <span class="rank-num">#15</span>
                 <span class="stars"><span class="star-filled">★★★</span><span class="star-empty">☆☆</span></span>
                 <span class="badge-waiting">LINEUP PENDING</span>
             </div>
@@ -1026,49 +1068,34 @@
                 <div class="venue-line">Great American Ball Park &nbsp;·&nbsp; Away</div>
                 <div class="pitcher-line">RHB vs Brandon Williamson (L) &nbsp;·&nbsp; #3 in order</div>
                 <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.210</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">14.0%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">50.9%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">93.1 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">38.6%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">42.1%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">7</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">Park 111%</span><span class="tag tag-dim">61°F</span><span class="tag tag-green">Wind 8mph (out)</span><span class="tag tag-amber">3HR / 14d</span><span class="tag tag-amber">Pitcher L3: 1.7 HR/9</span></div>
+                <div class="tags-row"><span class="tag tag-green">Park 111%</span><span class="tag tag-dim">66°F</span><span class="tag tag-green">Wind 13mph (out)</span><span class="tag tag-amber">3HR / 14d</span><span class="tag tag-amber">Pitcher L3: 1.7 HR/9</span></div>
                 
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.210, 3HR last 14d, pitcher L3: 1.7HR/9, barrel 14.0%, Small outfield</div>
             </div>
         </div>
-        </div>
-    </section>
-    <section class="tier-section">
-        <div class="tier-header">
-            <span class="tier-stars">
-                <span class="star-filled">★★</span><span class="star-empty">☆☆☆</span>
-            </span>
-            <span class="tier-label">Worth Watching</span>
-            <span class="tier-count">5 picks</span>
-            <span class="tier-hit-rate tier-no-history">no history yet</span>
-            
-            <div class="tier-rule"></div>
-        </div>
-        <div class="picks-grid">
-
-        <div class="pick-card" style="animation-delay:0.60s">
+        <div class="pick-card" style="animation-delay:0.56s">
             <div class="card-rank">
-                <span class="rank-num">#16</span>
-                <span class="stars"><span class="star-filled">★★</span><span class="star-empty">☆☆☆</span></span>
+                <span class="rank-num">#15</span>
+                <span class="stars"><span class="star-filled">★★★</span><span class="star-empty">☆☆</span></span>
                 <span class="badge-waiting">LINEUP PENDING</span>
             </div>
             <div class="card-body">
                 <div class="player-row">
-                    <span class="player-name">Shohei Ohtani</span>
-                    <span class="score-badge score-high">19.3</span>
+                    <span class="player-name">Max Muncy</span>
+                    <span class="score-badge score-high">18.9</span>
                 </div>
                 <div class="matchup-line">Miami Marlins @ Los Angeles Dodgers &nbsp;·&nbsp; <strong>3:10 PM ET</strong></div>
                 <div class="venue-line">UNIQLO Field at Dodger Stadium &nbsp;·&nbsp; Home</div>
-                <div class="pitcher-line">LHB vs Sandy Alcantara (R) &nbsp;·&nbsp; #11 in order</div>
-                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.280</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">21.8%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">52.6%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">94.6 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">37.2%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">35.9%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">6</span></div></div>
-                <div class="tags-row"><span class="tag tag-green">Park 117%</span><span class="tag tag-dim">79°F</span><span class="tag tag-green">Wind 7mph (out)</span><span class="tag tag-amber">1HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.3 HR/9</span></div>
+                <div class="pitcher-line">LHB vs Sandy Alcantara (R) &nbsp;·&nbsp; #5 in order</div>
+                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.290</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">17.1%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">52.9%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">92.1 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">32.9%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">34.3%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">9</span></div></div>
+                <div class="tags-row"><span class="tag tag-green">Park 115%</span><span class="tag tag-dim">77°F</span><span class="tag tag-green">Wind 6mph (out)</span><span class="tag tag-amber">5HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.3 HR/9</span></div>
                 
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.280, barrel 21.8%, park 117%</div>
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.290, 5HR last 14d, barrel 17.1%, park 115%</div>
             </div>
         </div>
-        <div class="pick-card" style="animation-delay:0.64s">
+        <div class="pick-card" style="animation-delay:0.60s">
             <div class="card-rank">
-                <span class="rank-num">#17</span>
+                <span class="rank-num">#16</span>
                 <span class="stars"><span class="star-filled">★★</span><span class="star-empty">☆☆☆</span></span>
                 <span class="badge-waiting">LINEUP PENDING</span>
             </div>
@@ -1081,14 +1108,14 @@
                 <div class="venue-line">Citi Field &nbsp;·&nbsp; Away</div>
                 <div class="pitcher-line">LHB vs David Peterson (L) &nbsp;·&nbsp; #1 in order</div>
                 <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.370</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">29.4%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">64.7%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">97.0 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">36.8%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">29.4%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">10</span></div></div>
-                <div class="tags-row"><span class="tag tag-red">Park 87%</span><span class="tag tag-dim">54°F</span><span class="tag tag-green">Wind 11mph (out)</span><span class="tag tag-amber">5HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.3 HR/9</span></div>
+                <div class="tags-row"><span class="tag tag-red">Park 88%</span><span class="tag tag-dim">54°F</span><span class="tag tag-green">Wind 10mph (out)</span><span class="tag tag-amber">5HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.3 HR/9</span></div>
                 
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.370, 5HR last 14d, barrel 29.4%, 54°F, weather 89% HR factor</div>
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.370, 5HR last 14d, barrel 29.4%, 54°F, weather 90% HR factor</div>
             </div>
         </div>
-        <div class="pick-card" style="animation-delay:0.68s">
+        <div class="pick-card" style="animation-delay:0.64s">
             <div class="card-rank">
-                <span class="rank-num">#18</span>
+                <span class="rank-num">#17</span>
                 <span class="stars"><span class="star-filled">★★</span><span class="star-empty">☆☆☆</span></span>
                 <span class="badge-waiting">LINEUP PENDING</span>
             </div>
@@ -1101,9 +1128,29 @@
                 <div class="venue-line">Truist Park &nbsp;·&nbsp; Away</div>
                 <div class="pitcher-line">RHB vs JR Ritchie (R) &nbsp;·&nbsp; #5 in order</div>
                 <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.310</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">18.3%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">53.5%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">91.6 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">45.1%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">26.8%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">5</span></div></div>
-                <div class="tags-row"><span class="tag tag-dim">Park 99%</span><span class="tag tag-dim">73°F</span><span class="tag tag-green">Wind 9mph (out)</span><span class="tag tag-amber">2HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.6 HR/9</span></div>
+                <div class="tags-row"><span class="tag tag-dim">Park 101%</span><span class="tag tag-dim">75°F</span><span class="tag tag-green">Wind 7mph (out)</span><span class="tag tag-amber">2HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.6 HR/9</span></div>
                 
                 <div class="why-line"><span class="why-label">Why:</span> xISO 0.310, 2HR last 14d, pitcher L3: 2.6HR/9, barrel 18.3%</div>
+            </div>
+        </div>
+        <div class="pick-card" style="animation-delay:0.68s">
+            <div class="card-rank">
+                <span class="rank-num">#18</span>
+                <span class="stars"><span class="star-filled">★★</span><span class="star-empty">☆☆☆</span></span>
+                <span class="badge-waiting">LINEUP PENDING</span>
+            </div>
+            <div class="card-body">
+                <div class="player-row">
+                    <span class="player-name">Shohei Ohtani</span>
+                    <span class="score-badge score-high">18.6</span>
+                </div>
+                <div class="matchup-line">Miami Marlins @ Los Angeles Dodgers &nbsp;·&nbsp; <strong>3:10 PM ET</strong></div>
+                <div class="venue-line">UNIQLO Field at Dodger Stadium &nbsp;·&nbsp; Home</div>
+                <div class="pitcher-line">LHB vs Sandy Alcantara (R) &nbsp;·&nbsp; #11 in order</div>
+                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.280</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">21.8%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">52.6%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">94.6 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">37.2%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">35.9%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">6</span></div></div>
+                <div class="tags-row"><span class="tag tag-green">Park 115%</span><span class="tag tag-dim">77°F</span><span class="tag tag-green">Wind 6mph (out)</span><span class="tag tag-amber">1HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.3 HR/9</span></div>
+                
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.280, barrel 21.8%, park 115%</div>
             </div>
         </div>
         <div class="pick-card" style="animation-delay:0.72s">
@@ -1114,36 +1161,16 @@
             </div>
             <div class="card-body">
                 <div class="player-row">
-                    <span class="player-name">Ty France</span>
-                    <span class="score-badge score-high">18.0</span>
+                    <span class="player-name">Jordan Walker</span>
+                    <span class="score-badge score-high">18.5</span>
                 </div>
-                <div class="matchup-line">Chicago Cubs @ San Diego Padres &nbsp;·&nbsp; <strong>4:10 PM ET</strong></div>
-                <div class="venue-line">Petco Park &nbsp;·&nbsp; Home</div>
-                <div class="pitcher-line">RHB vs Jameson Taillon (R) &nbsp;·&nbsp; #5 in order</div>
-                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.340</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">16.2%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">54.1%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">92.1 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">35.1%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">21.6%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">3</span></div></div>
-                <div class="tags-row"><span class="tag tag-dim">Park 91%</span><span class="tag tag-dim">70°F</span><span class="tag tag-red">Wind 11mph (in)</span><span class="tag tag-amber">2HR / 14d</span><span class="tag tag-red">Pitcher L3: 2.6 HR/9</span></div>
+                <div class="matchup-line">St. Louis Cardinals @ Pittsburgh Pirates &nbsp;·&nbsp; <strong>6:40 PM ET</strong></div>
+                <div class="venue-line">PNC Park &nbsp;·&nbsp; Away</div>
+                <div class="pitcher-line">RHB vs Bubba Chandler (R) &nbsp;·&nbsp; #4 in order</div>
+                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.280</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">20.3%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">58.0%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">94.8 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">40.6%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">33.3%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">8</span></div></div>
+                <div class="tags-row"><span class="tag tag-dim">Park 94%</span><span class="tag tag-dim">59°F</span><span class="tag tag-green">Wind 6mph (out)</span><span class="tag tag-amber">Pitcher L3: 1.4 HR/9</span></div>
                 
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.340, 2HR last 14d, pitcher L3: 2.6HR/9, barrel 16.2%</div>
-            </div>
-        </div>
-        <div class="pick-card" style="animation-delay:0.76s">
-            <div class="card-rank">
-                <span class="rank-num">#20</span>
-                <span class="stars"><span class="star-filled">★★</span><span class="star-empty">☆☆☆</span></span>
-                <span class="badge-waiting">LINEUP PENDING</span>
-            </div>
-            <div class="card-body">
-                <div class="player-row">
-                    <span class="player-name">Michael Harris II</span>
-                    <span class="score-badge score-mid">17.8</span>
-                </div>
-                <div class="matchup-line">Detroit Tigers @ Atlanta Braves &nbsp;·&nbsp; <strong>7:15 PM ET</strong></div>
-                <div class="venue-line">Truist Park &nbsp;·&nbsp; Home</div>
-                <div class="pitcher-line">LHB vs Tarik Skubal (L) &nbsp;·&nbsp; #5 in order</div>
-                <div class="stats-row"><div class="stat"><span class="stat-label">xISO</span><span class="stat-value">0.320</span></div><div class="stat"><span class="stat-label">Barrel</span><span class="stat-value">18.5%</span></div><div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">55.6%</span></div></div><div class="stats-row"><div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">94.5 mph</span></div><div class="stat"><span class="stat-label">Sweet Sp</span><span class="stat-value">29.6%</span></div><div class="stat"><span class="stat-label">FB%</span><span class="stat-value">21.0%</span></div><div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">6</span></div></div>
-                <div class="tags-row"><span class="tag tag-dim">Park 99%</span><span class="tag tag-dim">73°F</span><span class="tag tag-green">Wind 9mph (out)</span><span class="tag tag-amber">4HR / 14d</span><span class="tag tag-dim">Pitcher L3: 0.4 HR/9</span></div>
-                
-                <div class="why-line"><span class="why-label">Why:</span> xISO 0.320, 4HR last 14d, barrel 18.5%</div>
+                <div class="why-line"><span class="why-label">Why:</span> xISO 0.280, pitcher L3: 1.4HR/9, barrel 20.3%</div>
             </div>
         </div>
         </div>
@@ -1151,7 +1178,7 @@
 
 <footer class="site-footer">
   <span>Dingers Hotline</span>
-  <span>Generated 2026-04-29 10:50 AM &nbsp;·&nbsp; Model AUC 0.634</span>
+  <span>Generated 2026-04-29 11:48 AM &nbsp;·&nbsp; Model AUC 0.634</span>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
