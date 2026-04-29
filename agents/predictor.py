@@ -2985,17 +2985,25 @@ class Homer:
 
         # Statcast rate stats require a minimum sample to be reliable.
         # pa_scale weights their contribution based on sample size:
-        #   PA >= 40 (or unknown): full weight — enough data to trust rate stats
-        #   PA 20–39: half weight — real signal from a hot/called-up player, but uncertain
-        #   PA < 20:  zero weight — 1–2 good swings can inflate every rate to elite
-        # Non-Statcast signals (park, platoon, pitcher form, recent HRs) are unaffected.
+        #   PA >= 50 (or unknown): full weight — reliable sample for rate stats
+        #   PA 30–49: 60% weight — real signal but still early-season noise
+        #   PA 15–29: 25% weight — hot/called-up player with thin sample
+        #   PA < 15:  zero weight — 1–2 good swings can inflate every rate to elite
+        # When Statcast is down-weighted, bpp_boost compensates by amplifying
+        # BallparkPal matchup grades (which don't depend on sample size).
         pa = sig.get("pa")
-        if pa is None or pa >= 40:
-            pa_scale = 1.0
-        elif pa >= 20:
-            pa_scale = 0.5
+        if pa is None or pa >= 50:
+            pa_scale  = 1.0
+            bpp_boost = 1.0
+        elif pa >= 30:
+            pa_scale  = 0.6
+            bpp_boost = 1.3
+        elif pa >= 15:
+            pa_scale  = 0.25
+            bpp_boost = 1.5
         else:
-            pa_scale = 0.0
+            pa_scale  = 0.0
+            bpp_boost = 1.6
 
         barrel = sig.get("barrel_rate") if pa_scale > 0 else None
         hh     = sig.get("hard_hit_pct") if pa_scale > 0 else None
@@ -3176,10 +3184,10 @@ class Homer:
         # 0-2 = tough matchup (pitcher dominates this type of batter)
         bpp_vs = sig.get("bpp_vs_grade")
         if bpp_vs is not None:
-            if bpp_vs >= 9:    score += 4   # Elite matchup
-            elif bpp_vs >= 7:  score += 2   # Good matchup
-            elif bpp_vs >= 5:  score += 1   # Neutral/slight advantage
-            elif bpp_vs <= 2:  score -= 1   # Pitcher advantage
+            if bpp_vs >= 9:    score += 4 * bpp_boost   # Elite matchup
+            elif bpp_vs >= 7:  score += 2 * bpp_boost   # Good matchup
+            elif bpp_vs >= 5:  score += 1 * bpp_boost   # Neutral/slight advantage
+            elif bpp_vs <= 2:  score -= 1 * bpp_boost   # Pitcher advantage
 
         # Park HR factor (stadium conduciveness to HRs)
         # Added <=85 tier after T-Mobile (82%) was only getting -1 (fell in <=90 bucket)
