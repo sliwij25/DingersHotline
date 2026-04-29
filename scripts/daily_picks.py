@@ -373,7 +373,8 @@ else:
                                   algo_version=_algo_version,
                                   score=p.get("score"),
                                   rank=rank_i,
-                                  stars=p.get("stars", "").count("★") or None)
+                                  stars=p.get("stars", "").count("★") or None,
+                                  game_pk=p.get("signals", {}).get("game_pk"))
                 saved += 1
             except Exception:
                 pass

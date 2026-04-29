@@ -1851,7 +1851,25 @@ class Homer:
             return lineups.get("message", "No lineup data."), {}
 
         lines          = []
-        player_signals = {}   # "player_name|team" → signals dict
+        player_signals = {}   # "player_name||game_pk" → signals dict
+
+        # ── Build per-team G1/G2 doubleheader index ───────────────────────────
+        from collections import defaultdict as _defaultdict
+        _team_game_order: dict[str, list] = _defaultdict(list)
+        for _g in lineups.get("games", []):
+            _gtime = _g.get("game_time", "")
+            _gpk   = str(_g.get("game_pk", ""))
+            for _side in ("away", "home"):
+                _team = _g.get(_side, {}).get("team", "")
+                if _team:
+                    _team_game_order[_team].append((_gtime, _gpk))
+        _team_game_label: dict[tuple, str | None] = {}
+        for _team, _entries in _team_game_order.items():
+            _entries.sort()
+            _is_dh = len(_entries) > 1
+            for _i, (_, _gpk) in enumerate(_entries):
+                _team_game_label[(_team, _gpk)] = f"G{_i+1}" if _is_dh else None
+        # ─────────────────────────────────────────────────────────────────────
 
         for game in lineups.get("games", []):
             away_side = game.get("away", {})
@@ -1860,12 +1878,15 @@ class Homer:
             time_raw  = game.get("game_time") or ""
             time_     = time_raw[:16]   # display only (no tz — used in section headers)
 
+            game_pk_str = str(game.get("game_pk") or "")
+
             for side, opp, is_home in [(away_side, home_side, False),
                                        (home_side, away_side, True)]:
                 sp           = opp.get("starting_pitcher") or "TBD"
                 sp_id        = opp.get("pitcher_id")
                 sp_throws    = opp.get("pitcher_throws", "?")
                 team         = side.get("team", "")
+                game_label   = _team_game_label.get((team, game_pk_str))
                 batters_full = side.get("batters") or []  # Now includes all roster players
 
                 if not batters_full:
@@ -1980,9 +2001,12 @@ class Homer:
 
                     # ── Store structured signals for performance tracking ──────
                     if batter_name:
-                        player_signals[f"{batter_name}|{team}"] = {
+                        _ck = f"{batter_name}||{game_pk_str}" if game_pk_str else batter_name
+                        player_signals[_ck] = {
                             "player_name":      batter_name,
                             "team":             team,
+                            "game_pk":          game_pk_str or None,
+                            "game_label":       game_label,
                             "status":           status,  # "confirmed", "waiting", or "unknown"
                             "platoon":          platoon,
                             "matchup":          matchup_str,
@@ -2214,8 +2238,8 @@ class Homer:
             def _norm(s: str) -> str:
                 return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower().strip()
 
-            # Map normalized name → list of sig_keys (handles same-name players)
             def _name_part(sig_key: str) -> str:
+                """Strip ||game_pk suffix — first segment before any pipe."""
                 return sig_key.split("|")[0]
 
             def _team_in_matchup(team_abbrev: str, matchup: str) -> bool:
@@ -2227,49 +2251,53 @@ class Homer:
                 return any(v == venue and frag in matchup_lower
                            for frag, v in _TEAM_VENUE.items())
 
+            # Name-only index: strips ||game_pk suffix so composite keys work correctly.
+            # DH players (same name, two game_pks) appear in the same list → odds applied to both.
             normed_signals: dict[str, list[str]] = {}
             for k in player_signals:
                 normed_signals.setdefault(_norm(_name_part(k)), []).append(k)
             matched_count = 0
 
             for comp in odds_data.get("comparisons", []):
-                pname      = comp.get("player", "")
-                pname_norm = _norm(pname)
+                pname        = comp.get("player", "")
+                pname_norm   = _norm(pname)
                 comp_matchup = comp.get("matchup", "")
-                # Exact norm match first, then fuzzy
+
                 if pname_norm in normed_signals:
                     candidates = normed_signals[pname_norm]
                     if len(candidates) == 1:
-                        matched = candidates[0]
+                        matched_keys = candidates
                     else:
-                        # Same name on multiple teams — use odds matchup to pick the right one
-                        matched = next(
-                            (k for k in candidates
-                             if _team_in_matchup(k.split("|")[-1], comp_matchup)),
-                            candidates[0],   # fall back to first if can't disambiguate
-                        )
+                        # Multiple candidates — try team-based disambiguation via signal dict.
+                        # For DH (same player, same team, 2 game_pks): team_matched will have
+                        # both or neither — apply odds to all. For same-name different teams:
+                        # pick the team that matches the odds matchup string.
+                        team_matched = [k for k in candidates
+                                        if _team_in_matchup(player_signals[k].get("team", ""), comp_matchup)]
+                        matched_keys = team_matched if team_matched else candidates
                 else:
-                    best_ratio, best_key = 0.0, None
+                    best_ratio, best_keys = 0.0, []
                     for nk, keys in normed_signals.items():
                         r = SequenceMatcher(None, pname_norm, nk).ratio()
                         if r > best_ratio:
-                            best_ratio, best_key = r, keys[0]
-                    matched = best_key if best_ratio >= 0.85 else None
+                            best_ratio, best_keys = r, keys
+                    matched_keys = best_keys if best_ratio >= 0.85 else []
 
-                if matched:
+                if matched_keys:
                     matched_count += 1
-                    ev    = comp.get("ev_10")
-                    pin   = comp.get("pinnacle")
-                    best  = comp.get("best_odds")
+                    ev   = comp.get("ev_10")
+                    pin  = comp.get("pinnacle")
+                    best = comp.get("best_odds")
                     if ev is None:
                         print(f"[ODDS] {pname}: ev_10 is None (pinnacle={pin!r}, best_odds={best!r})")
                     if pin is None:
                         print(f"[ODDS] {pname}: pinnacle_odds missing — EV/Kelly unreliable")
-                    player_signals[matched]["ev_10"]         = ev
-                    player_signals[matched]["kelly_size"]    = comp.get("kelly_size")
-                    player_signals[matched]["value_edge"]    = comp.get("value_edge")
-                    player_signals[matched]["pinnacle_odds"] = pin
-                    player_signals[matched]["best_odds"]     = best
+                    for _mk in matched_keys:
+                        player_signals[_mk]["ev_10"]         = ev
+                        player_signals[_mk]["kelly_size"]    = comp.get("kelly_size")
+                        player_signals[_mk]["value_edge"]    = comp.get("value_edge")
+                        player_signals[_mk]["pinnacle_odds"] = pin
+                        player_signals[_mk]["best_odds"]     = best
                 else:
                     print(f"[ODDS] No signal match for odds player: {pname!r}")
 
@@ -2299,16 +2327,16 @@ class Homer:
                     bt_normed.setdefault(_norm(_name_part(k)), []).append(k)
                 for bt_key, blast_val in blast_tracking.items():
                     if bt_key in bt_normed:
-                        matched = bt_normed[bt_key][0]
+                        bt_keys = bt_normed[bt_key]
                     else:
-                        best_ratio, best_key = 0.0, None
+                        best_ratio, best_keys = 0.0, []
                         for nk, keys in bt_normed.items():
                             r = SequenceMatcher(None, bt_key, nk).ratio()
                             if r > best_ratio:
-                                best_ratio, best_key = r, keys[0]
-                        matched = best_key if best_ratio >= 0.85 else None
-                    if matched:
-                        player_signals[matched]["blast_rate"] = round(blast_val * 100, 2)
+                                best_ratio, best_keys = r, keys
+                        bt_keys = best_keys if best_ratio >= 0.85 else []
+                    for _bk in bt_keys:
+                        player_signals[_bk]["blast_rate"] = round(blast_val * 100, 2)
         except Exception:
             pass
 
@@ -2651,11 +2679,12 @@ class Homer:
                     continue
 
                 team_abbrev = side.get("team", "")
+                game_pk_str = str(game.get("game_pk") or "")
                 for entry in last_order:
                     player_name = entry["name"]
                     if not player_name:
                         continue
-                    sig_key = f"{player_name}|{team_abbrev}"
+                    sig_key = f"{player_name}||{game_pk_str}" if game_pk_str else player_name
                     # Always backfill batting_order for waiting players — covers both
                     # fully-unconfirmed lineups AND partial lineups where some players
                     # are confirmed but others are still [WAITING] with a roster index.
@@ -2698,6 +2727,8 @@ class Homer:
                     player_signals[sig_key] = {
                         "player_name":      player_name,
                         "team":             team_abbrev,
+                        "game_pk":          game_pk_str or None,
+                        "game_label":       None,  # roster fallback players don't have DH label yet
                         "status":           "waiting",
                         "lineup_confirmed": False,
                         "batting_order":    entry["batting_order"],
@@ -3566,6 +3597,7 @@ class Homer:
                 "score":      sc,
                 "hr_prob":    hr_prob,
                 "reasoning":  ", ".join(reasons) if reasons else "Statcast/park signals",
+                "dh_label":   sig.get("game_label"),
                 "signals":    sig,
             })
 
@@ -3663,8 +3695,10 @@ class Homer:
                 lines.append(_tier_label(stars))
 
             # ── Header row ────────────────────────────────────────────
+            dh_label = pick.get("dh_label")
+            dh_tag   = f"  [DH {dh_label}]" if dh_label else ""
             lines.append(f"\n{DIVIDER}")
-            lines.append(f"#{i}  {name}{status_tag}  {stars}")
+            lines.append(f"#{i}  {name}{dh_tag}{status_tag}  {stars}")
 
             # ── Matchup / context row ──────────────────────────────────
             mu            = sig.get("matchup", "—")

@@ -127,8 +127,9 @@ CREATE TABLE IF NOT EXISTS pick_factors (
     is_home          INTEGER,
     lineup_confirmed INTEGER,
     venue_slugging   TEXT,
+    game_pk          TEXT,
     created_at       TEXT    DEFAULT (datetime('now')),
-    UNIQUE(bet_date, player)
+    UNIQUE(bet_date, player, game_pk)
 );
 """
 
@@ -161,21 +162,49 @@ _MIGRATION_COLUMNS = [
     ("pitcher_fb_pct",        "REAL"),
     ("pitcher_breaking_pct",  "REAL"),
     ("pitcher_offspeed_pct",  "REAL"),
+    ("game_pk",               "TEXT"),  # doubleheader support
 ]
 
 
 def _ensure_pick_factors_table(conn) -> None:
     conn.execute(_CREATE_PICK_FACTORS)
     conn.commit()
+
+    # Check schema BEFORE running column migrations so we can detect the old UNIQUE constraint.
+    # Migrate old UNIQUE(bet_date, player) → UNIQUE(bet_date, player, game_pk)
+    # Required for doubleheader support — same player can appear in two games on one day.
+    # SQLite can't DROP CONSTRAINT, so we rebuild the table when the old schema is detected.
+    schema = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='pick_factors'"
+    ).fetchone()
+    needs_rebuild = (
+        schema is not None
+        and "UNIQUE(bet_date, player)" in schema[0]
+        and "UNIQUE(bet_date, player, game_pk)" not in schema[0]
+    )
+    if needs_rebuild:
+        existing_cols = [row[1] for row in conn.execute("PRAGMA table_info(pick_factors)").fetchall()]
+        conn.execute("ALTER TABLE pick_factors RENAME TO _pick_factors_old")
+        conn.execute(_CREATE_PICK_FACTORS)
+        # Copy all columns that exist in both old and new table
+        new_base = {row[1] for row in conn.execute("PRAGMA table_info(pick_factors)").fetchall()}
+        shared = [c for c in existing_cols if c in new_base]
+        cols_sql = ", ".join(shared)
+        conn.execute(f"INSERT INTO pick_factors ({cols_sql}) SELECT {cols_sql} FROM _pick_factors_old")
+        conn.execute("DROP TABLE _pick_factors_old")
+        conn.commit()
+
     # Add new columns to existing tables without breaking old rows
     existing = {row[1] for row in conn.execute("PRAGMA table_info(pick_factors)").fetchall()}
     for col_name, col_type in _MIGRATION_COLUMNS:
         if col_name not in existing:
             conn.execute(f"ALTER TABLE pick_factors ADD COLUMN {col_name} {col_type}")
-    # Enforce uniqueness on old tables that predate the UNIQUE constraint in the schema
+
+    # Drop legacy index and ensure new composite-key index exists
+    conn.execute("DROP INDEX IF EXISTS idx_pick_factors_date_player")
     conn.execute("""
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_pick_factors_date_player
-        ON pick_factors (bet_date, player)
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_pick_factors_date_player_game
+        ON pick_factors (bet_date, player, game_pk)
     """)
     conn.commit()
 
@@ -185,7 +214,8 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                       algo_version: str = "2.0",
                       score: float = None,
                       rank: int = None,
-                      stars: int = None) -> str:
+                      stars: int = None,
+                      game_pk: str = None) -> str:
     """
     Persist the algorithmic signal snapshot for one pick.
     Called automatically by daily_picks.py for ALL ranked players (not just bets),
@@ -217,9 +247,10 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                bpp_hr_pct, park_hr_factor,
                recent_form_14d, pitcher_hr_per_9, pitcher_hr_vs_hand, pitcher_barrel_pct,
                h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging,
-               team, blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft, hr_luck)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            ON CONFLICT(bet_date, player) DO UPDATE SET
+               team, blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft, hr_luck,
+               game_pk)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ON CONFLICT(bet_date, player, game_pk) DO UPDATE SET
               rank=excluded.rank, score=excluded.score, stars=excluded.stars,
               algo_version=excluded.algo_version, confidence=excluded.confidence,
               ev_10=excluded.ev_10, kelly_size=excluded.kelly_size,
@@ -239,7 +270,8 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
               venue_slugging=excluded.venue_slugging, team=excluded.team,
               blast_rate=excluded.blast_rate, altitude_ft=excluded.altitude_ft,
               humidity_pct=excluded.humidity_pct, pressure_mb=excluded.pressure_mb,
-              carry_ft=excluded.carry_ft, hr_luck=excluded.hr_luck
+              carry_ft=excluded.carry_ft, hr_luck=excluded.hr_luck,
+              game_pk=excluded.game_pk
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
@@ -280,12 +312,14 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             signals.get("pressure_mb"),
             signals.get("carry_ft"),
             signals.get("hr_luck"),
+            game_pk or signals.get("game_pk"),
         ))
         # Backfill stars on existing rows that were saved before stars column existed
         if stars is not None:
+            _gpk = game_pk or signals.get("game_pk")
             conn.execute(
-                "UPDATE pick_factors SET stars=? WHERE bet_date=? AND player=? AND stars IS NULL",
-                (stars, bet_date, player)
+                "UPDATE pick_factors SET stars=? WHERE bet_date=? AND player=? AND game_pk IS ? AND stars IS NULL",
+                (stars, bet_date, player, _gpk)
             )
         conn.commit()
         return f"Saved signals for {player} ({bet_date})"
