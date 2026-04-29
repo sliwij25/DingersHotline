@@ -168,10 +168,13 @@ def _print_yesterday_snapshot():
         print(f"  #{p['rank']:>2}  {status}  {stars_str}  {p['player']:<28}  {p['odds']:>5}  {pnl_str}")
 
     if snap["labeled"]:
-        hr_line  = f"{snap['hr_count']} HR{'s' if snap['hr_count'] != 1 else ''}"
-        pnl_line = f"${snap['day_pnl']:+.2f}"
+        hr_line      = f"{snap['hr_count']} HR{'s' if snap['hr_count'] != 1 else ''}"
+        pnl_line     = f"${snap['day_pnl']:+.2f}"
+        countable    = sum(1 for p in snap["picks"] if p["homered"] is not None)
+        n_scratched  = len(snap["picks"]) - countable
+        scratch_note = f" ({n_scratched} scratched)" if n_scratched else ""
         print("  " + "─" * 58)
-        print(f"  {hr_line} out of {len(snap['picks'])} picks   Day P&L: {pnl_line}")
+        print(f"  {hr_line} out of {countable} picks{scratch_note}   Day P&L: {pnl_line}")
     else:
         print("  " + "─" * 58)
         print("  (results not yet labeled — run after games complete)")
@@ -318,7 +321,10 @@ try:
                     _pnl   = f"${_p['pnl']:+.2f}" if _p["pnl"] is not None else "  —  "
                     _f.write(f"#{_p['rank']:>2}{_hr}  {_stars}  {_p['player']:<28}  {_p['odds']:>5}  {_pnl}\n")
                 if _snap["labeled"]:
-                    _f.write(f"{'─'*62}\n{_snap['hr_count']} HR(s) / {len(_snap['picks'])} picks   Day P&L: ${_snap['day_pnl']:+.2f}\n")
+                    _countable   = sum(1 for _pp in _snap["picks"] if _pp["homered"] is not None)
+                    _n_scratched = len(_snap["picks"]) - _countable
+                    _scratch_txt = f" ({_n_scratched} scratched)" if _n_scratched else ""
+                    _f.write(f"{'─'*62}\n{_snap['hr_count']} HR(s) / {_countable} picks{_scratch_txt}   Day P&L: ${_snap['day_pnl']:+.2f}\n")
                 _f.write("\n")
 
             _f.write(f"Dingers Hotline — {TODAY}\n")
