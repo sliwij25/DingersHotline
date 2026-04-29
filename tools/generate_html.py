@@ -218,6 +218,50 @@ def _build_card(rank: int, pick: dict) -> str:
         </div>"""
 
 
+def _build_best_bets_html(best_bets: list[dict]) -> str:
+    if not best_bets:
+        return ""
+    cards = []
+    for i, p in enumerate(best_bets, 1):
+        sig   = p.get("signals", {}) or {}
+        ev    = sig.get("ev_10")
+        pin   = sig.get("pinnacle_odds")
+        name  = _esc(p.get("player", "Unknown"))
+        stars = _star_html(p.get("stars", ""))
+        matchup = _esc(p.get("matchup", ""))
+        overall_rank = p.get("rank") or i
+
+        if ev is not None:
+            if pin:
+                ev_html = f'<span class="bb-ev bb-ev-confirmed">${ev:+.2f}</span>'
+                ev_tip  = "Pinnacle-anchored EV"
+            else:
+                ev_html = f'<span class="bb-ev bb-ev-est">~${ev:+.2f}</span>'
+                ev_tip  = "Consensus EV (no Pinnacle)"
+        else:
+            ev_html = f'<span class="bb-ev bb-ev-model">est.</span>'
+            ev_tip  = "No odds — ranked by model score"
+
+        cards.append(f"""<div class="bb-card" title="{_esc(ev_tip)}">
+  <div class="bb-rank">#{i}</div>
+  <div class="bb-name">{name}</div>
+  <div class="bb-matchup">{matchup}</div>
+  <div class="bb-stars">{stars}</div>
+  <div class="bb-ev-row">{ev_html}<span class="bb-overall">#{overall_rank} overall</span></div>
+</div>""")
+
+    cards_html = "\n".join(cards)
+    return f"""<section class="best-bets-section">
+  <div class="bb-header">
+    <span class="bb-title">Best Bets</span>
+    <span class="bb-sub">Top 7 by Expected Value — ranked by EV edge over the market</span>
+  </div>
+  <div class="bb-grid">
+{cards_html}
+  </div>
+</section>"""
+
+
 def generate_picks_html(
     picks: list[dict],
     today: str,
@@ -234,6 +278,7 @@ def generate_picks_html(
     tier_hit_rates: dict | None = None,
     tier_pnl: dict | None = None,
     version: str = "",
+    best_bets: list[dict] | None = None,
 ) -> str:
     # tier_hit_rates: {star_count: (n_picks, n_homers)} — pre-computed by daily_picks.py
     # tier_pnl: {star_count: float | None} — cumulative hypothetical P&L per tier
@@ -295,6 +340,8 @@ def generate_picks_html(
 
     auc_str = f"{auc:.3f}" if auc else "—"
     ml_str  = f"{ml_influence * 100:.0f}%" if ml_influence else "—"
+
+    best_bets_html = _build_best_bets_html(best_bets) if best_bets else ""
 
     def _pnl_chip(label: str, value: float | None, since: str = "") -> str:
         if value is None:
@@ -1000,6 +1047,56 @@ def generate_picks_html(
     margin-top: 4px;
   }}
 
+  /* ─── Best Bets ─── */
+  .best-bets-section {{
+    max-width: 960px; margin: 0 auto 28px; padding: 0 24px;
+  }}
+  .bb-header {{
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px;
+  }}
+  .bb-title {{
+    font-family: 'Oswald', sans-serif; font-size: 1.05rem; font-weight: 600;
+    color: var(--navy); text-transform: uppercase; letter-spacing: 0.04em;
+  }}
+  .bb-sub {{
+    font-size: 0.72rem; color: var(--text-sub);
+  }}
+  .bb-grid {{
+    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;
+  }}
+  .bb-card {{
+    flex: 0 0 auto; width: 148px; background: var(--surface);
+    border: 1.5px solid var(--gold); border-radius: 8px;
+    padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
+    cursor: default; transition: box-shadow 0.15s;
+  }}
+  .bb-card:hover {{ box-shadow: 0 2px 10px rgba(212,160,23,0.25); }}
+  .bb-rank {{
+    font-size: 0.65rem; font-weight: 700; color: var(--gold);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }}
+  .bb-name {{
+    font-family: 'Oswald', sans-serif; font-size: 0.88rem; font-weight: 600;
+    color: var(--navy); line-height: 1.2;
+  }}
+  .bb-matchup {{
+    font-size: 0.65rem; color: var(--text-sub); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }}
+  .bb-stars {{ font-size: 0.75rem; }}
+  .bb-ev-row {{
+    display: flex; align-items: center; gap: 6px; margin-top: 2px;
+  }}
+  .bb-ev {{
+    font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
+  }}
+  .bb-ev-confirmed {{ color: var(--green); }}
+  .bb-ev-est       {{ color: var(--amber); }}
+  .bb-ev-model     {{ color: var(--text-dim); }}
+  .bb-overall {{
+    font-size: 0.62rem; color: var(--text-dim);
+  }}
+
   /* ─── Responsive ─── */
   @media (max-width: 600px) {{
     .site-header   {{ padding: 18px; }}
@@ -1007,6 +1104,8 @@ def generate_picks_html(
     .picks-grid    {{ gap: 8px; }}
     .site-footer   {{ padding: 12px 16px; }}
     .stat          {{ min-width: 54px; }}
+    .best-bets-section {{ padding: 0 16px; }}
+    .bb-card       {{ width: 132px; }}
   }}
 </style>
 </head>
@@ -1035,6 +1134,8 @@ def generate_picks_html(
 
 {model_stats_tile}
 {streak_tile}
+
+{best_bets_html}
 
 {sections_html}
 
