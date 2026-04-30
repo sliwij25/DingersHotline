@@ -2027,6 +2027,7 @@ class Homer:
                             "fb_pct":           _safe_float(b_data.get("flyballs_percent")),
                             "launch_angle":     _safe_float(b_data.get("launch_angle_avg")),
                             "ev_avg":           _safe_float(b_data.get("exit_velocity_avg")),
+                            "ev_max":           _safe_float(b_data.get("max_hit_speed")),
                             "sweet_spot_pct":   _safe_float(b_data.get("sweet_spot_percent")),
                             "pull_pct":         _safe_float(b_data.get("pull_percent")),
                             "recent_form_14d":  _safe_int(form_hrs),
@@ -2104,8 +2105,8 @@ class Homer:
             return self._fetch_full_statcast(
                 "batter",
                 "pa,barrel_batted_rate,hard_hit_percent,hr_flyballs_rate_batter,"
-                "pull_percent,exit_velocity_avg,sweet_spot_percent,xiso,xslg,xhrs,"
-                "flyballs_percent,launch_angle_avg,home_run"
+                "pull_percent,exit_velocity_avg,max_hit_speed,sweet_spot_percent,"
+                "xiso,xslg,xhrs,flyballs_percent,launch_angle_avg,home_run"
             )
 
         def _fetch_pitchers():
@@ -2747,6 +2748,7 @@ class Homer:
                         "fb_pct":           _safe_float(sc_data.get("flyballs_percent")),
                         "launch_angle":     _safe_float(sc_data.get("launch_angle_avg")),
                         "ev_avg":           _safe_float(sc_data.get("exit_velocity_avg")),
+                        "ev_max":           _safe_float(sc_data.get("max_hit_speed")),
                         "sweet_spot_pct":   _safe_float(sc_data.get("sweet_spot_percent")),
                         "season_hr":        _safe_int(sc_data.get("home_run")),
                         "hr_luck":          None,   # filled below: actual − expected HRs
@@ -3083,13 +3085,15 @@ class Homer:
         # Launch angle — from Savant glossary research (predictive correlations):
         # - Launch Angle Average: r=0.42 predictive for HR%
         # - Launch Angle (38+%): r=0.43 predictive — DO NOT penalize high angles
-        # - Launch Angle (-4 to 26%): r=-0.15 NEGATIVE — line drive/grounder range hurts HRs
-        # Note: elite exit velocity can overcome low launch angle (see Judge at 8.2°)
+        # Launch angle — HRs almost exclusively come from 15°–50°. Sub-10° is
+        # ground ball territory; 10°–15° is flat line drives. High barrel/hard-hit
+        # doesn't matter if the ball never gets in the air.
         if la is not None:
             if la >= 25:   sc_statcast += 2   # Optimal HR zone
             elif la >= 20: sc_statcast += 1
-            elif la >= 12: sc_statcast += 0   # Neutral — line drive zone
-            elif la < 12:  sc_statcast -= 1   # Ground ball tendency (mild, EV can overcome)
+            elif la >= 15: sc_statcast += 0   # Neutral — line drive zone
+            elif la >= 10: sc_statcast -= 2   # Flat contact — rarely clears the wall
+            else:          sc_statcast -= 4   # Ground ball profile — almost no HR upside
 
         # Exit velocity average — r=0.57 predictive for HR% (2nd strongest after barrel%).
         # MLB average ~88.5 mph. Elite HR hitters consistently 92+ mph.
@@ -3110,6 +3114,36 @@ class Homer:
             elif ss >= 42: sc_statcast += 2   # Elite (Schwarber 45.5%, Yordan 42.3%)
             elif ss >= 37: sc_statcast += 1   # Good (Trout 37%)
             elif ss < 28:  sc_statcast -= 1   # Below average — poor contact profile
+
+        # Max exit velocity — peak power ceiling. Avg EV can be dragged down by weak contact,
+        # but max EV reveals the batter's true power when they square one up.
+        # MLB avg max EV ~108 mph. True HR threats consistently 110+.
+        ev_max = sig.get("ev_max") if pa_scale > 0 else None
+        if ev_max is not None:
+            if ev_max >= 115:  sc_statcast += 3   # Elite ceiling (Giancarlo/Judge tier)
+            elif ev_max >= 112: sc_statcast += 2
+            elif ev_max >= 109: sc_statcast += 1
+            elif ev_max < 104:  sc_statcast -= 1   # Weak ceiling — HR unlikely even on best contact
+
+        # Pull% — pull hitters have shorter paths to the wall and generate more bat speed
+        # through the zone. Strong independent HR predictor, especially combined with high FB%.
+        # Score as standalone signal (separate from the park-context pull×porch bonus).
+        pull_pct_raw = sig.get("pull_pct") if pa_scale > 0 else None
+        if pull_pct_raw is not None:
+            if pull_pct_raw >= 52:   sc_statcast += 2   # Strong pull profile — HR machinery
+            elif pull_pct_raw >= 44: sc_statcast += 1   # Above-average pull tendency
+            elif pull_pct_raw < 32:  sc_statcast -= 1   # Opposite-field / spray hitter
+
+        # Derived HR/FB rate — when Savant doesn't provide it directly, compute from
+        # season HRs ÷ estimated fly balls (pa × fb%). Confirms power is translating.
+        # Stored back into sig so the sustainability check below can use it.
+        if sig.get("hr_fb_ratio") is None and fb is not None and fb > 0:
+            _season_hr = sig.get("season_hr") or 0
+            _pa        = sig.get("pa") or 0
+            if _pa > 0:
+                _est_fb = _pa * fb / 100
+                if _est_fb >= 5:   # Need at least 5 fly balls for meaningful rate
+                    sig["hr_fb_ratio"] = (_season_hr / _est_fb) * 100
 
         # Blast rate — % of swings qualifying as a Blast (bat speed + squared-up contact).
         # Formula: (percent_squared_up × 100) + bat_speed ≥ 164. ~7% is league average.
@@ -3505,6 +3539,11 @@ class Homer:
                 sig["_elite_hr_boost"] = 2.0
             player = sig.get("player_name", sig_key.split("|")[0])
             if player.lower() in _scratched:
+                continue
+            # Minimum PA gate: Statcast metrics are unreliable below 50 PA.
+            # Only exclude when PA is known — missing PA data is not penalized.
+            _pa = sig.get("pa")
+            if _pa is not None and _pa < 50:
                 continue
             if sig.get("bat_side", "?") == "?":
                 resolved = get_bat_side_by_name(player)

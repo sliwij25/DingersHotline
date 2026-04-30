@@ -276,18 +276,19 @@ def generate_picks_html(
     model_days_tracked: int | None = None,
     streak: str | None = None,
     group_data: dict | None = None,
+    tier_hit_rates: dict | None = None,
+    tier_pnl: dict | None = None,
     version: str = "",
     best_bets: list[dict] | None = None,
 ) -> str:
-    # Two-group layout: Best Bets (top-7 EV) and Also Watching (remaining top-20).
-    # Stars still appear on individual pick cards.
+    # Layout: compact 5-card EV Plays grid at top, then star-bucket sections below.
 
-    def _group_header_html(label: str, subtitle: str, n: int, gd: dict | None, accent: bool) -> str:
+    def _tier_header_html(label: str, subtitle: str, n: int, star_n: int | None) -> str:
         hit_rate_html = ""
         pnl_html = ""
-        if gd:
-            n_picks, n_homers = gd.get("hit_rate", (0, 0))
-            pv = gd.get("pnl")
+        if star_n is not None and tier_hit_rates and tier_pnl:
+            n_picks, n_homers = tier_hit_rates.get(star_n, (0, 0))
+            pv = tier_pnl.get(star_n)
             if n_picks > 0:
                 rate = n_homers / n_picks * 100
                 hit_rate_html = (
@@ -299,9 +300,8 @@ def generate_picks_html(
             if pv is not None:
                 pnl_css = "tier-pnl-pos" if pv > 0 else "tier-pnl-neg" if pv < 0 else "tier-pnl-flat"
                 pnl_html = f'<span class="tier-pnl {pnl_css}">${pv:+.2f}</span>'
-        accent_class = " tier-header-accent" if accent else ""
         return (
-            f'<div class="tier-header{accent_class}">'
+            f'<div class="tier-header">'
             f'<span class="tier-label">{_esc(label)}</span>'
             f'<span class="tier-subtitle">{_esc(subtitle)}</span>'
             f'<span class="tier-count">{n} pick{"s" if n != 1 else ""}</span>'
@@ -310,37 +310,85 @@ def generate_picks_html(
             f'</div>'
         )
 
-    # Split: best-bet names from best_bets list (EV order), rest in model-rank order
-    bb_names = {p.get("player") for p in (best_bets or [])}
-
-    # Best Bets: display in EV order using best_bets list (already sorted)
-    bb_display = list(best_bets or [])
-
-    # Also Watching: picks not in best bets, in model rank order
-    aw_display = [p for p in picks if p.get("player") not in bb_names]
-
-    bb_cards = "".join(_build_card(i + 1, p) for i, p in enumerate(bb_display))
-    aw_cards = "".join(_build_card(len(bb_display) + i + 1, p) for i, p in enumerate(aw_display))
-
+    # ── EV Plays compact grid ─────────────────────────────────────────────────
     gd_bb = (group_data or {}).get("best_bets")
-    gd_aw = (group_data or {}).get("also_watching")
+    ev_pnl_html = ""
+    ev_hit_html = ""
+    if gd_bb:
+        n_picks, n_homers = gd_bb.get("hit_rate", (0, 0))
+        pv = gd_bb.get("pnl")
+        if n_picks > 0:
+            rate = n_homers / n_picks * 100
+            ev_hit_html = (
+                f'<span class="tier-hit-rate">'
+                f'{rate:.0f}% HR rate'
+                f'<span class="tier-hit-count"> ({n_picks} picks)</span>'
+                f'</span>'
+            )
+        if pv is not None:
+            pnl_css = "tier-pnl-pos" if pv > 0 else "tier-pnl-neg" if pv < 0 else "tier-pnl-flat"
+            ev_pnl_html = f'<span class="tier-pnl {pnl_css}">${pv:+.2f}</span>'
 
-    bb_header = _group_header_html("Best Bets", "Top 7 by Expected Value", len(bb_display), gd_bb, accent=True)
-    aw_header = _group_header_html("Also Watching", "Remaining top-20 by model score", len(aw_display), gd_aw, accent=False)
+    ev_cards_html = ""
+    for i, p in enumerate(best_bets or [], 1):
+        sig        = p.get("signals", {}) or {}
+        ev         = sig.get("ev_10")
+        pin        = sig.get("pinnacle_odds")
+        name       = _esc(p.get("player", "Unknown"))
+        stars      = _star_html(p.get("stars", ""))
+        matchup    = _esc(p.get("matchup", ""))
+        overall_rk = p.get("rank") or i
 
-    sections_html = f"""
-    <section class="tier-section tier-section-accent">
-        {bb_header}
-        <div class="picks-grid">
-{bb_cards}
-        </div>
-    </section>
+        ev_cards_html += f"""<div class="ev-card">
+  <div class="ev-card-rank">EV #{i}</div>
+  <div class="ev-card-name">{name}</div>
+  <div class="ev-card-matchup">{matchup}</div>
+  <div class="ev-card-stars">{stars}</div>
+</div>"""
+
+    ev_section_html = f"""<section class="ev-plays-section">
+  <div class="ev-section-header">
+    <span class="ev-section-title">Top EV Plays</span>
+    <span class="ev-section-sub">Top 5 by expected value</span>
+    {ev_hit_html}{ev_pnl_html}
+    <div class="ev-section-rule"></div>
+  </div>
+  <div class="ev-grid">
+{ev_cards_html}
+  </div>
+</section>"""
+
+    # ── Star-bucket sections ──────────────────────────────────────────────────
+    _BUCKET_LABELS = {
+        5: ("Elite Dingers",  "Top-of-pool, elite model score"),
+        4: ("Strong Plays",   "High-confidence model picks"),
+        3: ("Solid Looks",    "Good signals across the board"),
+        2: ("Worth Watching", "Moderate edge, worth a look"),
+        1: ("Speculative",    "Lower confidence, long-shot value"),
+        0: ("Low Confidence", "Minimal edge"),
+    }
+
+    # Group picks by star count, preserving model rank order within each bucket
+    buckets: dict[int, list[tuple[int, dict]]] = {}
+    for rank_i, p in enumerate(picks, 1):
+        sc = _star_count(p.get("stars", ""))
+        buckets.setdefault(sc, []).append((rank_i, p))
+
+    bucket_sections = []
+    for sc in sorted(buckets.keys(), reverse=True):
+        items = buckets[sc]
+        label, subtitle = _BUCKET_LABELS.get(sc, (f"{sc}★", ""))
+        header = _tier_header_html(label, subtitle, len(items), sc)
+        cards  = "".join(_build_card(rank_i, p) for rank_i, p in items)
+        bucket_sections.append(f"""
     <section class="tier-section">
-        {aw_header}
+        {header}
         <div class="picks-grid">
-{aw_cards}
+{cards}
         </div>
-    </section>"""
+    </section>""")
+
+    sections_html = ev_section_html + "\n".join(bucket_sections)
 
     auc_str = f"{auc:.3f}" if auc else "—"
     ml_str  = f"{ml_influence * 100:.0f}%" if ml_influence else "—"
@@ -1056,54 +1104,88 @@ def generate_picks_html(
     margin-top: 4px;
   }}
 
-  /* ─── Best Bets ─── */
-  .best-bets-section {{
-    max-width: 960px; margin: 0 auto 28px; padding: 0 24px;
+  /* ─── EV Plays strip ─── */
+  .ev-plays-section {{
+    padding: 24px 36px 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
   }}
-  .bb-header {{
-    display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px;
+  .ev-section-header {{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
   }}
-  .bb-title {{
-    font-family: 'Oswald', sans-serif; font-size: 1.05rem; font-weight: 600;
-    color: var(--navy); text-transform: uppercase; letter-spacing: 0.04em;
+  .ev-section-title {{
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    white-space: nowrap;
   }}
-  .bb-sub {{
-    font-size: 0.72rem; color: var(--text-sub);
+  .ev-section-sub {{
+    font-size: 11px;
+    color: var(--text-sub);
+    white-space: nowrap;
   }}
-  .bb-grid {{
-    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;
+  .ev-section-rule {{
+    flex: 1;
+    height: 1px;
+    background: var(--border);
   }}
-  .bb-card {{
-    flex: 0 0 auto; width: 148px; background: var(--surface);
-    border: 1.5px solid var(--gold); border-radius: 8px;
-    padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
-    cursor: default; transition: box-shadow 0.15s;
+  .ev-grid {{
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
   }}
-  .bb-card:hover {{ box-shadow: 0 2px 10px rgba(212,160,23,0.25); }}
-  .bb-rank {{
+  .ev-card {{
+    background: var(--surface);
+    border: 1.5px solid var(--gold);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: default;
+    transition: box-shadow 0.15s;
+    min-width: 0;
+  }}
+  .ev-card:hover {{ box-shadow: 0 2px 10px rgba(212,160,23,0.25); }}
+  .ev-card-rank {{
     font-size: 0.65rem; font-weight: 700; color: var(--gold);
     text-transform: uppercase; letter-spacing: 0.06em;
   }}
-  .bb-name {{
+  .ev-card-name {{
     font-family: 'Oswald', sans-serif; font-size: 0.88rem; font-weight: 600;
     color: var(--navy); line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }}
-  .bb-matchup {{
-    font-size: 0.65rem; color: var(--text-sub); white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis;
+  .ev-card-matchup {{
+    font-size: 0.65rem; color: var(--text-sub);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }}
-  .bb-stars {{ font-size: 0.75rem; }}
-  .bb-ev-row {{
+  .ev-card-stars {{ font-size: 0.75rem; }}
+  .ev-card-ev-row {{
     display: flex; align-items: center; gap: 6px; margin-top: 2px;
   }}
-  .bb-ev {{
+  .ev-card-ev {{
     font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
   }}
-  .bb-ev-confirmed {{ color: var(--green); }}
-  .bb-ev-est       {{ color: var(--amber); }}
-  .bb-ev-model     {{ color: var(--text-dim); }}
-  .bb-overall {{
+  .ev-confirmed {{ color: var(--green); }}
+  .ev-est       {{ color: var(--amber); }}
+  .ev-model     {{ color: var(--text-dim); }}
+  .ev-card-overall {{
     font-size: 0.62rem; color: var(--text-dim);
+  }}
+  @media (max-width: 700px) {{
+    .ev-plays-section {{ padding: 16px 16px 8px; }}
+    .ev-grid {{ grid-template-columns: repeat(3, 1fr); }}
+  }}
+  @media (max-width: 480px) {{
+    .ev-grid {{ grid-template-columns: repeat(2, 1fr); }}
   }}
 
   /* ─── Responsive ─── */
@@ -1114,8 +1196,7 @@ def generate_picks_html(
     .picks-grid    {{ gap: 8px; }}
     .site-footer   {{ padding: 12px 16px; }}
     .stat          {{ min-width: 54px; }}
-    .best-bets-section {{ padding: 0 16px; }}
-    .bb-card       {{ width: 132px; }}
+    .model-stats-tile {{ margin: 0 16px 20px; }}
   }}
 </style>
 </head>

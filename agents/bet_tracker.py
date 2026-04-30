@@ -638,20 +638,31 @@ def score_bucket_pnl(min_score: float | None, max_score: float | None) -> float 
     return round(total, 2)
 
 
+_STAR_FROM_RANK_SQL = """
+  COALESCE(stars,
+    CASE WHEN rank <= 5 THEN 4
+         WHEN rank <= 15 THEN 3
+         WHEN rank <= 20 THEN 2
+         ELSE 1 END)
+"""
+
+
 def star_bucket_hit_rate(star_count: int) -> tuple[int, int]:
-    """Return (n_picks, n_homers) for top-20 picks with exactly star_count stars."""
+    """Return (n_picks, n_homers) for top-20 picks with exactly star_count stars.
+    When stars column is NULL, derives star count from rank bands."""
     conn = get_db_conn()
     try:
         _ensure_pick_factors_table(conn)
         row = conn.execute(
-            """
+            f"""
             SELECT COUNT(*), SUM(homered) FROM (
-              SELECT homered, stars,
+              SELECT homered,
+                     {_STAR_FROM_RANK_SQL} AS derived_stars,
                      ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn
               FROM pick_factors
-              WHERE homered IS NOT NULL AND rank IS NOT NULL AND stars IS NOT NULL
+              WHERE homered IS NOT NULL AND rank IS NOT NULL
                 AND algo_version NOT LIKE 'hist_%'
-            ) WHERE rn <= 20 AND stars = ?
+            ) WHERE rn <= 20 AND derived_stars = ?
             """,
             (star_count,),
         ).fetchone()
@@ -661,19 +672,21 @@ def star_bucket_hit_rate(star_count: int) -> tuple[int, int]:
 
 
 def star_bucket_pnl(star_count: int) -> float | None:
-    """Return cumulative hypothetical P&L ($10/pick) for top-20 picks with star_count stars."""
+    """Return cumulative hypothetical P&L ($10/pick) for top-20 picks with star_count stars.
+    When stars column is NULL, derives star count from rank bands."""
     conn = get_db_conn()
     try:
         _ensure_pick_factors_table(conn)
         rows = conn.execute(
-            """
+            f"""
             SELECT best_odds, homered FROM (
-              SELECT best_odds, homered, stars,
+              SELECT best_odds, homered,
+                     {_STAR_FROM_RANK_SQL} AS derived_stars,
                      ROW_NUMBER() OVER (PARTITION BY bet_date ORDER BY rank, player) AS rn
               FROM pick_factors
-              WHERE homered IS NOT NULL AND rank IS NOT NULL AND stars IS NOT NULL
+              WHERE homered IS NOT NULL AND rank IS NOT NULL
                 AND algo_version NOT LIKE 'hist_%'
-            ) WHERE rn <= 20 AND stars = ?
+            ) WHERE rn <= 20 AND derived_stars = ?
             """,
             (star_count,),
         ).fetchall()

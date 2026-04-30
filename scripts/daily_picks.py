@@ -71,7 +71,7 @@ print("=" * 60)
 
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
-from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, group_hit_rate, group_pnl, yesterday_results_snapshot, trending_picks
+from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, group_hit_rate, group_pnl, star_bucket_hit_rate, star_bucket_pnl, yesterday_results_snapshot, trending_picks
 from generate_html import generate_picks_html, generate_leaderboard_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
@@ -287,7 +287,7 @@ def _ev_sort_key(p: dict) -> tuple:
 
 _sigs_for_bb = homer._context.get("player_signals", {})
 _ranked_for_bb = homer._rank_picks_python(_sigs_for_bb, top_n=20, verbose=False, scratched=SCRATCHED)
-_best_bets: list[dict] = sorted(_ranked_for_bb, key=_ev_sort_key)[:7]
+_best_bets: list[dict] = sorted(_ranked_for_bb, key=_ev_sort_key)[:5]
 
 def _fmt_best_bets_terminal(best_bets: list[dict]) -> str:
     # Stars (★☆) are "wide" Unicode chars — each takes 2 display columns.
@@ -636,12 +636,13 @@ try:
         import datetime as _dt2
         _timestamp = _dt2.datetime.now().strftime("%Y-%m-%d %I:%M %p")
 
-        # Compute hit rates + P&L for the two groups (Best Bets / Also Watching)
+        # Compute hit rates + P&L for EV group and star buckets
         _ranked_for_html = _all_ranked or picks
         _group_data = {
-            "best_bets":      {"hit_rate": group_hit_rate(True),  "pnl": group_pnl(True)},
-            "also_watching":  {"hit_rate": group_hit_rate(False), "pnl": group_pnl(False)},
+            "best_bets": {"hit_rate": group_hit_rate(True), "pnl": group_pnl(True)},
         }
+        _tier_hit_rates = {sc: star_bucket_hit_rate(sc) for sc in range(5, -1, -1)}
+        _tier_pnl       = {sc: star_bucket_pnl(sc)      for sc in range(5, -1, -1)}
 
         import time as _time
         _version = str(int(_time.time()))
@@ -660,6 +661,8 @@ try:
             model_days_tracked=_model_days_tracked,
             streak=_streak,
             group_data=_group_data,
+            tier_hit_rates=_tier_hit_rates,
+            tier_pnl=_tier_pnl,
             version=_version,
             best_bets=_best_bets,
         )
