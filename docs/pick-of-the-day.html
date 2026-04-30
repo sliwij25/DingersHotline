@@ -3,216 +3,130 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pick of the Day &#8212; Dingers Hotline</title>
+<title>Pick of the Day — Dingers Hotline</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:         #FAFAF7;
-    --surface:    #FFFFFF;
-    --surface2:   #F3F2EE;
-    --border:     #E2DED6;
-    --border-dark:#C8C2B8;
-    --navy:       #1B2A4A;
-    --navy-mid:   #2D4070;
-    --red:        #C8102E;
-    --red-dim:    #F9E5E8;
-    --gold:       #D4A017;
-    --gold-dim:   #FDF5DC;
-    --green:      #1A6B3C;
-    --green-dim:  #E4F2EB;
-    --amber:      #B45309;
-    --amber-dim:  #FEF3C7;
-    --text:       #1A1A1A;
-    --text-sub:   #6B6560;
-    --text-dim:   #A8A29E;
+    --bg:#FAFAF7; --surface:#FFFFFF; --surface2:#F3F2EE;
+    --border:#E2DED6; --navy:#1B2A4A; --navy-mid:#2D4070;
+    --red:#C8102E; --red-dim:#F9E5E8; --gold:#D4A017; --gold-dim:#FDF5DC;
+    --green:#1A6B3C; --green-dim:#E4F2EB; --amber:#B45309; --amber-dim:#FEF3C7;
+    --text:#1A1A1A; --text-sub:#6B6560; --text-dim:#A8A29E;
   }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Source Serif 4', Georgia, serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
-
-  /* ── Header ── */
-  .site-header {
-    background: var(--navy);
-    background-image: repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(255,255,255,0.04) 47px, rgba(255,255,255,0.04) 48px);
-    color: #fff;
-    padding: 28px 36px 24px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 20px;
-    border-bottom: 4px solid var(--red);
-  }
-  .header-left { display: flex; flex-direction: column; gap: 6px; }
-  .site-title {
-    font-family: 'Oswald', sans-serif;
-    font-weight: 700;
-    font-size: clamp(30px, 5vw, 52px);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #fff;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .title-ball { display: inline-block; width: 0.85em; height: 0.85em; flex-shrink: 0; opacity: 0.9; }
-  .site-date { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.12em; text-transform: uppercase; }
-  .header-nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .nav-link {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,0.10); color: #fff;
-    font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 14px;
-    letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none;
-    padding: 10px 18px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.18);
-    transition: background 0.15s; white-space: nowrap;
-  }
-  .nav-link:hover { background: rgba(255,255,255,0.18); }
-
-  /* ── Layout ── */
-  .page-body { max-width: 820px; margin: 32px auto 60px; padding: 0 20px; }
-  .page-title { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--navy); margin-bottom: 4px; }
-  .page-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 24px; }
-
-  /* ── POTD card ── */
-  .potd-card {
-    background: var(--surface);
-    border: 2px solid var(--gold);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 24px rgba(212,160,23,0.15), 0 1px 4px rgba(0,0,0,0.06);
-    margin-bottom: 28px;
-  }
-  .potd-banner {
-    background: var(--gold);
-    background-image: repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(255,255,255,0.10) 47px, rgba(255,255,255,0.10) 48px);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 22px; gap: 12px;
-  }
-  .potd-banner-left { display: flex; align-items: center; gap: 10px; }
-  .potd-banner-title { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: #fff; }
-  .potd-banner-sub   { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.70); }
-  .potd-odds-pill    { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; background: rgba(255,255,255,0.20); border: 1px solid rgba(255,255,255,0.35); color: #fff; padding: 6px 16px; border-radius: 20px; white-space: nowrap; }
-
-  .potd-body { display: flex; padding: 22px 24px; gap: 22px; align-items: flex-start; }
-  .potd-rank-col { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 52px; padding-top: 3px; }
-  .potd-rank-num { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 36px; line-height: 1; color: var(--gold); }
-  .potd-stars    { font-size: 14px; letter-spacing: 1px; line-height: 1; }
-  .star-filled   { color: var(--gold); }
-  .star-empty    { color: var(--border-dark); }
-  .potd-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
-  .potd-player-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .potd-player-name { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 32px; color: var(--navy); letter-spacing: 0.02em; line-height: 1; }
-  .potd-score-badge { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; padding: 3px 11px; border-radius: 3px; color: var(--red); background: var(--red-dim); border: 1px solid #F9A8B4; }
-  .conf-badge   { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; padding: 3px 8px; border-radius: 2px; text-transform: uppercase; }
-  .conf-high    { background: var(--green-dim); color: var(--green); border: 1px solid #A7D7B8; }
-  .potd-matchup { font-size: 14px; color: var(--text); }
-  .potd-venue   { font-size: 12px; color: var(--text-sub); margin-top: 1px; }
-  .potd-pitcher { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-sub); }
-
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia,serif;font-size:14px;line-height:1.5;min-height:100vh}
+  .site-header{background:var(--navy);background-image:repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(255,255,255,.04) 47px,rgba(255,255,255,.04) 48px);color:#fff;padding:28px 36px 24px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:20px;border-bottom:4px solid var(--red)}
+  .header-left{display:flex;flex-direction:column;gap:6px}
+  .site-title{font-family:'Oswald',sans-serif;font-weight:700;font-size:clamp(30px,5vw,52px);letter-spacing:.04em;text-transform:uppercase;color:#fff;line-height:1;display:flex;align-items:center;gap:12px}
+  .title-ball{display:inline-block;width:.85em;height:.85em;flex-shrink:0;opacity:.9}
+  .site-date{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.55);letter-spacing:.12em;text-transform:uppercase}
+  .header-nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .nav-link{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.10);color:#fff;font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:10px 18px;border-radius:6px;border:1px solid rgba(255,255,255,.18);transition:background .15s;white-space:nowrap}
+  .nav-link:hover{background:rgba(255,255,255,.18)}
+  .page-body{max-width:820px;margin:32px auto 60px;padding:0 20px}
+  .page-title{font-family:'Oswald',sans-serif;font-size:22px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .page-subtitle{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}
+  /* POTD card */
+  .potd-card{background:var(--surface);border:2px solid var(--gold);border-radius:8px;overflow:hidden;box-shadow:0 4px 24px rgba(212,160,23,.15),0 1px 4px rgba(0,0,0,.06);margin-bottom:28px}
+  .potd-banner{background:var(--gold);background-image:repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(255,255,255,.10) 47px,rgba(255,255,255,.10) 48px);display:flex;align-items:center;justify-content:space-between;padding:10px 22px;gap:12px}
+  .potd-banner-left{display:flex;align-items:center;gap:10px}
+  .potd-banner-title{font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:#fff}
+  .potd-banner-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.70)}
+  .potd-odds-pill{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;background:rgba(255,255,255,.20);border:1px solid rgba(255,255,255,.35);color:#fff;padding:6px 16px;border-radius:20px;white-space:nowrap}
+  .potd-body{display:flex;padding:22px 24px;gap:22px;align-items:flex-start}
+  .potd-rank-col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:52px;padding-top:3px}
+  .potd-rank-num{font-family:'Oswald',sans-serif;font-weight:700;font-size:36px;line-height:1;color:var(--gold)}
+  .star-filled{color:var(--gold)} .star-empty{color:var(--border-dark)}
+  .potd-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
+  .potd-player-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .potd-player-name{font-family:'Oswald',sans-serif;font-weight:700;font-size:32px;color:var(--navy);letter-spacing:.02em;line-height:1}
+  .potd-score-badge{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:3px 11px;border-radius:3px;color:var(--red);background:var(--red-dim);border:1px solid #F9A8B4}
+  .conf-badge{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:2px;text-transform:uppercase}
+  .conf-high{background:var(--green-dim);color:var(--green);border:1px solid #A7D7B8}
+  .conf-med {background:var(--amber-dim);color:var(--amber);border:1px solid #FCD34D}
+  .conf-low {background:var(--surface2);color:var(--text-sub);border:1px solid var(--border)}
+  .potd-matchup{font-size:14px;color:var(--text)}
+  .potd-venue{font-size:12px;color:var(--text-sub);margin-top:1px}
+  .potd-pitcher{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-sub)}
   /* Stats chips */
-  .stats-row { display: flex; gap: 4px; flex-wrap: wrap; }
-  .stat { display: flex; flex-direction: column; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 4px 9px; min-width: 64px; }
-  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); line-height: 1; margin-bottom: 2px; }
-  .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--navy); line-height: 1; }
-  .stat-value.hot  { color: var(--red); }
-
+  .stats-row{display:flex;gap:4px;flex-wrap:wrap}
+  .stat{display:flex;flex-direction:column;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:4px 9px;min-width:64px}
+  .stat-label{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);line-height:1;margin-bottom:2px}
+  .stat-value{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--navy);line-height:1}
+  .stat-value.hot{color:var(--red)}
   /* Tags */
-  .tags-row { display: flex; flex-wrap: wrap; gap: 4px; }
-  .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 3px; border: 1px solid transparent; letter-spacing: 0.02em; }
-  .tag-green { color: var(--green);   background: var(--green-dim); border-color: #A7D7B8; }
-  .tag-amber { color: var(--amber);   background: var(--amber-dim); border-color: #FCD34D; }
-  .tag-dim   { color: var(--text-sub); background: var(--surface2); border-color: var(--border); }
-  .tag-gold  { color: #92400E; background: var(--gold-dim); border-color: rgba(212,160,23,0.5); }
-
-  /* Why line */
-  .why-line { font-size: 13px; color: var(--text-sub); line-height: 1.4; font-style: italic; }
-  .why-label { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-right: 4px; font-style: normal; }
-
+  .tags-row{display:flex;flex-wrap:wrap;gap:4px}
+  .tag{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;border:1px solid transparent;letter-spacing:.02em}
+  .tag-green{color:var(--green);background:var(--green-dim);border-color:#A7D7B8}
+  .tag-amber{color:var(--amber);background:var(--amber-dim);border-color:#FCD34D}
+  .tag-dim{color:var(--text-sub);background:var(--surface2);border-color:var(--border)}
+  .tag-gold{color:#92400E;background:var(--gold-dim);border-color:rgba(212,160,23,.5)}
+  .tag-red{color:var(--red);background:var(--red-dim);border-color:#F9A8B4}
+  /* Why */
+  .why-line{font-size:13px;color:var(--text-sub);line-height:1.4;font-style:italic}
+  .why-label{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-right:4px;font-style:normal}
   /* EV strip */
-  .potd-ev-strip { background: var(--green-dim); border-top: 1px solid #A7D7B8; padding: 12px 24px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
-  .potd-ev-item  { display: flex; align-items: baseline; gap: 7px; }
-  .ev-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
-  .ev-value { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--green); }
-  .ev-value.neutral { color: var(--text-sub); }
-
-  /* ── Detail sections ── */
-  .detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
-  .detail-card-header { background: var(--navy); color: rgba(255,255,255,0.80); padding: 9px 16px; font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
-  .detail-card-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-
-  /* Score breakdown */
-  .score-total-row { display: flex; align-items: center; justify-content: space-between; background: var(--navy); color: #fff; padding: 9px 14px; border-radius: 5px; margin-bottom: 8px; }
-  .score-total-label { font-family: 'Oswald', sans-serif; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; opacity: 0.8; }
-  .score-total-value { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: #FBBF24; }
-
-  .contrib-list { display: flex; flex-direction: column; gap: 3px; }
-  .contrib-row { display: flex; align-items: center; padding: 5px 10px; border-radius: 4px; gap: 10px; border: 1px solid var(--border); }
-  .contrib-pos { background: #F0FAF4; border-color: #A7D7B8; }
-  .contrib-0   { background: var(--surface2); }
-  .contrib-signal { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-sub); flex: 1; }
-  .contrib-raw    { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); min-width: 60px; text-align: right; }
-  .contrib-delta  { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; min-width: 34px; text-align: right; }
-  .contrib-delta.pos { color: var(--green); }
-
+  .potd-ev-strip{background:var(--green-dim);border-top:1px solid #A7D7B8;padding:12px 24px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+  .potd-ev-item{display:flex;align-items:baseline;gap:7px}
+  .ev-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim)}
+  .ev-value{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--green)}
+  .ev-value.neutral{color:var(--text-sub)}
+  /* Detail sections */
+  .detail-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
+  .detail-card-header{background:var(--navy);color:rgba(255,255,255,.80);padding:9px 16px;font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+  .detail-card-body{padding:16px;display:flex;flex-direction:column;gap:10px}
   /* Signal grid */
-  .signal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 5px; }
-  .signal-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--surface2); border-radius: 4px; border: 1px solid var(--border); }
-  .signal-name { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-sub); min-width: 76px; flex-shrink: 0; }
-  .signal-bar-wrap { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .signal-bar { height: 100%; border-radius: 3px; background: var(--navy-mid); }
-  .bar-green { background: var(--green); }
-  .bar-amber { background: var(--amber); }
-  .bar-gold  { background: var(--gold); }
-  .signal-value { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--navy); min-width: 54px; text-align: right; flex-shrink: 0; }
-  .signal-value.green { color: var(--green); }
-  .signal-value.amber { color: var(--amber); }
-  .signal-delta { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; min-width: 26px; text-align: right; flex-shrink: 0; }
-  .delta-pos { color: var(--green); }
-  .delta-0   { color: var(--text-dim); }
-
-  /* Splits grid */
-  .splits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .splits-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; }
-  .splits-title { font-family: 'Oswald', sans-serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
-  .splits-stats { display: flex; gap: 16px; flex-wrap: wrap; }
-  .splits-stat { display: flex; flex-direction: column; gap: 1px; }
-  .splits-stat-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
-  .splits-stat-value { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--navy); }
-  .splits-stat-value.hi { color: var(--red); }
-
-  /* Odds table */
-  .odds-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-  .odds-table th { text-align: left; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); border-bottom: 1px solid var(--border); padding: 5px 10px; font-weight: 500; }
-  .odds-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--navy); font-weight: 700; vertical-align: middle; }
-  .odds-table tr:last-child td { border-bottom: none; }
-  .best-book td { background: var(--green-dim); }
-  .odds-book { font-size: 11px; font-weight: 500; color: var(--text-sub); }
-  .ev-pos { color: var(--green); }
-  .ev-neg { color: var(--red); }
-
-  /* Footer */
-  .site-footer { text-align: center; padding: 16px 24px; font-size: 11px; color: var(--text-dim); border-top: 1px solid var(--border); margin-top: 20px; font-family: 'JetBrains Mono', monospace; }
-
-  @media (max-width: 600px) {
-    .site-header { padding: 18px; }
-    .potd-body { flex-direction: column; }
-    .potd-rank-col { flex-direction: row; }
-    .splits-grid { grid-template-columns: 1fr; }
-    .signal-grid { grid-template-columns: 1fr; }
+  .signal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:5px}
+  .sig-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:4px;border:1px solid var(--border)}
+  .sig-row.g{background:#F0FAF4;border-color:#A7D7B8}
+  .sig-row.a{background:#FFFBEB;border-color:#FCD34D}
+  .sig-name{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-sub);min-width:80px;flex-shrink:0}
+  .bar-wrap{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+  .bar{height:100%;border-radius:3px;background:var(--navy-mid);transition:width .4s}
+  .bar.g{background:var(--green)} .bar.a{background:var(--amber)} .bar.r{background:var(--red)}
+  .sig-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--navy);min-width:54px;text-align:right;flex-shrink:0}
+  .sig-val.g{color:var(--green)} .sig-val.a{color:var(--amber)} .sig-val.r{color:var(--red)}
+  /* Splits */
+  .splits-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .split-card{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:12px 14px}
+  .split-title{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
+  .split-stats{display:flex;gap:16px;flex-wrap:wrap}
+  .split-stat{display:flex;flex-direction:column;gap:1px}
+  .split-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim)}
+  .split-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--navy)}
+  .split-val.hi{color:var(--red)}
+  /* Odds */
+  .odds-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:12px}
+  .odds-table th{text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);padding:5px 10px;font-weight:500}
+  .odds-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--navy);font-weight:700;vertical-align:middle}
+  .odds-table tr:last-child td{border-bottom:none}
+  .best-book td{background:var(--green-dim)}
+  .odds-book{font-size:11px;font-weight:500;color:var(--text-sub)}
+  .ev-pos{color:var(--green)} .ev-neg{color:var(--red)}
+  /* Deep-dive link */
+  .deep-dive-btn{display:inline-flex;align-items:center;gap:6px;font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--navy);background:var(--surface2);border:1px solid var(--border);padding:9px 16px;border-radius:6px;transition:background .15s;margin-bottom:4px}
+  .deep-dive-btn:hover{background:var(--border)}
+  /* States */
+  .state-box{max-width:500px;margin:60px auto;padding:32px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+  .state-title{font-family:'Oswald',sans-serif;font-size:20px;color:var(--navy);margin-bottom:8px}
+  .state-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim)}
+  .site-footer{text-align:center;padding:16px 24px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:20px;font-family:'JetBrains Mono',monospace}
+  @media(max-width:600px){
+    .site-header{padding:18px} .potd-body{flex-direction:column} .potd-rank-col{flex-direction:row}
+    .splits-grid{grid-template-columns:1fr} .signal-grid{grid-template-columns:1fr}
   }
 </style>
 </head>
 <body>
-
 <header class="site-header">
   <div class="header-left">
     <div class="site-title">
       <svg class="title-ball" fill="#ffffff" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g><path d="M455.857,56.144c-74.86-74.859-196.662-74.859-271.521,0C17.087,223.392-9.275,272.783,2.398,298.264c8.318,18.153,32.898,19.077,63.015,17.249l-36.537,97.203c-6.838,18.194-2.549,38.035,11.195,51.778c13.744,13.743,33.583,18.035,51.778,11.195L197.2,436.089c-2.507,34.987-3.349,64.4,16.534,73.511c3.325,1.524,7.055,2.4,11.403,2.4c28.973-0.002,85.294-38.91,230.72-184.335C530.715,252.806,530.715,131.003,455.857,56.144z"/></g></svg>
       Dingers Hotline
     </div>
-    <div class="site-date">Pick of the Day &nbsp;&middot;&nbsp; Updated 2026-04-30</div>
+    <div class="site-date" id="hdr-date">Pick of the Day</div>
   </div>
   <div class="header-nav">
     <a class="nav-link" href="index.html">&#8592; Today's Picks</a>
@@ -223,269 +137,399 @@
 <div class="page-body">
   <div class="page-title">Pick of the Day</div>
   <div class="page-subtitle">Highest model score &middot; Full signal breakdown &middot; Updated daily</div>
-
-  <!-- ── POTD Card ── -->
-  <div class="potd-card">
-
-    <div class="potd-banner">
-      <div class="potd-banner-left">
-        <span style="font-size:20px;line-height:1;">&#128293;</span>
-        <div>
-          <div class="potd-banner-title">Pick of the Day &mdash; Wed Apr 30, 2026</div>
-          <div class="potd-banner-sub">Model score 31.4 &middot; Rank #1 of 20 &middot; &#9733;&#9733;&#9733;&#9733;&#9734;</div>
-        </div>
-      </div>
-      <div class="potd-odds-pill">Best: +310 &middot; DraftKings</div>
-    </div>
-
-    <div class="potd-body">
-      <div class="potd-rank-col">
-        <span class="potd-rank-num">#1</span>
-        <span class="potd-stars"><span class="star-filled">&#9733;&#9733;&#9733;&#9733;</span><span class="star-empty">&#9734;</span></span>
-      </div>
-      <div class="potd-main">
-        <div class="potd-player-row">
-          <span class="potd-player-name">Aaron Judge</span>
-          <span class="potd-score-badge">31.4</span>
-          <span class="conf-badge conf-high">HIGH</span>
-        </div>
-        <div class="potd-matchup">New York Yankees vs Boston Red Sox &nbsp;&middot;&nbsp; <strong>7:05 PM ET</strong></div>
-        <div class="potd-venue">Yankee Stadium &nbsp;&middot;&nbsp; Home &nbsp;&middot;&nbsp; 72&deg;F &middot; Wind 8mph out to RF</div>
-        <div class="potd-pitcher">RHB vs Brayan Bello (R) &nbsp;&middot;&nbsp; #3 in batting order</div>
-        <div class="stats-row">
-          <div class="stat"><span class="stat-label">xISO</span><span class="stat-value hot">0.340</span></div>
-          <div class="stat"><span class="stat-label">Barrel</span><span class="stat-value hot">22.1%</span></div>
-          <div class="stat"><span class="stat-label">Hard Hit</span><span class="stat-value">56.8%</span></div>
-          <div class="stat"><span class="stat-label">EV Avg</span><span class="stat-value">95.2 mph</span></div>
-          <div class="stat"><span class="stat-label">EV Max</span><span class="stat-value hot">116.4 mph</span></div>
-          <div class="stat"><span class="stat-label">Blast%</span><span class="stat-value hot">18.2%</span></div>
-          <div class="stat"><span class="stat-label">xSLG</span><span class="stat-value hot">0.680</span></div>
-          <div class="stat"><span class="stat-label">Season HR</span><span class="stat-value">14</span></div>
-        </div>
-        <div class="tags-row">
-          <span class="tag tag-green">Park 118%</span>
-          <span class="tag tag-gold">195 career HR @ Yankee Stadium</span>
-          <span class="tag tag-amber">5HR / 14d</span>
-          <span class="tag tag-amber">Pitcher L3: 2.1 HR/9</span>
-          <span class="tag tag-green">Wind out to RF</span>
-          <span class="tag tag-dim">72&deg;F</span>
-        </div>
-        <div class="why-line">
-          <span class="why-label">Why:</span>
-          Elite xISO 0.340 + barrel 22.1%, 195 career HR at Yankee Stadium, pitcher giving up 2.1 HR/9 last 3 starts, wind blowing out to right field, top-10 HR leaderboard
-        </div>
-      </div>
-    </div>
-
-    <div class="potd-ev-strip">
-      <div class="potd-ev-item"><span class="ev-label">EV on $10</span><span class="ev-value">+$2.84</span></div>
-      <div class="potd-ev-item"><span class="ev-label">Pinnacle</span><span class="ev-value neutral">+285</span></div>
-      <div class="potd-ev-item"><span class="ev-label">Kelly size</span><span class="ev-value neutral">$8.40</span></div>
-      <div class="potd-ev-item"><span class="ev-label">Value edge</span><span class="ev-value">+4.2pp</span></div>
-    </div>
-
-  </div><!-- /potd-card -->
-
-
-  <!-- ── Score Breakdown ── -->
-  <div class="detail-card">
-    <div class="detail-card-header">Score Breakdown</div>
-    <div class="detail-card-body">
-      <div>
-        <div class="score-total-row">
-          <span class="score-total-label">Model Score</span>
-          <span class="score-total-value">31.4</span>
-        </div>
-        <div class="contrib-list">
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">xISO (0.340)</span>
-            <span class="contrib-raw">&#8805; 0.280</span>
-            <span class="contrib-delta pos">+5</span>
-          </div>
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">Barrel rate (22.1%)</span>
-            <span class="contrib-raw">&#8805; 18%</span>
-            <span class="contrib-delta pos">+4</span>
-          </div>
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">xSLG (0.680)</span>
-            <span class="contrib-raw">&#8805; 0.600</span>
-            <span class="contrib-delta pos">+4</span>
-          </div>
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">EV Avg (95.2 mph)</span>
-            <span class="contrib-raw">&#8805; 93</span>
-            <span class="contrib-delta pos">+3</span>
-          </div>
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">Recent form (5HR / 14d)</span>
-            <span class="contrib-raw">&#8805; 3</span>
-            <span class="contrib-delta pos">+3</span>
-          </div>
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">EV Max (116.4 mph)</span>
-            <span class="contrib-raw">&#8805; 115</span>
-            <span class="contrib-delta pos">+3</span>
-          </div>
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">Career park HR (195 @ Yankee Stadium)</span>
-            <span class="contrib-raw">&#8805; 5</span>
-            <span class="contrib-delta pos">+2</span>
-          </div>
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">Park factor (118%)</span>
-            <span class="contrib-raw">HR-friendly</span>
-            <span class="contrib-delta pos">+2</span>
-          </div>
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">Pitcher L3 HR/9 (2.1)</span>
-            <span class="contrib-raw">&#8805; 2.0</span>
-            <span class="contrib-delta pos">+2</span>
-          </div>
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">Blast rate (18.2%)</span>
-            <span class="contrib-raw">&#8805; 16%</span>
-            <span class="contrib-delta pos">+2</span>
-          </div>
-          <div class="contrib-row contrib-pos">
-            <span class="contrib-signal">Elite hitter boost (HR leaderboard #2)</span>
-            <span class="contrib-raw">top-10</span>
-            <span class="contrib-delta pos">+2</span>
-          </div>
-          <div class="contrib-row contrib-0">
-            <span class="contrib-signal">ML blend (AUC 0.640 &rarr; 35% weight)</span>
-            <span class="contrib-raw">&mdash;</span>
-            <span class="contrib-delta pos">+2.1</span>
-          </div>
-        </div>
-      </div>
+  <div id="main-content">
+    <div class="state-box">
+      <div class="state-title">Loading…</div>
+      <div class="state-sub">Fetching today's top pick</div>
     </div>
   </div>
+</div>
 
-  <!-- ── Contact Quality ── -->
-  <div class="detail-card">
-    <div class="detail-card-header">Contact Quality</div>
-    <div class="detail-card-body">
-      <div class="signal-grid">
-        <div class="signal-row"><span class="signal-name">xISO</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:95%"></div></div><span class="signal-value green">0.340</span><span class="signal-delta delta-pos">+5</span></div>
-        <div class="signal-row"><span class="signal-name">Barrel%</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:85%"></div></div><span class="signal-value green">22.1%</span><span class="signal-delta delta-pos">+4</span></div>
-        <div class="signal-row"><span class="signal-name">Hard Hit%</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:74%"></div></div><span class="signal-value">56.8%</span><span class="signal-delta delta-pos">+2</span></div>
-        <div class="signal-row"><span class="signal-name">EV Avg</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:80%"></div></div><span class="signal-value green">95.2 mph</span><span class="signal-delta delta-pos">+3</span></div>
-        <div class="signal-row"><span class="signal-name">EV Max</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:90%"></div></div><span class="signal-value green">116.4 mph</span><span class="signal-delta delta-pos">+3</span></div>
-        <div class="signal-row"><span class="signal-name">Sweet Spot%</span><div class="signal-bar-wrap"><div class="signal-bar bar-amber" style="width:50%"></div></div><span class="signal-value">36.2%</span><span class="signal-delta delta-0">0</span></div>
-        <div class="signal-row"><span class="signal-name">FB%</span><div class="signal-bar-wrap"><div class="signal-bar bar-amber" style="width:54%"></div></div><span class="signal-value">40.1%</span><span class="signal-delta delta-pos">+1</span></div>
-        <div class="signal-row"><span class="signal-name">xSLG</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:92%"></div></div><span class="signal-value green">0.680</span><span class="signal-delta delta-pos">+4</span></div>
-        <div class="signal-row"><span class="signal-name">Blast%</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:68%"></div></div><span class="signal-value green">18.2%</span><span class="signal-delta delta-pos">+2</span></div>
-        <div class="signal-row"><span class="signal-name">Launch &deg;</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:62%"></div></div><span class="signal-value">21.8&deg;</span><span class="signal-delta delta-pos">+1</span></div>
-        <div class="signal-row"><span class="signal-name">HR Luck</span><div class="signal-bar-wrap"><div class="signal-bar bar-gold" style="width:35%"></div></div><span class="signal-value amber">&minus;1.4</span><span class="signal-delta delta-pos">+1</span></div>
-        <div class="signal-row"><span class="signal-name">xHR Rate</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:78%"></div></div><span class="signal-value green">5.8%</span><span class="signal-delta delta-pos">+3</span></div>
-      </div>
-    </div>
-  </div>
+<footer class="site-footer">Dingers Hotline &nbsp;&middot;&nbsp; Model picks for entertainment &nbsp;&middot;&nbsp; Bet responsibly</footer>
 
-  <!-- ── Pitcher Analysis ── -->
-  <div class="detail-card">
-    <div class="detail-card-header">Pitcher Analysis &mdash; Brayan Bello (R)</div>
-    <div class="detail-card-body">
-      <div class="signal-grid">
-        <div class="signal-row"><span class="signal-name">L3 HR/9</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:72%"></div></div><span class="signal-value green">2.1</span><span class="signal-delta delta-pos">+2</span></div>
-        <div class="signal-row"><span class="signal-name">Career vs R</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:60%"></div></div><span class="signal-value green">1.62 HR/9</span><span class="signal-delta delta-pos">+2</span></div>
-        <div class="signal-row"><span class="signal-name">Barrel Alwd</span><div class="signal-bar-wrap"><div class="signal-bar bar-amber" style="width:44%"></div></div><span class="signal-value">8.2%</span><span class="signal-delta delta-pos">+1</span></div>
-        <div class="signal-row"><span class="signal-name">FB Mix</span><div class="signal-bar-wrap"><div class="signal-bar bar-amber" style="width:38%"></div></div><span class="signal-value">FB 48%</span><span class="signal-delta delta-0">0</span></div>
-        <div class="signal-row"><span class="signal-name">Btr vs FB</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:88%"></div></div><span class="signal-value green">xSLG .640</span><span class="signal-delta delta-pos">+2</span></div>
-      </div>
-    </div>
-  </div>
+<script>
+(function () {
+  /* ── DOM helpers (no innerHTML) ─────────────────────────────────────── */
+  function mk(tag, cls) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    return e;
+  }
+  function ap(parent) {
+    for (var i = 1; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c == null) continue;
+      parent.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c);
+    }
+    return parent;
+  }
 
-  <!-- ── Park & Context ── -->
-  <div class="detail-card">
-    <div class="detail-card-header">Park &amp; Context</div>
-    <div class="detail-card-body">
-      <div class="signal-grid">
-        <div class="signal-row"><span class="signal-name">Park Factor</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:68%"></div></div><span class="signal-value green">118%</span><span class="signal-delta delta-pos">+2</span></div>
-        <div class="signal-row"><span class="signal-name">Temperature</span><div class="signal-bar-wrap"><div class="signal-bar bar-amber" style="width:52%"></div></div><span class="signal-value">72&deg;F</span><span class="signal-delta delta-0">0</span></div>
-        <div class="signal-row"><span class="signal-name">Carry ft</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:58%"></div></div><span class="signal-value">+3.1 ft</span><span class="signal-delta delta-pos">+1</span></div>
-        <div class="signal-row"><span class="signal-name">Wind</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:56%"></div></div><span class="signal-value">8mph out</span><span class="signal-delta delta-pos">+1</span></div>
-        <div class="signal-row"><span class="signal-name">Home/Away</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:60%"></div></div><span class="signal-value">Home</span><span class="signal-delta delta-pos">+1</span></div>
-        <div class="signal-row"><span class="signal-name">Career Park</span><div class="signal-bar-wrap"><div class="signal-bar bar-green" style="width:100%"></div></div><span class="signal-value green">195 HR</span><span class="signal-delta delta-pos">+2</span></div>
-      </div>
-    </div>
-  </div>
+  function chip(label, val, hot) {
+    if (val == null) return null;
+    var d = mk('div', 'stat');
+    var l = mk('span', 'stat-label'); l.textContent = label;
+    var v = mk('span', 'stat-value' + (hot ? ' hot' : '')); v.textContent = val;
+    return ap(d, l, v);
+  }
 
-  <!-- ── Historical ── -->
-  <div class="detail-card">
-    <div class="detail-card-header">Historical Splits</div>
-    <div class="detail-card-body">
-      <div class="splits-grid">
-        <div class="splits-card">
-          <div class="splits-title">Home splits (2026)</div>
-          <div class="splits-stats">
-            <div class="splits-stat"><span class="splits-stat-label">Home HR</span><span class="splits-stat-value hi">9</span></div>
-            <div class="splits-stat"><span class="splits-stat-label">PA</span><span class="splits-stat-value">58</span></div>
-            <div class="splits-stat"><span class="splits-stat-label">SLG</span><span class="splits-stat-value">.701</span></div>
-          </div>
-        </div>
-        <div class="splits-card">
-          <div class="splits-title">Career vs Bello</div>
-          <div class="splits-stats">
-            <div class="splits-stat"><span class="splits-stat-label">AB</span><span class="splits-stat-value">12</span></div>
-            <div class="splits-stat"><span class="splits-stat-label">HR</span><span class="splits-stat-value hi">2</span></div>
-            <div class="splits-stat"><span class="splits-stat-label">AVG</span><span class="splits-stat-value">.333</span></div>
-          </div>
-        </div>
-        <div class="splits-card">
-          <div class="splits-title">Career at Yankee Stadium</div>
-          <div class="splits-stats">
-            <div class="splits-stat"><span class="splits-stat-label">Career HR</span><span class="splits-stat-value hi">195</span></div>
-            <div class="splits-stat"><span class="splits-stat-label">Seasons</span><span class="splits-stat-value">9</span></div>
-          </div>
-        </div>
-        <div class="splits-card">
-          <div class="splits-title">Pitcher career vs RHB</div>
-          <div class="splits-stats">
-            <div class="splits-stat"><span class="splits-stat-label">HR/9</span><span class="splits-stat-value hi">1.62</span></div>
-            <div class="splits-stat"><span class="splits-stat-label">IP vs RHB</span><span class="splits-stat-value">280</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  function tagEl(text, cls) {
+    var e = mk('span', 'tag ' + cls); e.textContent = text; return e;
+  }
 
-  <!-- ── Odds ── -->
-  <div class="detail-card">
-    <div class="detail-card-header">Odds Across Books</div>
-    <div class="detail-card-body">
-      <table class="odds-table">
-        <thead>
-          <tr><th>Book</th><th>Line</th><th>Implied Prob</th><th>EV on $10</th><th>vs Pinnacle</th></tr>
-        </thead>
-        <tbody>
-          <tr class="best-book">
-            <td><span class="odds-book">DraftKings</span></td>
-            <td>+310</td><td>24.4%</td><td class="ev-pos">+$2.84</td><td class="ev-pos">+4.2pp</td>
-          </tr>
-          <tr>
-            <td><span class="odds-book">FanDuel</span></td>
-            <td>+290</td><td>25.6%</td><td class="ev-pos">+$1.42</td><td class="ev-pos">+3.0pp</td>
-          </tr>
-          <tr>
-            <td><span class="odds-book">BetMGM</span></td>
-            <td>+270</td><td>27.0%</td><td class="ev-neg">&minus;$0.14</td><td class="ev-neg">&minus;0.4pp</td>
-          </tr>
-          <tr>
-            <td><span class="odds-book">Pinnacle (benchmark)</span></td>
-            <td>+285</td><td>26.0%</td><td>&mdash;</td><td>&mdash;</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+  function starsNode(starsStr) {
+    var span = mk('span', 'stars');
+    var f = (starsStr || '').split('').filter(function(c){return c==='★';}).length;
+    var e2 = (starsStr || '').split('').filter(function(c){return c==='☆';}).length;
+    var sf = mk('span', 'star-filled'); sf.textContent = '★'.repeat(f);
+    var se = mk('span', 'star-empty');  se.textContent = '☆'.repeat(e2);
+    return ap(span, sf, se);
+  }
 
-</div><!-- /page-body -->
+  function confClass(c) {
+    return {HIGH:'conf-high',MEDIUM:'conf-med',LOW:'conf-low'}[c] || 'conf-low';
+  }
 
-<footer class="site-footer">
-  Dingers Hotline &nbsp;&middot;&nbsp; Model picks for entertainment &nbsp;&middot;&nbsp; Bet responsibly
-</footer>
+  function sigRow(label, valueText, barPct, barColorCls, rowColorCls, valColorCls) {
+    var row = mk('div', 'sig-row' + (rowColorCls ? ' ' + rowColorCls : ''));
+    var nm  = mk('span', 'sig-name'); nm.textContent = label;
+    var bw  = mk('div', 'bar-wrap');
+    var bar = mk('div', 'bar' + (barColorCls ? ' ' + barColorCls : ''));
+    bar.style.width = (barPct || 0) + '%';
+    bw.appendChild(bar);
+    var sv  = mk('span', 'sig-val' + (valColorCls ? ' ' + valColorCls : '')); sv.textContent = valueText;
+    return ap(row, nm, bw, sv);
+  }
 
+  function sectionCard(headerText, bodyNode) {
+    var card = mk('div', 'detail-card');
+    var hdr  = mk('div', 'detail-card-header'); hdr.textContent = headerText;
+    var body = mk('div', 'detail-card-body'); body.appendChild(bodyNode);
+    return ap(card, hdr, body);
+  }
+
+  function splitCard(title, stats) {
+    var c = mk('div', 'split-card');
+    var t = mk('div', 'split-title'); t.textContent = title;
+    var ss = mk('div', 'split-stats');
+    stats.forEach(function(st) {
+      if (st.val == null) return;
+      var w = mk('div', 'split-stat');
+      var l = mk('span', 'split-lbl'); l.textContent = st.label;
+      var v = mk('span', 'split-val' + (st.hi ? ' hi' : '')); v.textContent = st.val;
+      ap(w, l, v); ss.appendChild(w);
+    });
+    return ap(c, t, ss);
+  }
+
+  function colorTier(val, lo, hi) {
+    if (val == null) return '';
+    return val >= hi ? 'g' : (val >= lo ? 'a' : '');
+  }
+  function bp(val, maxVal) { return maxVal ? Math.min(100, Math.round(Math.abs(val) / maxVal * 100)) : 40; }
+
+  /* ── Build page ─────────────────────────────────────────────────────── */
+  function buildPage(p) {
+    var s = p.signals || {};
+    var root = document.getElementById('main-content');
+
+    document.title = p.player + ' — Pick of the Day — Dingers Hotline';
+    var hdrDate = document.getElementById('hdr-date');
+    if (hdrDate) hdrDate.textContent = 'Pick of the Day · ' + (p.matchup || '');
+
+    /* ── POTD card ── */
+    var card = mk('div', 'potd-card');
+
+    // Gold banner
+    var banner = mk('div', 'potd-banner');
+    var banLeft = mk('div', 'potd-banner-left');
+    var fireSpan = mk('span'); fireSpan.textContent = '🔥';
+    fireSpan.style.cssText = 'font-size:20px;line-height:1';
+    var banTextWrap = mk('div');
+    var banTitle = mk('div', 'potd-banner-title'); banTitle.textContent = 'Pick of the Day';
+    var banSub   = mk('div', 'potd-banner-sub');
+    banSub.textContent = 'Model score ' + (p.score||0).toFixed(1) + ' · Rank #1 of 20 · ' + (p.stars||'');
+    ap(banTextWrap, banTitle, banSub);
+    ap(banLeft, fireSpan, banTextWrap);
+    var oddsPill = mk('div', 'potd-odds-pill');
+    if (s.best_odds) {
+      oddsPill.textContent = 'Best: ' + s.best_odds + (s.best_book ? ' · ' + s.best_book : '');
+    } else {
+      oddsPill.textContent = 'Model pick';
+    }
+    ap(banner, banLeft, oddsPill);
+
+    // Body
+    var body = mk('div', 'potd-body');
+    var rankCol = mk('div', 'potd-rank-col');
+    var rankNum = mk('span', 'potd-rank-num'); rankNum.textContent = '#1';
+    ap(rankCol, rankNum, starsNode(p.stars));
+
+    var main = mk('div', 'potd-main');
+    var playerRow = mk('div', 'potd-player-row');
+    var playerName = mk('span', 'potd-player-name'); playerName.textContent = p.player;
+    var scoreBadge = mk('span', 'potd-score-badge'); scoreBadge.textContent = (p.score||0).toFixed(1);
+    var confBadge  = mk('span', 'conf-badge ' + confClass(p.confidence)); confBadge.textContent = p.confidence || 'LOW';
+    ap(playerRow, playerName, scoreBadge, confBadge);
+
+    var matchupLine = mk('div', 'potd-matchup'); matchupLine.textContent = p.matchup || '';
+    if (p.game_time_et) { var strong = mk('strong'); strong.textContent = ' ' + p.game_time_et; matchupLine.appendChild(strong); }
+
+    var weatherParts = [];
+    if (s.temp_f != null) weatherParts.push(s.temp_f.toFixed(0) + '°F');
+    if (s.wind_mph != null && s.wind_mph >= 1) weatherParts.push('Wind ' + s.wind_mph.toFixed(0) + 'mph' + (s.wind_direction_bpp ? ' ' + s.wind_direction_bpp : ''));
+    if (s.carry_ft != null) weatherParts.push('Carry ' + (s.carry_ft >= 0 ? '+' : '') + s.carry_ft.toFixed(1) + ' ft');
+    var venueLine   = mk('div', 'potd-venue');
+    venueLine.textContent = (s.venue || '') + ' · ' + (s.is_home ? 'Home' : 'Away') + (weatherParts.length ? ' · ' + weatherParts.join(' · ') : '');
+
+    var pitcherStr = (s.bat_side||'?') + 'HB vs ' + (s.pitcher_name||'TBD') + ' (' + (s.pitcher_throws||'?') + ')';
+    if (s.batting_order) pitcherStr += ' · #' + s.batting_order + ' in order';
+    var pitcherLine = mk('div', 'potd-pitcher'); pitcherLine.textContent = pitcherStr;
+
+    ap(main, playerRow, matchupLine, venueLine, pitcherLine);
+
+    // Stats chips
+    var chipsRow = mk('div', 'stats-row');
+    [
+      chip('xISO',     s.xiso     != null ? s.xiso.toFixed(3)         : null, s.xiso >= 0.280),
+      chip('Barrel',   s.barrel_rate != null ? s.barrel_rate.toFixed(1)+'%'  : null, s.barrel_rate >= 18),
+      chip('Hard Hit', s.hard_hit_pct != null ? s.hard_hit_pct.toFixed(1)+'%': null, false),
+      chip('EV Avg',   s.ev_avg   != null ? s.ev_avg.toFixed(1)+' mph'       : null, false),
+      chip('EV Max',   s.ev_max   != null ? s.ev_max.toFixed(1)+' mph'       : null, s.ev_max >= 115),
+      chip('Blast%',   s.blast_rate != null ? s.blast_rate.toFixed(1)+'%'    : null, s.blast_rate >= 16),
+      chip('xSLG',     s.xslg    != null ? s.xslg.toFixed(3)          : null, s.xslg >= 0.600),
+      chip('Season HR',s.season_hr != null ? String(s.season_hr)              : null, false),
+    ].forEach(function(c) { if (c) chipsRow.appendChild(c); });
+    if (chipsRow.children.length) main.appendChild(chipsRow);
+
+    // Tags
+    var tagsRow = mk('div', 'tags-row');
+    if (s.park_hr_factor != null) {
+      tagsRow.appendChild(tagEl('Park ' + s.park_hr_factor.toFixed(0) + '%', s.park_hr_factor >= 110 ? 'tag-green' : (s.park_hr_factor <= 90 ? 'tag-red' : 'tag-dim')));
+    }
+    if (s.career_park_hr != null && s.career_park_hr >= 1) {
+      tagsRow.appendChild(tagEl(s.career_park_hr + ' career HR @ ' + (s.venue||'park'), 'tag-gold'));
+    }
+    if (s.recent_form_14d != null && s.recent_form_14d >= 1) {
+      tagsRow.appendChild(tagEl(s.recent_form_14d + ' HR / 14d', 'tag-amber'));
+    }
+    if (s.pitcher_hr_per_9 != null) {
+      tagsRow.appendChild(tagEl('Pitcher L3: ' + s.pitcher_hr_per_9.toFixed(1) + ' HR/9', s.pitcher_hr_per_9 >= 2 ? 'tag-red' : (s.pitcher_hr_per_9 >= 1 ? 'tag-amber' : 'tag-dim')));
+    }
+    if (s.h2h_hr != null && s.h2h_hr >= 1) {
+      tagsRow.appendChild(tagEl('H2H ' + s.h2h_hr + 'HR/' + (s.h2h_ab||'—') + 'AB', 'tag-green'));
+    }
+    if (s.wind_direction_bpp === 'out' && s.wind_mph >= 1) {
+      tagsRow.appendChild(tagEl('Wind out ' + s.wind_mph.toFixed(0) + 'mph', 'tag-green'));
+    }
+    if (tagsRow.children.length) main.appendChild(tagsRow);
+
+    // Why line
+    if (p.reasoning) {
+      var whyLine = mk('div', 'why-line');
+      var whyLbl  = mk('span', 'why-label'); whyLbl.textContent = 'Why:';
+      ap(whyLine, whyLbl, ' ' + p.reasoning);
+      main.appendChild(whyLine);
+    }
+
+    ap(body, rankCol, main);
+    ap(card, banner, body);
+
+    // EV strip
+    if (s.ev_10 != null || s.pinnacle_odds || s.best_odds) {
+      var strip = mk('div', 'potd-ev-strip');
+      function evItem(lbl, val, neutral) {
+        var d = mk('div', 'potd-ev-item');
+        var l = mk('span', 'ev-label'); l.textContent = lbl;
+        var v = mk('span', 'ev-value' + (neutral ? ' neutral' : '')); v.textContent = val;
+        return ap(d, l, v);
+      }
+      if (s.ev_10 != null) strip.appendChild(evItem('EV on $10', s.ev_10 >= 0 ? '+$' + s.ev_10.toFixed(2) : '-$' + Math.abs(s.ev_10).toFixed(2), false));
+      if (s.pinnacle_odds) strip.appendChild(evItem('Pinnacle', String(s.pinnacle_odds), true));
+      if (s.kelly_size != null) strip.appendChild(evItem('Kelly size', '$' + s.kelly_size.toFixed(2), true));
+      if (s.value_edge != null) strip.appendChild(evItem('Value edge', (s.value_edge >= 0 ? '+' : '') + s.value_edge.toFixed(1) + ' pp', false));
+      card.appendChild(strip);
+    }
+
+    root.textContent = '';
+    root.appendChild(card);
+
+    // Deep-dive link
+    var ddLink = mk('a', 'deep-dive-btn');
+    ddLink.setAttribute('href', 'player-card.html?player=' + p.slug);
+    ddLink.textContent = '→ Full Signal Deep Dive';
+    root.appendChild(ddLink);
+
+    /* ── Contact Quality ── */
+    var cqGrid = mk('div', 'signal-grid');
+    function addSig(lbl, val, lo, hi, maxV, fmt) {
+      if (val == null) return;
+      var t = colorTier(val, lo, hi);
+      cqGrid.appendChild(sigRow(lbl, fmt(val), bp(val, maxV), t, t, t));
+    }
+    addSig('xISO',      s.xiso,          0.200, 0.280, 0.400, function(v){return v.toFixed(3)});
+    addSig('xSLG',      s.xslg,          0.420, 0.600, 0.800, function(v){return v.toFixed(3)});
+    addSig('Barrel%',   s.barrel_rate,   10,    18,    30,    function(v){return v.toFixed(1)+'%'});
+    addSig('Hard Hit%', s.hard_hit_pct,  45,    52,    70,    function(v){return v.toFixed(1)+'%'});
+    addSig('EV Avg',    s.ev_avg,        89,    93,    100,   function(v){return v.toFixed(1)+' mph'});
+    addSig('EV Max',    s.ev_max,        109,   115,   122,   function(v){return v.toFixed(1)+' mph'});
+    addSig('Sweet Sp%', s.sweet_spot_pct,37,    42,    55,    function(v){return v.toFixed(1)+'%'});
+    addSig('FB%',       s.fb_pct,        30,    45,    60,    function(v){return v.toFixed(1)+'%'});
+    addSig('xHR Rate',  s.xhr_rate,      3,     4.5,   8,     function(v){return v.toFixed(1)+'%'});
+    addSig('Blast%',    s.blast_rate,    12,    16,    25,    function(v){return v.toFixed(1)+'%'});
+    addSig('Launch°',   s.launch_angle,  15,    20,    30,    function(v){return v.toFixed(1)+'°'});
+    if (s.hr_luck != null) {
+      var lc = s.hr_luck <= -2 ? 'g' : (s.hr_luck >= 2 ? 'r' : '');
+      cqGrid.appendChild(sigRow('HR Luck', (s.hr_luck >= 0 ? '+' : '') + s.hr_luck.toFixed(1), bp(s.hr_luck, 5), lc, '', lc));
+    }
+    if (cqGrid.children.length) root.appendChild(sectionCard('Contact Quality', cqGrid));
+
+    /* ── Pitcher Analysis ── */
+    var pitGrid = mk('div', 'signal-grid');
+    if (s.pitcher_hr_per_9 != null) {
+      var t9 = s.pitcher_hr_per_9 >= 2.0 ? 'g' : (s.pitcher_hr_per_9 >= 1.0 ? 'a' : '');
+      pitGrid.appendChild(sigRow('L3 HR/9', s.pitcher_hr_per_9.toFixed(1), bp(s.pitcher_hr_per_9, 3.0), t9, t9, t9));
+    }
+    if (s.pitcher_career_hr_vs_hand != null) {
+      var tc = s.pitcher_career_hr_vs_hand >= 1.5 ? 'g' : (s.pitcher_career_hr_vs_hand >= 1.0 ? 'a' : '');
+      pitGrid.appendChild(sigRow('Career vs ' + (s.bat_side||''), s.pitcher_career_hr_vs_hand.toFixed(2) + ' HR/9', bp(s.pitcher_career_hr_vs_hand, 2.5), tc, tc, tc));
+    }
+    if (s.pitcher_barrel_pct != null) {
+      pitGrid.appendChild(sigRow('Barrel Alwd', s.pitcher_barrel_pct.toFixed(1) + '%', bp(s.pitcher_barrel_pct, 15), 'a', '', ''));
+    }
+    // Dominant pitch vs batter split
+    var domPct2 = 0, domBKey = null, domLbl = null;
+    [{pk:'pitcher_fb_pct',bk:'batter_xslg_vs_fastball',lbl:'Btr vs FB'},
+     {pk:'pitcher_breaking_pct',bk:'batter_xslg_vs_breaking',lbl:'Btr vs Break'},
+     {pk:'pitcher_offspeed_pct',bk:'batter_xslg_vs_offspeed',lbl:'Btr vs OS'}].forEach(function(x){
+      if (s[x.pk] != null && s[x.pk] > domPct2) { domPct2 = s[x.pk]; domBKey = x.bk; domLbl = x.lbl; }
+    });
+    if (domPct2 >= 50 && domBKey && s[domBKey] != null) {
+      var bt = s[domBKey] >= 0.500 ? 'g' : (s[domBKey] >= 0.420 ? 'a' : '');
+      pitGrid.appendChild(sigRow(domLbl, 'xSLG ' + s[domBKey].toFixed(3), bp(s[domBKey], 0.800), bt, bt, bt));
+    }
+    if (pitGrid.children.length) {
+      root.appendChild(sectionCard('Pitcher Analysis — ' + (s.pitcher_name||'Opponent') + (s.pitcher_throws ? ' (' + s.pitcher_throws + ')' : ''), pitGrid));
+    }
+
+    /* ── Park & Context ── */
+    var pkGrid = mk('div', 'signal-grid');
+    if (s.park_hr_factor != null) {
+      var pkt = s.park_hr_factor >= 110 ? 'g' : (s.park_hr_factor <= 90 ? 'r' : '');
+      pkGrid.appendChild(sigRow('Park Factor', s.park_hr_factor.toFixed(0) + '%', bp(s.park_hr_factor, 150), pkt, pkt, pkt));
+    }
+    if (s.career_park_hr != null) {
+      var cpt = s.career_park_hr >= 5 ? 'g' : (s.career_park_hr >= 3 ? 'a' : '');
+      pkGrid.appendChild(sigRow('Career Park HR', s.career_park_hr + ' HR', bp(s.career_park_hr, 250), cpt, cpt, cpt));
+    }
+    if (s.is_home != null) pkGrid.appendChild(sigRow('Home/Away', s.is_home ? 'Home' : 'Away', 50, '', '', ''));
+    if (s.carry_ft != null) {
+      var ct = s.carry_ft >= 2 ? 'g' : (s.carry_ft <= -2 ? 'r' : '');
+      pkGrid.appendChild(sigRow('Carry ft', (s.carry_ft >= 0 ? '+' : '') + s.carry_ft.toFixed(1) + ' ft', bp(s.carry_ft, 10), ct, '', ct));
+    }
+    if (s.wind_mph != null && s.wind_mph >= 1) {
+      var wt = s.wind_direction_bpp === 'out' ? 'g' : (s.wind_direction_bpp === 'in' ? 'r' : '');
+      pkGrid.appendChild(sigRow('Wind', s.wind_mph.toFixed(0) + 'mph' + (s.wind_direction_bpp ? ' ' + s.wind_direction_bpp : ''), bp(s.wind_mph, 20), wt, '', wt));
+    }
+    if (s.temp_f != null) {
+      pkGrid.appendChild(sigRow('Temp', s.temp_f.toFixed(0) + '°F', bp(s.temp_f, 100), '', '', s.temp_f >= 80 ? 'g' : (s.temp_f <= 50 ? 'r' : '')));
+    }
+    if (pkGrid.children.length) root.appendChild(sectionCard('Park & Context', pkGrid));
+
+    /* ── Historical ── */
+    var splitGrid = mk('div', 'splits-grid');
+    if (s.season_hr != null) {
+      splitGrid.appendChild(splitCard('2026 Season', [
+        {label:'HR', val: String(s.season_hr), hi: s.season_hr >= 10},
+        {label:'PA', val: s.pa != null ? String(s.pa) : null},
+      ]));
+    }
+    if (s.recent_form_14d != null) {
+      splitGrid.appendChild(splitCard('Recent Form (14 days)', [
+        {label:'HRs', val: String(s.recent_form_14d), hi: s.recent_form_14d >= 3},
+      ]));
+    }
+    if (s.h2h_hr != null && s.h2h_ab != null) {
+      splitGrid.appendChild(splitCard('Career vs ' + (s.pitcher_name||'Pitcher'), [
+        {label:'AB', val: String(s.h2h_ab)},
+        {label:'HR', val: String(s.h2h_hr), hi: s.h2h_hr >= 1},
+      ]));
+    }
+    if (s.career_park_hr != null && s.career_park_hr >= 1) {
+      splitGrid.appendChild(splitCard('Career at ' + (s.venue||'This Park'), [
+        {label:'Career HR', val: String(s.career_park_hr), hi: true},
+      ]));
+    }
+    if (splitGrid.children.length) root.appendChild(sectionCard('Historical Context', splitGrid));
+
+    /* ── Odds ── */
+    if (s.best_odds || s.pinnacle_odds) {
+      var oddsBody = mk('div', 'detail-card-body');
+      var tbl = mk('table', 'odds-table');
+      var thead = mk('thead'); var hrow = mk('tr');
+      ['Book','Line','EV on $10','vs Pinnacle'].forEach(function(h) {
+        var th = mk('th'); th.textContent = h; hrow.appendChild(th);
+      });
+      thead.appendChild(hrow); tbl.appendChild(thead);
+      var tbody = mk('tbody');
+      if (s.best_odds) {
+        var brow = mk('tr', 'best-book');
+        var bk = mk('td'); var bks = mk('span','odds-book'); bks.textContent = s.best_book || 'Best Available'; bk.appendChild(bks);
+        var bl = mk('td'); bl.textContent = String(s.best_odds);
+        var be = mk('td');
+        if (s.ev_10 != null) {
+          var evsp = mk('span', s.ev_10 >= 0 ? 'ev-pos' : 'ev-neg');
+          evsp.textContent = s.ev_10 >= 0 ? '+$' + s.ev_10.toFixed(2) : '-$' + Math.abs(s.ev_10).toFixed(2);
+          be.appendChild(evsp);
+        } else { be.textContent = '—'; }
+        var bv = mk('td');
+        if (s.value_edge != null) {
+          var vesp = mk('span', s.value_edge >= 0 ? 'ev-pos' : 'ev-neg');
+          vesp.textContent = (s.value_edge >= 0 ? '+' : '') + s.value_edge.toFixed(1) + ' pp';
+          bv.appendChild(vesp);
+        } else { bv.textContent = '—'; }
+        ap(brow, bk, bl, be, bv); tbody.appendChild(brow);
+      }
+      if (s.pinnacle_odds) {
+        var prow = mk('tr');
+        var pk2 = mk('td'); var pks = mk('span','odds-book'); pks.textContent = 'Pinnacle (benchmark)'; pk2.appendChild(pks);
+        var pl = mk('td'); pl.textContent = String(s.pinnacle_odds);
+        var pd1 = mk('td'); pd1.textContent = '—';
+        var pd2 = mk('td'); pd2.textContent = '—';
+        ap(prow, pk2, pl, pd1, pd2); tbody.appendChild(prow);
+      }
+      tbl.appendChild(tbody); oddsBody.appendChild(tbl);
+      var oddsCard = mk('div', 'detail-card');
+      var oddsHdr = mk('div', 'detail-card-header'); oddsHdr.textContent = 'Odds Across Books';
+      ap(oddsCard, oddsHdr, oddsBody); root.appendChild(oddsCard);
+    }
+  }
+
+  /* ── Fetch #1 pick and render ─────────────────────────────────────── */
+  fetch('player-data.json?v=' + Date.now())
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(data) {
+      var players = data.players || [];
+      var top = players[0];
+      if (!top) {
+        var root = document.getElementById('main-content');
+        root.textContent = '';
+        var box = mk('div', 'state-box');
+        var t = mk('div', 'state-title'); t.textContent = 'No picks yet today';
+        var sub = mk('div', 'state-sub');  sub.textContent = "Check back after the morning picks run.";
+        ap(box, t, sub); root.appendChild(box);
+        return;
+      }
+      buildPage(top);
+    })
+    .catch(function() {
+      var root = document.getElementById('main-content');
+      root.textContent = '';
+      var box = mk('div', 'state-box');
+      var t = mk('div', 'state-title'); t.textContent = 'No pick data yet';
+      var sub = mk('div', 'state-sub');  sub.textContent = "Run today's picks first to populate data.";
+      ap(box, t, sub); root.appendChild(box);
+    });
+})();
+</script>
 </body>
 </html>
