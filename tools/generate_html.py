@@ -6,11 +6,103 @@ Called from daily_picks.py after picks are ranked.
 
 from __future__ import annotations
 import html as _html
+import json as _json
+import re as _re
+import unicodedata as _unicodedata
 from itertools import groupby
 
 
 def _esc(s) -> str:
     return _html.escape(str(s)) if s is not None else ""
+
+
+def _player_slug(name: str) -> str:
+    nfkd = _unicodedata.normalize("NFKD", str(name))
+    ascii_str = nfkd.encode("ascii", "ignore").decode("ascii")
+    return _re.sub(r"[^a-z0-9]+", "-", ascii_str.lower()).strip("-")
+
+
+def generate_player_data_json(picks: list[dict], today: str) -> str:
+    players = []
+    for rank, pick in enumerate(picks, 1):
+        player = pick.get("player", "")
+        sig = pick.get("signals") or {}
+
+        game_time_et = ""
+        gt = sig.get("game_time") or ""
+        if gt:
+            try:
+                from datetime import datetime as _dt
+                from zoneinfo import ZoneInfo
+                utc = _dt.fromisoformat(gt.replace("Z", "+00:00"))
+                et  = utc.astimezone(ZoneInfo("America/New_York"))
+                game_time_et = et.strftime("%-I:%M %p ET")
+            except Exception:
+                game_time_et = gt[11:16]
+
+        entry = {
+            "slug":       _player_slug(player),
+            "player":     player,
+            "rank":       rank,
+            "stars":      pick.get("stars", ""),
+            "score":      pick.get("score", 0),
+            "confidence": pick.get("confidence", "LOW"),
+            "matchup":    pick.get("matchup", ""),
+            "game_time_et": game_time_et,
+            "reasoning":  pick.get("reasoning", ""),
+            "signals": {
+                "venue":              sig.get("venue"),
+                "is_home":            sig.get("is_home"),
+                "pitcher_name":       sig.get("pitcher_name"),
+                "pitcher_throws":     sig.get("pitcher_throws"),
+                "bat_side":           sig.get("bat_side"),
+                "batting_order":      sig.get("batting_order"),
+                "season_hr":          sig.get("season_hr"),
+                "pa":                 sig.get("pa"),
+                "status":             sig.get("status"),
+                "xiso":               sig.get("xiso"),
+                "xslg":               sig.get("xslg"),
+                "barrel_rate":        sig.get("barrel_rate"),
+                "hard_hit_pct":       sig.get("hard_hit_pct"),
+                "ev_avg":             sig.get("ev_avg"),
+                "ev_max":             sig.get("ev_max"),
+                "sweet_spot_pct":     sig.get("sweet_spot_pct"),
+                "fb_pct":             sig.get("fb_pct"),
+                "launch_angle":       sig.get("launch_angle"),
+                "blast_rate":         sig.get("blast_rate"),
+                "xhr_rate":           sig.get("xhr_rate"),
+                "hr_luck":            sig.get("hr_luck"),
+                "pitcher_hr_per_9":   sig.get("pitcher_hr_per_9"),
+                "pitcher_career_hr_vs_hand": sig.get("pitcher_career_hr_vs_hand"),
+                "pitcher_barrel_pct": sig.get("pitcher_barrel_pct"),
+                "pitcher_fb_pct":     sig.get("pitcher_fb_pct"),
+                "pitcher_breaking_pct": sig.get("pitcher_breaking_pct"),
+                "pitcher_offspeed_pct": sig.get("pitcher_offspeed_pct"),
+                "batter_xslg_vs_fastball": sig.get("batter_xslg_vs_fastball"),
+                "batter_xslg_vs_breaking": sig.get("batter_xslg_vs_breaking"),
+                "batter_xslg_vs_offspeed": sig.get("batter_xslg_vs_offspeed"),
+                "park_hr_factor":     sig.get("park_hr_factor"),
+                "career_park_hr":     sig.get("career_park_hr"),
+                "carry_ft":           sig.get("carry_ft"),
+                "temp_f":             sig.get("temp_f"),
+                "wind_mph":           sig.get("wind_mph"),
+                "wind_direction_bpp": sig.get("wind_direction_bpp"),
+                "venue_slugging":     sig.get("venue_slugging"),
+                "bpp_hr_pct":         sig.get("bpp_hr_pct"),
+                "h2h_hr":             sig.get("h2h_hr"),
+                "h2h_ab":             sig.get("h2h_ab"),
+                "recent_form_14d":    sig.get("recent_form_14d"),
+                "ev_10":              sig.get("ev_10"),
+                "kelly_size":         sig.get("kelly_size"),
+                "value_edge":         sig.get("value_edge"),
+                "pinnacle_odds":      sig.get("pinnacle_odds"),
+                "best_odds":          sig.get("best_odds"),
+                "best_book":          sig.get("best_book"),
+            },
+        }
+        players.append(entry)
+
+    return _json.dumps({"date": today, "players": players}, default=str)
 
 
 def _stat(label: str, value, suffix: str = "", fmt: str = "") -> str:
@@ -194,9 +286,10 @@ def _build_card(rank: int, pick: dict) -> str:
     tags_html = park_html + weather_tags + form_html + pitcher_html + h2h_html + pa_html
 
     delay = (rank - 1) * 0.04
+    slug  = _player_slug(player)
 
     return f"""
-        <div class="pick-card" style="animation-delay:{delay:.2f}s">
+        <a class="pick-card" href="player-card.html?player={slug}" style="animation-delay:{delay:.2f}s">
             <div class="card-rank">
                 <span class="rank-num">#{rank}</span>
                 {_star_html(stars_str)}
@@ -215,7 +308,7 @@ def _build_card(rank: int, pick: dict) -> str:
                 {odds_html}
                 <div class="why-line"><span class="why-label">Why:</span> {_esc(reasoning)}</div>
             </div>
-        </div>"""
+        </a>"""
 
 
 def _build_best_bets_html(best_bets: list[dict]) -> str:
@@ -857,6 +950,9 @@ def generate_picks_html(
     transform: translateY(10px);
     animation: reveal 0.35s ease forwards;
     transition: box-shadow 0.15s, border-color 0.15s;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
   }}
 
   @keyframes reveal {{
@@ -867,6 +963,7 @@ def generate_picks_html(
     border-color: var(--navy);
     box-shadow: 0 2px 12px rgba(27,42,74,0.10);
   }}
+  .pick-card:hover .player-name {{ color: var(--navy-mid); }}
 
   /* ─── Rank column ─── */
   .card-rank {{
@@ -1212,6 +1309,7 @@ def generate_picks_html(
   </div>
   <div class="model-chips">
     {yesterday_chip}
+    <a class="nav-link" href="pick-of-the-day.html">Pick of Day ★</a>
     <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
   </div>
   <div class="tg-join">
@@ -1486,7 +1584,10 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
     </div>
     <div class="site-date">Season HR Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}</div>
   </div>
-  <a class="nav-link" href="index.html">← Today's Picks</a>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="nav-link" href="index.html">← Today's Picks</a>
+    <a class="nav-link" href="pick-of-the-day.html">Pick of Day ★</a>
+  </div>
 </header>
 
 <div class="page-body">

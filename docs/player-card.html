@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Deep Dive — Dingers Hotline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#FAFAF7; --surface:#FFFFFF; --surface2:#F3F2EE;
+    --border:#E2DED6; --navy:#1B2A4A; --navy-mid:#2D4070;
+    --red:#C8102E; --red-dim:#F9E5E8; --gold:#D4A017; --gold-dim:#FDF5DC;
+    --green:#1A6B3C; --green-dim:#E4F2EB; --amber:#B45309; --amber-dim:#FEF3C7;
+    --text:#1A1A1A; --text-sub:#6B6560; --text-dim:#A8A29E;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia,serif;font-size:14px;line-height:1.5;min-height:100vh}
+  .site-header{background:var(--navy);background-image:repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(255,255,255,0.04) 47px,rgba(255,255,255,0.04) 48px);color:#fff;padding:28px 36px 24px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:20px;border-bottom:4px solid var(--red)}
+  .header-left{display:flex;flex-direction:column;gap:6px}
+  .site-title{font-family:'Oswald',sans-serif;font-weight:700;font-size:clamp(30px,5vw,52px);letter-spacing:.04em;text-transform:uppercase;color:#fff;line-height:1;display:flex;align-items:center;gap:12px}
+  .title-ball{display:inline-block;width:.85em;height:.85em;flex-shrink:0;opacity:.9}
+  .site-date{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.55);letter-spacing:.12em;text-transform:uppercase}
+  .header-nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .nav-link{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.10);color:#fff;font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:10px 18px;border-radius:6px;border:1px solid rgba(255,255,255,.18);transition:background .15s;white-space:nowrap}
+  .nav-link:hover{background:rgba(255,255,255,.18)}
+  .page-body{max-width:820px;margin:32px auto 60px;padding:0 20px}
+  .page-title{font-family:'Oswald',sans-serif;font-size:22px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .page-subtitle{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}
+  /* Hero */
+  .player-hero{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--navy);border-radius:8px;overflow:hidden;margin-bottom:12px}
+  .hero-hdr{background:var(--navy);padding:18px 22px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .player-name{font-family:'Oswald',sans-serif;font-weight:700;font-size:clamp(28px,6vw,44px);color:#fff;letter-spacing:.02em;line-height:1}
+  .player-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .player-team{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.65)}
+  .score-badge{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:3px 11px;border-radius:3px;color:#FBBF24;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.35)}
+  .conf-badge{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:2px;text-transform:uppercase}
+  .conf-high{background:var(--green-dim);color:var(--green);border:1px solid #A7D7B8}
+  .conf-med {background:var(--amber-dim);color:var(--amber);border:1px solid #FCD34D}
+  .conf-low {background:var(--surface2);color:var(--text-sub);border:1px solid var(--border)}
+  .rank-block{display:flex;flex-direction:column;align-items:flex-end;gap:4px;padding-top:2px}
+  .rank-num{font-family:'Oswald',sans-serif;font-weight:700;font-size:38px;color:#FBBF24;line-height:1}
+  .rank-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:3px}
+  .player-stars{font-size:15px;letter-spacing:1px}
+  .star-filled{color:var(--gold)} .star-empty{color:rgba(255,255,255,.25)}
+  .hero-body{padding:16px 22px 18px;display:flex;flex-direction:column;gap:10px}
+  .matchup-line{font-size:14px;color:var(--text)} .matchup-line strong{color:var(--navy)}
+  .venue-line{font-size:12px;color:var(--text-sub)}
+  .pitcher-line{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-sub)}
+  /* Chips */
+  .stats-row{display:flex;gap:4px;flex-wrap:wrap}
+  .stat{display:flex;flex-direction:column;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:4px 9px;min-width:64px}
+  .stat-label{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);line-height:1;margin-bottom:2px}
+  .stat-value{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--navy);line-height:1}
+  .stat-value.hot{color:var(--red)}
+  /* Tags */
+  .tags-row{display:flex;flex-wrap:wrap;gap:4px}
+  .tag{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;border:1px solid transparent;letter-spacing:.02em}
+  .tag-green{color:var(--green);background:var(--green-dim);border-color:#A7D7B8}
+  .tag-amber{color:var(--amber);background:var(--amber-dim);border-color:#FCD34D}
+  .tag-dim{color:var(--text-sub);background:var(--surface2);border-color:var(--border)}
+  .tag-gold{color:#92400E;background:var(--gold-dim);border-color:rgba(212,160,23,.5)}
+  .tag-red{color:var(--red);background:var(--red-dim);border-color:#F9A8B4}
+  /* Why */
+  .why-line{font-size:13px;color:var(--text-sub);line-height:1.4;font-style:italic}
+  .why-label{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-right:4px;font-style:normal}
+  /* EV strip */
+  .ev-strip{background:var(--green-dim);border-top:1px solid #A7D7B8;padding:12px 22px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+  .ev-item{display:flex;align-items:baseline;gap:7px}
+  .ev-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim)}
+  .ev-value{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--green)}
+  .ev-value.neutral{color:var(--text-sub)}
+  /* Detail cards */
+  .detail-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
+  .detail-hdr{background:var(--navy);color:rgba(255,255,255,.80);padding:9px 16px;font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+  .detail-body{padding:16px;display:flex;flex-direction:column;gap:10px}
+  /* Signal grid */
+  .sig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:5px}
+  .sig-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:4px;border:1px solid var(--border)}
+  .sig-row.green{background:#F0FAF4;border-color:#A7D7B8}
+  .sig-row.amber{background:#FFFBEB;border-color:#FCD34D}
+  .sig-name{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-sub);min-width:80px;flex-shrink:0}
+  .bar-wrap{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+  .bar{height:100%;border-radius:3px;background:var(--navy-mid);transition:width .4s ease}
+  .bar.g{background:var(--green)} .bar.a{background:var(--amber)} .bar.r{background:var(--red)}
+  .sig-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--navy);min-width:54px;text-align:right;flex-shrink:0}
+  .sig-val.g{color:var(--green)} .sig-val.a{color:var(--amber)} .sig-val.r{color:var(--red)}
+  /* Splits */
+  .splits-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .split-card{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:12px 14px}
+  .split-title{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
+  .split-stats{display:flex;gap:16px;flex-wrap:wrap}
+  .split-stat{display:flex;flex-direction:column;gap:1px}
+  .split-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim)}
+  .split-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--navy)}
+  .split-val.hi{color:var(--red)}
+  /* Odds */
+  .odds-tbl{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:12px}
+  .odds-tbl th{text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);padding:5px 10px;font-weight:500}
+  .odds-tbl td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--navy);font-weight:700;vertical-align:middle}
+  .odds-tbl tr:last-child td{border-bottom:none}
+  .best-row td{background:var(--green-dim)}
+  .odds-book{font-size:11px;font-weight:500;color:var(--text-sub)}
+  .ev-pos{color:var(--green)} .ev-neg{color:var(--red)}
+  /* Info note */
+  .info-note{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-sub);padding:6px 10px;background:var(--surface2);border-radius:4px;border:1px solid var(--border)}
+  /* States */
+  .state-box{max-width:500px;margin:60px auto;padding:32px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+  .state-title{font-family:'Oswald',sans-serif;font-size:20px;color:var(--navy);margin-bottom:8px}
+  .state-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim)}
+  .site-footer{text-align:center;padding:16px 24px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:20px;font-family:'JetBrains Mono',monospace}
+  @media(max-width:600px){
+    .site-header{padding:18px} .hero-hdr{flex-direction:column} .rank-block{align-items:flex-start}
+    .splits-grid{grid-template-columns:1fr} .sig-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-left">
+    <div class="site-title">
+      <svg class="title-ball" fill="#ffffff" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g><path d="M455.857,56.144c-74.86-74.859-196.662-74.859-271.521,0C17.087,223.392-9.275,272.783,2.398,298.264c8.318,18.153,32.898,19.077,63.015,17.249l-36.537,97.203c-6.838,18.194-2.549,38.035,11.195,51.778c13.744,13.743,33.583,18.035,51.778,11.195L197.2,436.089c-2.507,34.987-3.349,64.4,16.534,73.511c3.325,1.524,7.055,2.4,11.403,2.4c28.973-0.002,85.294-38.91,230.72-184.335C530.715,252.806,530.715,131.003,455.857,56.144z"/></g></svg>
+      Dingers Hotline
+    </div>
+    <div class="site-date" id="hdr-date">Player Deep Dive</div>
+  </div>
+  <div class="header-nav">
+    <a class="nav-link" href="index.html">&#8592; Today's Picks</a>
+    <a class="nav-link" href="pick-of-the-day.html">Pick of Day</a>
+    <a class="nav-link" href="leaderboard.html">HR Leaders &#8594;</a>
+  </div>
+</header>
+
+<div class="page-body">
+  <div class="page-title" id="pg-title">Player Deep Dive</div>
+  <div class="page-subtitle" id="pg-sub">Full signal breakdown &middot; All data sources &middot; Today's game context</div>
+  <div id="main-content">
+    <div class="state-box">
+      <div class="state-title">Loading…</div>
+      <div class="state-sub">Fetching player data</div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">Dingers Hotline &nbsp;&middot;&nbsp; Model picks for entertainment &nbsp;&middot;&nbsp; Bet responsibly</footer>
+
+<script>
+(function () {
+  /* ── DOM helpers (no innerHTML) ──────────────────────────────────────── */
+  function mk(tag, cls) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    return e;
+  }
+  function tx(s) { return document.createTextNode(s != null ? String(s) : ''); }
+  function ap(parent) {
+    for (var i = 1; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c == null) continue;
+      parent.appendChild(typeof c === 'string' || typeof c === 'number' ? tx(c) : c);
+    }
+    return parent;
+  }
+  function setTxt(id, s) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = s;
+  }
+
+  /* ── Component builders ──────────────────────────────────────────────── */
+  function chip(label, val, hot) {
+    if (val == null) return null;
+    var d = mk('div', 'stat');
+    var l = mk('span', 'stat-label'); l.textContent = label;
+    var v = mk('span', 'stat-value' + (hot ? ' hot' : '')); v.textContent = val;
+    return ap(d, l, v);
+  }
+
+  function tagEl(text, cls) {
+    var e = mk('span', 'tag ' + cls);
+    e.textContent = text;
+    return e;
+  }
+
+  function sigRow(label, valueText, barPct, barColorCls, rowColorCls, valColorCls) {
+    var row = mk('div', 'sig-row' + (rowColorCls ? ' ' + rowColorCls : ''));
+    var nm  = mk('span', 'sig-name'); nm.textContent = label;
+    var bw  = mk('div', 'bar-wrap');
+    var bar = mk('div', 'bar' + (barColorCls ? ' ' + barColorCls : ''));
+    bar.style.width = (barPct || 0) + '%';
+    bw.appendChild(bar);
+    var sv  = mk('span', 'sig-val' + (valColorCls ? ' ' + valColorCls : '')); sv.textContent = valueText;
+    return ap(row, nm, bw, sv);
+  }
+
+  function sectionCard(headerText, bodyNode) {
+    var card = mk('div', 'detail-card');
+    var hdr  = mk('div', 'detail-hdr'); hdr.textContent = headerText;
+    var body = mk('div', 'detail-body'); body.appendChild(bodyNode);
+    return ap(card, hdr, body);
+  }
+
+  function splitCard(titleText, stats) {
+    var c = mk('div', 'split-card');
+    var t = mk('div', 'split-title'); t.textContent = titleText;
+    var s = mk('div', 'split-stats');
+    stats.forEach(function(st) {
+      if (st.val == null) return;
+      var w = mk('div', 'split-stat');
+      var l = mk('span', 'split-lbl'); l.textContent = st.label;
+      var v = mk('span', 'split-val' + (st.hi ? ' hi' : '')); v.textContent = st.val;
+      ap(w, l, v);
+      s.appendChild(w);
+    });
+    return ap(c, t, s);
+  }
+
+  function evItem(label, valueText, neutral) {
+    var d = mk('div', 'ev-item');
+    var l = mk('span', 'ev-label'); l.textContent = label;
+    var v = mk('span', 'ev-value' + (neutral ? ' neutral' : '')); v.textContent = valueText;
+    return ap(d, l, v);
+  }
+
+  function starsNode(starsStr) {
+    var span = mk('span', 'player-stars');
+    var f = (starsStr || '').split('').filter(function(c) { return c === '★'; }).length;
+    var e = (starsStr || '').split('').filter(function(c) { return c === '☆'; }).length;
+    var sf = mk('span', 'star-filled'); sf.textContent = '★'.repeat(f);
+    var se = mk('span', 'star-empty');  se.textContent = '☆'.repeat(e);
+    return ap(span, sf, se);
+  }
+
+  /* ── Tier helpers ─────────────────────────────────────────────────────── */
+  function barPct(val, maxVal) { return maxVal ? Math.min(100, Math.round(Math.abs(val) / maxVal * 100)) : 40; }
+
+  function colorTier(val, lo, hi) {
+    if (val == null) return '';
+    return val >= hi ? 'g' : (val >= lo ? 'a' : '');
+  }
+
+  /* ── Page builder ─────────────────────────────────────────────────────── */
+  function buildPage(p) {
+    var s = p.signals || {};
+    var root = document.getElementById('main-content');
+
+    // Update title elements
+    document.title = p.player + ' — Player Deep Dive — Dingers Hotline';
+    setTxt('hdr-date', 'Player Deep Dive · ' + (p.matchup || ''));
+    setTxt('pg-title', p.player);
+    var sub = document.getElementById('pg-sub');
+    if (sub) {
+      sub.textContent = '';
+      ap(sub, 'Rank #' + p.rank + ' today · Score ' + (p.score || 0).toFixed(1) + ' · Full signal breakdown');
+    }
+
+    /* ── Hero ── */
+    var hero = mk('div', 'player-hero');
+
+    // Header (navy band)
+    var heroHdr  = mk('div', 'hero-hdr');
+    var nameBlk  = mk('div');
+    var nameEl   = mk('div', 'player-name'); nameEl.textContent = p.player;
+    var metaRow  = mk('div', 'player-meta');
+    var teamSpan = mk('span', 'player-team'); teamSpan.textContent = p.matchup || '';
+    var confBadge= mk('span', 'conf-badge conf-' + (p.confidence||'low').toLowerCase());
+    confBadge.textContent = p.confidence || 'LOW';
+    var scoreBadge = mk('span', 'score-badge');
+    scoreBadge.textContent = (p.score || 0).toFixed(1);
+    ap(metaRow, teamSpan, confBadge, scoreBadge);
+    ap(nameBlk, nameEl, metaRow);
+
+    var rankBlk = mk('div', 'rank-block');
+    var rankNum = mk('div', 'rank-num'); rankNum.textContent = '#' + p.rank;
+    var rankLbl = mk('div', 'rank-label'); rankLbl.textContent = 'of 20 picks today';
+    ap(rankBlk, rankNum, starsNode(p.stars), rankLbl);
+    ap(heroHdr, nameBlk, rankBlk);
+
+    // Body
+    var heroBody = mk('div', 'hero-body');
+
+    var pitcherLabel = (s.bat_side || '?') + 'HB vs ' + (s.pitcher_name || 'TBD') + ' (' + (s.pitcher_throws || '?') + ')';
+    if (s.batting_order) pitcherLabel += ' · #' + s.batting_order + ' in order';
+
+    var weatherParts = [];
+    if (s.temp_f != null) weatherParts.push(s.temp_f.toFixed(0) + '°F');
+    if (s.wind_mph != null && s.wind_mph >= 1) {
+      weatherParts.push('Wind ' + s.wind_mph.toFixed(0) + 'mph' + (s.wind_direction_bpp ? ' (' + s.wind_direction_bpp + ')' : ''));
+    }
+    if (s.carry_ft != null) weatherParts.push('Carry ' + (s.carry_ft >= 0 ? '+' : '') + s.carry_ft.toFixed(1) + ' ft');
+    var venueText = (s.venue || '') + ' · ' + (s.is_home ? 'Home' : 'Away') + (weatherParts.length ? ' · ' + weatherParts.join(' · ') : '');
+
+    var mLine = mk('div', 'matchup-line'); mLine.textContent = p.matchup || '';
+    if (p.game_time_et) { var strong = mk('strong'); strong.textContent = ' ' + p.game_time_et; mLine.appendChild(strong); }
+    var vLine = mk('div', 'venue-line'); vLine.textContent = venueText;
+    var pLine = mk('div', 'pitcher-line'); pLine.textContent = pitcherLabel;
+    ap(heroBody, mLine, vLine, pLine);
+
+    // Stats chips
+    var chipsRow = mk('div', 'stats-row');
+    [
+      chip('xISO',     s.xiso != null       ? s.xiso.toFixed(3)      : null, s.xiso >= 0.280),
+      chip('Barrel',   s.barrel_rate != null ? s.barrel_rate.toFixed(1)+'%'  : null, s.barrel_rate >= 18),
+      chip('Hard Hit', s.hard_hit_pct != null? s.hard_hit_pct.toFixed(1)+'%' : null, false),
+      chip('EV Avg',   s.ev_avg != null      ? s.ev_avg.toFixed(1)+' mph'    : null, false),
+      chip('EV Max',   s.ev_max != null      ? s.ev_max.toFixed(1)+' mph'    : null, s.ev_max >= 115),
+      chip('Blast%',   s.blast_rate != null  ? s.blast_rate.toFixed(1)+'%'   : null, s.blast_rate >= 16),
+      chip('xSLG',     s.xslg != null        ? s.xslg.toFixed(3)      : null, s.xslg >= 0.600),
+      chip('Season HR',s.season_hr != null   ? String(s.season_hr)           : null, false),
+      chip('PA',       s.pa != null          ? String(s.pa)                  : null, false),
+    ].forEach(function(c) { if (c) chipsRow.appendChild(c); });
+    if (chipsRow.children.length) heroBody.appendChild(chipsRow);
+
+    // Tags
+    var tagsRow = mk('div', 'tags-row');
+    if (s.park_hr_factor != null) {
+      var pkCls = s.park_hr_factor >= 110 ? 'tag-green' : (s.park_hr_factor <= 90 ? 'tag-red' : 'tag-dim');
+      tagsRow.appendChild(tagEl('Park ' + s.park_hr_factor.toFixed(0) + '%', pkCls));
+    }
+    if (s.career_park_hr != null && s.career_park_hr >= 1) {
+      tagsRow.appendChild(tagEl(s.career_park_hr + ' career HR @ ' + (s.venue || 'park'), 'tag-gold'));
+    }
+    if (s.recent_form_14d != null && s.recent_form_14d >= 1) {
+      tagsRow.appendChild(tagEl(s.recent_form_14d + ' HR / 14d', 'tag-amber'));
+    }
+    if (s.pitcher_hr_per_9 != null) {
+      var pCls = s.pitcher_hr_per_9 >= 2 ? 'tag-red' : (s.pitcher_hr_per_9 >= 1 ? 'tag-amber' : 'tag-dim');
+      tagsRow.appendChild(tagEl('Pitcher L3: ' + s.pitcher_hr_per_9.toFixed(1) + ' HR/9', pCls));
+    }
+    if (s.h2h_hr != null && s.h2h_hr >= 1) {
+      tagsRow.appendChild(tagEl('H2H ' + s.h2h_hr + 'HR/' + (s.h2h_ab || '—') + 'AB', 'tag-green'));
+    }
+    if (s.wind_direction_bpp === 'out' && s.wind_mph >= 1) {
+      tagsRow.appendChild(tagEl('Wind out ' + s.wind_mph.toFixed(0) + 'mph', 'tag-green'));
+    }
+    if (tagsRow.children.length) heroBody.appendChild(tagsRow);
+
+    // Why line
+    if (p.reasoning) {
+      var whyLine = mk('div', 'why-line');
+      var whyLbl  = mk('span', 'why-label'); whyLbl.textContent = 'Why:';
+      ap(whyLine, whyLbl, ' ' + p.reasoning);
+      heroBody.appendChild(whyLine);
+    }
+
+    ap(hero, heroHdr, heroBody);
+
+    // EV strip
+    if (s.ev_10 != null || s.pinnacle_odds || s.best_odds) {
+      var strip = mk('div', 'ev-strip');
+      if (s.best_odds) {
+        var bestOddsText = s.best_odds + (s.best_book ? ' · ' + s.best_book : '');
+        strip.appendChild(evItem('Best Odds', bestOddsText, false));
+      }
+      if (s.ev_10 != null) {
+        var evText = s.ev_10 >= 0 ? '+$' + s.ev_10.toFixed(2) : '-$' + Math.abs(s.ev_10).toFixed(2);
+        strip.appendChild(evItem('EV on $10', evText, false));
+      }
+      if (s.pinnacle_odds) strip.appendChild(evItem('Pinnacle', String(s.pinnacle_odds), true));
+      if (s.kelly_size != null) strip.appendChild(evItem('Kelly', '$' + s.kelly_size.toFixed(2), true));
+      if (s.value_edge != null) {
+        var veText = (s.value_edge >= 0 ? '+' : '') + s.value_edge.toFixed(1) + ' pp';
+        strip.appendChild(evItem('Value Edge', veText, false));
+      }
+      hero.appendChild(strip);
+    }
+
+    root.textContent = '';
+    root.appendChild(hero);
+
+    /* ── Contact Quality ── */
+    var cqGrid = mk('div', 'sig-grid');
+    function addSig(lbl, val, lo, hi, maxV, fmt) {
+      if (val == null) return;
+      var t = colorTier(val, lo, hi);
+      cqGrid.appendChild(sigRow(lbl, fmt(val), barPct(val, maxV), t, t, t));
+    }
+    addSig('xISO',      s.xiso,          0.200, 0.280, 0.400, function(v){return v.toFixed(3)});
+    addSig('xSLG',      s.xslg,          0.420, 0.600, 0.800, function(v){return v.toFixed(3)});
+    addSig('Barrel%',   s.barrel_rate,   10,    18,    30,    function(v){return v.toFixed(1)+'%'});
+    addSig('Hard Hit%', s.hard_hit_pct,  45,    52,    70,    function(v){return v.toFixed(1)+'%'});
+    addSig('EV Avg',    s.ev_avg,        89,    93,    100,   function(v){return v.toFixed(1)+' mph'});
+    addSig('EV Max',    s.ev_max,        109,   115,   122,   function(v){return v.toFixed(1)+' mph'});
+    addSig('Sweet Sp%', s.sweet_spot_pct,37,    42,    55,    function(v){return v.toFixed(1)+'%'});
+    addSig('FB%',       s.fb_pct,        30,    45,    60,    function(v){return v.toFixed(1)+'%'});
+    addSig('xHR Rate',  s.xhr_rate,      3,     4.5,   8,     function(v){return v.toFixed(1)+'%'});
+    addSig('Blast%',    s.blast_rate,    12,    16,    25,    function(v){return v.toFixed(1)+'%'});
+    addSig('Launch°',   s.launch_angle,  15,    20,    30,    function(v){return v.toFixed(1)+'°'});
+    if (s.hr_luck != null) {
+      var luckCls = s.hr_luck <= -2 ? 'g' : (s.hr_luck >= 2 ? 'r' : '');
+      cqGrid.appendChild(sigRow('HR Luck', (s.hr_luck >= 0 ? '+' : '') + s.hr_luck.toFixed(1), barPct(s.hr_luck, 5), luckCls, '', luckCls));
+    }
+    if (cqGrid.children.length) root.appendChild(sectionCard('Contact Quality', cqGrid));
+
+    /* ── Pitcher Analysis ── */
+    var pitGrid = mk('div', 'sig-grid');
+    if (s.pitcher_hr_per_9 != null) {
+      var p9t = s.pitcher_hr_per_9 >= 2.0 ? 'g' : (s.pitcher_hr_per_9 >= 1.0 ? 'a' : '');
+      pitGrid.appendChild(sigRow('L3 HR/9', s.pitcher_hr_per_9.toFixed(1), barPct(s.pitcher_hr_per_9, 3.0), p9t, p9t, p9t));
+    }
+    if (s.pitcher_career_hr_vs_hand != null) {
+      var cvt = s.pitcher_career_hr_vs_hand >= 1.5 ? 'g' : (s.pitcher_career_hr_vs_hand >= 1.0 ? 'a' : '');
+      pitGrid.appendChild(sigRow('Career vs ' + (s.bat_side||''), s.pitcher_career_hr_vs_hand.toFixed(2) + ' HR/9', barPct(s.pitcher_career_hr_vs_hand, 2.5), cvt, cvt, cvt));
+    }
+    if (s.pitcher_barrel_pct != null) {
+      pitGrid.appendChild(sigRow('Barrel Alwd', s.pitcher_barrel_pct.toFixed(1) + '%', barPct(s.pitcher_barrel_pct, 15), 'a', '', ''));
+    }
+    var pitchParts = [];
+    if (s.pitcher_fb_pct != null)       pitchParts.push('FB '   + s.pitcher_fb_pct.toFixed(0)       + '%');
+    if (s.pitcher_breaking_pct != null) pitchParts.push('Break ' + s.pitcher_breaking_pct.toFixed(0) + '%');
+    if (s.pitcher_offspeed_pct != null) pitchParts.push('OS '   + s.pitcher_offspeed_pct.toFixed(0)  + '%');
+    if (pitchParts.length) pitGrid.appendChild(sigRow('Pitch Mix', pitchParts.join(' / '), 40, '', '', ''));
+    // Dominant pitch batter split
+    var domPct = 0, domKey = null, domBatterKey = null, domLabel = null;
+    [{pk:'pitcher_fb_pct',bk:'batter_xslg_vs_fastball',lbl:'Btr vs FB'},
+     {pk:'pitcher_breaking_pct',bk:'batter_xslg_vs_breaking',lbl:'Btr vs Break'},
+     {pk:'pitcher_offspeed_pct',bk:'batter_xslg_vs_offspeed',lbl:'Btr vs OS'}].forEach(function(x) {
+      if (s[x.pk] != null && s[x.pk] > domPct) { domPct = s[x.pk]; domKey = x.pk; domBatterKey = x.bk; domLabel = x.lbl; }
+    });
+    if (domPct >= 50 && domBatterKey && s[domBatterKey] != null) {
+      var bxt = s[domBatterKey] >= 0.500 ? 'g' : (s[domBatterKey] >= 0.420 ? 'a' : '');
+      pitGrid.appendChild(sigRow(domLabel, 'xSLG ' + s[domBatterKey].toFixed(3), barPct(s[domBatterKey], 0.800), bxt, bxt, bxt));
+    }
+    if (pitGrid.children.length) {
+      var pitName = (s.pitcher_name || 'Opposing Pitcher') + (s.pitcher_throws ? ' (' + s.pitcher_throws + ')' : '');
+      root.appendChild(sectionCard('Pitcher Analysis — ' + pitName, pitGrid));
+    }
+
+    /* ── Park & Context ── */
+    var pkGrid = mk('div', 'sig-grid');
+    if (s.park_hr_factor != null) {
+      var pkt = s.park_hr_factor >= 110 ? 'g' : (s.park_hr_factor <= 90 ? 'r' : '');
+      pkGrid.appendChild(sigRow('Park Factor', s.park_hr_factor.toFixed(0) + '%', barPct(s.park_hr_factor, 150), pkt, pkt, pkt));
+    }
+    if (s.career_park_hr != null) {
+      var cpt = s.career_park_hr >= 5 ? 'g' : (s.career_park_hr >= 3 ? 'a' : '');
+      pkGrid.appendChild(sigRow('Career Park HR', String(s.career_park_hr) + ' HR', barPct(s.career_park_hr, 250), cpt, cpt, cpt));
+    }
+    if (s.is_home != null) pkGrid.appendChild(sigRow('Home/Away', s.is_home ? 'Home' : 'Away', 50, '', '', ''));
+    if (s.carry_ft != null) {
+      var ct = s.carry_ft >= 2 ? 'g' : (s.carry_ft <= -2 ? 'r' : '');
+      pkGrid.appendChild(sigRow('Carry ft', (s.carry_ft >= 0 ? '+' : '') + s.carry_ft.toFixed(1) + ' ft', barPct(s.carry_ft, 10), ct, '', ct));
+    }
+    if (s.wind_mph != null && s.wind_mph >= 1) {
+      var wt = s.wind_direction_bpp === 'out' ? 'g' : (s.wind_direction_bpp === 'in' ? 'r' : '');
+      pkGrid.appendChild(sigRow('Wind', s.wind_mph.toFixed(0) + 'mph' + (s.wind_direction_bpp ? ' ' + s.wind_direction_bpp : ''), barPct(s.wind_mph, 20), wt, '', wt));
+    }
+    if (s.temp_f != null) {
+      var tt = s.temp_f >= 80 ? 'g' : (s.temp_f <= 50 ? 'r' : '');
+      pkGrid.appendChild(sigRow('Temp', s.temp_f.toFixed(0) + '°F', barPct(s.temp_f, 100), '', '', tt));
+    }
+    if (s.venue_slugging != null) pkGrid.appendChild(sigRow((s.is_home ? 'Home' : 'Away') + ' SLG', String(s.venue_slugging), 65, '', '', ''));
+    if (pkGrid.children.length) root.appendChild(sectionCard('Park & Context', pkGrid));
+
+    /* ── Historical Context ── */
+    var splitGrid = mk('div', 'splits-grid');
+    if (s.season_hr != null) {
+      splitGrid.appendChild(splitCard('2026 Season', [
+        {label:'HR', val: String(s.season_hr), hi: s.season_hr >= 10},
+        {label:'PA', val: s.pa != null ? String(s.pa) : null},
+      ]));
+    }
+    if (s.recent_form_14d != null) {
+      splitGrid.appendChild(splitCard('Recent Form (14 days)', [
+        {label:'HRs', val: String(s.recent_form_14d), hi: s.recent_form_14d >= 3},
+      ]));
+    }
+    if (s.h2h_hr != null && s.h2h_ab != null) {
+      splitGrid.appendChild(splitCard('Career vs ' + (s.pitcher_name || 'Pitcher'), [
+        {label:'AB', val: String(s.h2h_ab)},
+        {label:'HR', val: String(s.h2h_hr), hi: s.h2h_hr >= 1},
+      ]));
+    }
+    if (s.career_park_hr != null && s.career_park_hr >= 1) {
+      splitGrid.appendChild(splitCard('Career at ' + (s.venue || 'This Park'), [
+        {label:'Career HR', val: String(s.career_park_hr), hi: true},
+      ]));
+    }
+    if (splitGrid.children.length) root.appendChild(sectionCard('Historical Context', splitGrid));
+
+    /* ── Odds ── */
+    if (s.best_odds || s.pinnacle_odds) {
+      var oddsBody = mk('div', 'detail-body');
+      var tbl = mk('table', 'odds-tbl');
+      var thead = mk('thead'); var hrow = mk('tr');
+      ['Book','Line','EV on $10','vs Pinnacle'].forEach(function(h) {
+        var th = mk('th'); th.textContent = h; hrow.appendChild(th);
+      });
+      thead.appendChild(hrow); tbl.appendChild(thead);
+      var tbody = mk('tbody');
+      if (s.best_odds) {
+        var brow = mk('tr', 'best-row');
+        var bookTd = mk('td'); var bookSpan = mk('span', 'odds-book');
+        bookSpan.textContent = s.best_book || 'Best Available'; bookTd.appendChild(bookSpan);
+        var lineTd = mk('td'); lineTd.textContent = String(s.best_odds);
+        var evTd = mk('td');
+        if (s.ev_10 != null) {
+          var evSpan = mk('span', s.ev_10 >= 0 ? 'ev-pos' : 'ev-neg');
+          evSpan.textContent = s.ev_10 >= 0 ? '+$' + s.ev_10.toFixed(2) : '-$' + Math.abs(s.ev_10).toFixed(2);
+          evTd.appendChild(evSpan);
+        } else { evTd.textContent = '—'; }
+        var veTd = mk('td');
+        if (s.value_edge != null) {
+          var veSpan = mk('span', s.value_edge >= 0 ? 'ev-pos' : 'ev-neg');
+          veSpan.textContent = (s.value_edge >= 0 ? '+' : '') + s.value_edge.toFixed(1) + ' pp';
+          veTd.appendChild(veSpan);
+        } else { veTd.textContent = '—'; }
+        ap(brow, bookTd, lineTd, evTd, veTd);
+        tbody.appendChild(brow);
+      }
+      if (s.pinnacle_odds) {
+        var prow = mk('tr');
+        var pbook = mk('td'); var pbspan = mk('span', 'odds-book');
+        pbspan.textContent = 'Pinnacle (benchmark)'; pbook.appendChild(pbspan);
+        var pline = mk('td'); pline.textContent = String(s.pinnacle_odds);
+        var pd1 = mk('td'); pd1.textContent = '—';
+        var pd2 = mk('td'); pd2.textContent = '—';
+        ap(prow, pbook, pline, pd1, pd2);
+        tbody.appendChild(prow);
+      }
+      tbl.appendChild(tbody);
+      oddsBody.appendChild(tbl);
+      var note = mk('div', 'info-note');
+      note.textContent = 'Novig and ProphetX not on The Odds API — compare manually. If you beat Pinnacle, you have extra edge.';
+      oddsBody.appendChild(note);
+      var oddsCard = mk('div', 'detail-card');
+      var oddsHdr = mk('div', 'detail-hdr'); oddsHdr.textContent = 'Odds';
+      ap(oddsCard, oddsHdr, oddsBody);
+      root.appendChild(oddsCard);
+    }
+  }
+
+  /* ── Fetch and render ─────────────────────────────────────────────────── */
+  var params = new URLSearchParams(window.location.search);
+  var playerSlug = params.get('player') || '';
+
+  fetch('player-data.json?v=' + Date.now())
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(data) {
+      var players = data.players || [];
+      var found = null;
+      for (var i = 0; i < players.length; i++) {
+        if (players[i].slug === playerSlug) { found = players[i]; break; }
+      }
+      if (!found && players.length > 0) found = players[0];
+      if (!found) {
+        var root = document.getElementById('main-content');
+        root.textContent = '';
+        var box = mk('div', 'state-box');
+        var t = mk('div', 'state-title'); t.textContent = 'Player not found';
+        var sub = mk('div', 'state-sub');  sub.textContent = 'No data for "' + playerSlug + '"';
+        ap(box, t, sub); root.appendChild(box);
+        return;
+      }
+      buildPage(found);
+    })
+    .catch(function(err) {
+      var root = document.getElementById('main-content');
+      root.textContent = '';
+      var box = mk('div', 'state-box');
+      var t = mk('div', 'state-title'); t.textContent = 'No pick data yet';
+      var sub = mk('div', 'state-sub');  sub.textContent = "Run today's picks first to populate player data.";
+      ap(box, t, sub); root.appendChild(box);
+    });
+})();
+</script>
+</body>
+</html>
