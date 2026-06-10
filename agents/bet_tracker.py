@@ -937,16 +937,49 @@ def model_performance_report() -> str:
         add(f"\n  CONFIDENCE CALIBRATION")
         add(f"  {'Tier':<10} {'Picks':>6} {'HRs':>6} {'Hit Rate':>10}")
         add("  " + "-" * 36)
+        tier_totals = {}
         for tier in ("HIGH", "MEDIUM", "LOW"):
             row = conn.execute(
                 "SELECT COUNT(*), SUM(homered) FROM pick_factors "
                 "WHERE homered IS NOT NULL AND confidence=?", (tier,)
             ).fetchone()
             n, hits = row[0], (row[1] or 0)
+            tier_totals[tier] = (n, hits)
             if n == 0:
                 continue
             rate = hits / n * 100
-            add(f"  {tier:<10} {n:>6} {hits:>6} {rate:>9.1f}%")
+            note = "  ⚠ small sample" if n < 30 else ""
+            add(f"  {tier:<10} {n:>6} {hits:>6} {rate:>9.1f}%{note}")
+        add(f"  {'(HIGH should have the highest hit rate — if not, tiers need recalibration)'}")
+
+        # Monthly breakdown — last 4 months of live picks only
+        months_rows = conn.execute(
+            "SELECT strftime('%Y-%m', bet_date) as month, confidence, COUNT(*), SUM(homered) "
+            "FROM pick_factors WHERE homered IS NOT NULL AND rank IS NOT NULL "
+            "AND confidence IN ('HIGH','MEDIUM','LOW') "
+            "GROUP BY month, confidence ORDER BY month DESC"
+        ).fetchall()
+
+        if months_rows:
+            # Pivot by month
+            from collections import defaultdict
+            monthly = defaultdict(dict)
+            for month, tier, n, hits in months_rows:
+                monthly[month][tier] = (n, int(hits or 0))
+
+            add(f"\n  MONTHLY BREAKDOWN  (live picks only)")
+            add(f"  {'Month':<9} {'HIGH':>16} {'MEDIUM':>14} {'LOW':>12}")
+            add("  " + "-" * 54)
+            for month in sorted(monthly.keys(), reverse=True)[:6]:
+                row_parts = []
+                for tier in ("HIGH", "MEDIUM", "LOW"):
+                    if tier in monthly[month]:
+                        n, hits = monthly[month][tier]
+                        rate = hits / n * 100
+                        row_parts.append(f"{hits}/{n} ({rate:.0f}%)")
+                    else:
+                        row_parts.append("—")
+                add(f"  {month:<9} {row_parts[0]:>16} {row_parts[1]:>14} {row_parts[2]:>12}")
 
         # ── 4. ML model status ─────────────────────────────────────────────────
         add(f"\n  ML MODEL STATUS")

@@ -1864,6 +1864,80 @@ def _fetch_batter_pitch_splits(player_ids: list[int]) -> dict[int, dict]:
     return result
 
 
+def _fetch_hr_spray_profiles_batch(player_ids: list[int]) -> dict[int, dict]:
+    """
+    Fetch HR spray direction profiles for a list of batters from Baseball Savant.
+    Uses current + previous season HR events (hc_x/hc_y) to compute what % of
+    a player's HRs went to pull/center/oppo field.
+
+    Returns {player_id: {"hr_pull_pct": float, "hr_oppo_pct": float,
+                          "hr_center_pct": float, "hr_spray_count": int}}
+    Only included when hr_spray_count >= 8 (meaningful sample).
+    """
+    import math as _math
+    if not player_ids:
+        return {}
+
+    year = date.today().year
+    seasons = f"{year - 1}|{year}|"
+    SAVANT_SEARCH = "https://baseballsavant.mlb.com/statcast_search/csv"
+
+    def _fetch_one(pid: int) -> tuple[int, dict | None]:
+        try:
+            resp = requests.get(
+                SAVANT_SEARCH,
+                params={
+                    "all":              "true",
+                    "player_type":      "batter",
+                    "batters_lookup[]": pid,
+                    "hfAB":             "home_run|",
+                    "hfGT":             "R|",
+                    "hfSea":            seasons,
+                    "type":             "details",
+                    "min_pas":          "0",
+                },
+                timeout=20,
+                headers={"User-Agent": "DingersHotline/1.0"},
+            )
+            resp.raise_for_status()
+            text = resp.text.lstrip("﻿").strip()
+            if not text or text.startswith("Error"):
+                return pid, None
+            reader = csv.DictReader(io.StringIO(text))
+            angles = []
+            for row in reader:
+                try:
+                    x = float(row["hc_x"])
+                    y = float(row["hc_y"])
+                    angle = _math.degrees(_math.atan2(x - 125.42, 198.27 - y))
+                    angles.append(angle)
+                except (KeyError, ValueError, TypeError):
+                    continue
+            n = len(angles)
+            if n < 8:
+                return pid, None
+            pull   = sum(1 for a in angles if a < -15)
+            center = sum(1 for a in angles if -15 <= a <= 15)
+            oppo   = sum(1 for a in angles if a > 15)
+            return pid, {
+                "hr_pull_pct":   round(pull   / n * 100, 1),
+                "hr_center_pct": round(center / n * 100, 1),
+                "hr_oppo_pct":   round(oppo   / n * 100, 1),
+                "hr_spray_count": n,
+            }
+        except Exception:
+            return pid, None
+
+    result: dict[int, dict] = {}
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        futures = {pool.submit(_fetch_one, pid): pid for pid in player_ids}
+        for future in futures:
+            pid, profile = future.result()
+            if profile is not None:
+                result[pid] = profile
+    return result
+
+
 class Homer:
     """
     Gather-then-analyze predictor.
@@ -1880,6 +1954,7 @@ class Homer:
     _fetch_career_park_hrs_batch = staticmethod(_fetch_career_park_hrs_batch)
     _fetch_pitcher_career_splits_batch = staticmethod(_fetch_pitcher_career_splits_batch)
     _fetch_batter_pitch_splits = staticmethod(_fetch_batter_pitch_splits)
+    _fetch_hr_spray_profiles_batch = staticmethod(_fetch_hr_spray_profiles_batch)
 
     @staticmethod
     def _compute_elite_boost_thresholds(batter_stats: dict) -> dict:
@@ -2466,6 +2541,29 @@ class Homer:
                 print(f"  [PitchSplits] Done — {hits}/{len(batter_ids)} players have pitch-type split data")
         except Exception as e:
             print(f"  [PitchSplits] Warning: fetch failed ({e}) — signal skipped")
+
+        # ── HR spray direction profiles ───────────────────────────────────────
+        try:
+            spray_ids = [
+                int(sig["player_id"])
+                for sig in player_signals.values()
+                if sig.get("player_id") and sig.get("lineup_confirmed")
+            ]
+            if spray_ids:
+                print(f"  [SprayProfile] Fetching HR spray profiles for {len(spray_ids)} players…")
+                spray_profiles = _fetch_hr_spray_profiles_batch(spray_ids)
+                for sig in player_signals.values():
+                    pid = sig.get("player_id")
+                    if pid and int(pid) in spray_profiles:
+                        sp = spray_profiles[int(pid)]
+                        sig["hr_pull_pct"]    = sp["hr_pull_pct"]
+                        sig["hr_oppo_pct"]    = sp["hr_oppo_pct"]
+                        sig["hr_center_pct"]  = sp["hr_center_pct"]
+                        sig["hr_spray_count"] = sp["hr_spray_count"]
+                hits = len(spray_profiles)
+                print(f"  [SprayProfile] Done — {hits}/{len(spray_ids)} players have spray profiles (≥8 HRs)")
+        except Exception as e:
+            print(f"  [SprayProfile] Warning: fetch failed ({e}) — signal skipped")
 
         # ── Merge odds signals (EV, Kelly, value_edge, Pinnacle) ─────────────
         try:
@@ -3671,18 +3769,42 @@ class Homer:
             if bat_side == "L" and "short porch" in stadium_desc and "right" in stadium_desc:
                 stadium_score += 0.5
 
-            # Pull tendency × short porch alignment
-            # High pull% + short porch on the pull side = independent HR edge.
-            pull_pct = sig.get("pull_pct") if pa_scale > 0 else None
-            if pull_pct is not None:
-                has_short_lf = "short left" in stadium_desc or ("short porch" in stadium_desc and "left" in stadium_desc)
-                has_short_rf = "short right" in stadium_desc or ("short porch" in stadium_desc and "right" in stadium_desc)
-                if bat_side == "R" and has_short_lf:
-                    if pull_pct >= 48:   stadium_score += 2   # Strong pull hitter + short LF
-                    elif pull_pct >= 40: stadium_score += 1
-                elif bat_side == "L" and has_short_rf:
-                    if pull_pct >= 48:   stadium_score += 2   # Strong pull hitter + short RF
-                    elif pull_pct >= 40: stadium_score += 1
+            # Directional HR alignment × short porch
+            # Prefer HR spray profiles (actual HR direction) over generic pull%.
+            # A player might have 45% pull% but hit 70% of HRs to oppo — spray is more precise.
+            has_short_lf = "short left" in stadium_desc or ("short porch" in stadium_desc and "left" in stadium_desc)
+            has_short_rf = "short right" in stadium_desc or ("short porch" in stadium_desc and "right" in stadium_desc)
+
+            hr_pull_pct   = sig.get("hr_pull_pct")   if pa_scale > 0 else None
+            hr_oppo_pct   = sig.get("hr_oppo_pct")   if pa_scale > 0 else None
+            hr_spray_ok   = (sig.get("hr_spray_count") or 0) >= 8
+
+            if hr_spray_ok and hr_pull_pct is not None:
+                # Phase 2: use HR-specific direction data
+                if bat_side == "R":
+                    if has_short_lf:
+                        if hr_pull_pct >= 48:   stadium_score += 2   # Pulls HRs to short LF
+                        elif hr_pull_pct >= 36: stadium_score += 1
+                    if has_short_rf and hr_oppo_pct is not None:
+                        if hr_oppo_pct >= 40:   stadium_score += 2   # Hits HRs to short RF (oppo)
+                        elif hr_oppo_pct >= 28: stadium_score += 1
+                elif bat_side == "L":
+                    if has_short_rf:
+                        if hr_pull_pct >= 48:   stadium_score += 2   # Pulls HRs to short RF
+                        elif hr_pull_pct >= 36: stadium_score += 1
+                    if has_short_lf and hr_oppo_pct is not None:
+                        if hr_oppo_pct >= 40:   stadium_score += 2   # Hits HRs to short LF (oppo)
+                        elif hr_oppo_pct >= 28: stadium_score += 1
+            else:
+                # Phase 1 fallback: generic pull% from leaderboard
+                pull_pct = sig.get("pull_pct") if pa_scale > 0 else None
+                if pull_pct is not None:
+                    if bat_side == "R" and has_short_lf:
+                        if pull_pct >= 48:   stadium_score += 2
+                        elif pull_pct >= 40: stadium_score += 1
+                    elif bat_side == "L" and has_short_rf:
+                        if pull_pct >= 48:   stadium_score += 2
+                        elif pull_pct >= 40: stadium_score += 1
 
             # Negative factors
             if any(word in stadium_desc for word in ["deep", "large", "vast", "huge"]):
@@ -3975,19 +4097,33 @@ class Homer:
         # Pure score sort — best picks first regardless of game
         scored.sort(key=lambda x: x["score"], reverse=True)
 
-        # Assign star ratings by fixed rank bands within the top-15:
+        # Assign star ratings by fixed rank bands within the top-15.
+        # When AUC >= 0.65 (model reliable), 5 tiers across top-15:
+        #   #1–3   → ★★★★★  Elite
+        #   #4–6   → ★★★★☆  Strong
+        #   #7–9   → ★★★☆☆  Solid
+        #   #10–12 → ★★☆☆☆  Speculative
+        #   #13–15 → ★☆☆☆☆  Long shot
+        # When AUC < 0.65, 4 tiers (max ★★★★☆):
         #   #1–5   → ★★★★☆  Strong
         #   #6–10  → ★★★☆☆  Solid
         #   #11–15 → ★★☆☆☆  Speculative
         # Picks beyond top_n (roster fallback overflows) get 1 star.
+        _auc = (Homer._load_ml_weights() or {}).get("cv_auc_mean", 0.5)
+        _five_star = _auc >= 0.65
+
         def _stars_from_rank(rank_1based: int) -> int:
-            if rank_1based <= 5:
-                return 4
-            if rank_1based <= 10:
-                return 3
-            if rank_1based <= 15:
-                return 2
-            return 1
+            if _five_star:
+                if rank_1based <= 3:  return 5
+                if rank_1based <= 6:  return 4
+                if rank_1based <= 9:  return 3
+                if rank_1based <= 12: return 2
+                return 1
+            else:
+                if rank_1based <= 5:  return 4
+                if rank_1based <= 10: return 3
+                if rank_1based <= 15: return 2
+                return 1
 
         for i, pick in enumerate(scored[:top_n], 1):
             s = _stars_from_rank(i)
