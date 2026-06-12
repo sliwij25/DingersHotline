@@ -365,13 +365,9 @@ def generate_picks_html(
     model_yesterday_record: tuple | None = None,
     model_days_tracked: int | None = None,
     streak: str | None = None,
-    group_data: dict | None = None,
     tier_hit_rates: dict | None = None,
     version: str = "",
-    best_bets: list[dict] | None = None,
 ) -> str:
-    # Layout: compact 5-card EV Plays grid at top, then star-bucket sections below.
-
     def _tier_header_html(label: str, subtitle: str, n: int, star_n: int | None) -> str:
         hit_rate_html = ""
         if star_n is not None and tier_hit_rates:
@@ -393,49 +389,6 @@ def generate_picks_html(
             f'<div class="tier-rule"></div>'
             f'</div>'
         )
-
-    # ── EV Plays compact grid ─────────────────────────────────────────────────
-    gd_bb = (group_data or {}).get("best_bets")
-    ev_hit_html = ""
-    if gd_bb:
-        n_picks, n_homers = gd_bb.get("hit_rate", (0, 0))
-        if n_picks > 0:
-            rate = n_homers / n_picks * 100
-            ev_hit_html = (
-                f'<span class="tier-hit-rate">'
-                f'{rate:.0f}% HR rate'
-                f'<span class="tier-hit-count"> ({n_picks} picks)</span>'
-                f'</span>'
-            )
-
-    ev_cards_html = ""
-    for i, p in enumerate(best_bets or [], 1):
-        sig        = p.get("signals", {}) or {}
-        ev         = sig.get("ev_10")
-        pin        = sig.get("pinnacle_odds")
-        name       = _esc(p.get("player", "Unknown"))
-        stars      = _star_html(p.get("stars", ""))
-        matchup    = _esc(p.get("matchup", ""))
-        overall_rk = p.get("rank") or i
-
-        ev_cards_html += f"""<div class="ev-card">
-  <div class="ev-card-rank">EV #{i}</div>
-  <div class="ev-card-name">{name}</div>
-  <div class="ev-card-matchup">{matchup}</div>
-  <div class="ev-card-stars">{stars}</div>
-</div>"""
-
-    ev_section_html = f"""<section class="ev-plays-section">
-  <div class="ev-section-header">
-    <span class="ev-section-title">Top EV Plays</span>
-    <span class="ev-section-sub">Top 5 by expected value</span>
-    {ev_hit_html}
-    <div class="ev-section-rule"></div>
-  </div>
-  <div class="ev-grid">
-{ev_cards_html}
-  </div>
-</section>"""
 
     # ── Star-bucket sections ──────────────────────────────────────────────────
     _BUCKET_LABELS = {
@@ -467,7 +420,7 @@ def generate_picks_html(
         </div>
     </section>""")
 
-    sections_html = ev_section_html + "\n".join(bucket_sections)
+    sections_html = "\n".join(bucket_sections)
 
     auc_str = f"{auc:.3f}" if auc else "—"
     ml_str  = f"{ml_influence * 100:.0f}%" if ml_influence else "—"
@@ -1161,89 +1114,6 @@ def generate_picks_html(
     margin-top: 4px;
   }}
 
-  /* ─── EV Plays strip ─── */
-  .ev-plays-section {{
-    padding: 24px 36px 8px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 4px;
-  }}
-  .ev-section-header {{
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-  }}
-  .ev-section-title {{
-    font-family: 'Oswald', sans-serif;
-    font-weight: 700;
-    font-size: 15px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--gold);
-    white-space: nowrap;
-  }}
-  .ev-section-sub {{
-    font-size: 11px;
-    color: var(--text-sub);
-    white-space: nowrap;
-  }}
-  .ev-section-rule {{
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }}
-  .ev-grid {{
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-  }}
-  .ev-card {{
-    background: var(--surface);
-    border: 1.5px solid var(--gold);
-    border-radius: 8px;
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    cursor: default;
-    transition: box-shadow 0.15s;
-    min-width: 0;
-  }}
-  .ev-card:hover {{ box-shadow: 0 2px 10px rgba(212,160,23,0.25); }}
-  .ev-card-rank {{
-    font-size: 0.65rem; font-weight: 700; color: var(--gold);
-    text-transform: uppercase; letter-spacing: 0.06em;
-  }}
-  .ev-card-name {{
-    font-family: 'Oswald', sans-serif; font-size: 0.88rem; font-weight: 600;
-    color: var(--navy); line-height: 1.2;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }}
-  .ev-card-matchup {{
-    font-size: 0.65rem; color: var(--text-sub);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }}
-  .ev-card-stars {{ font-size: 0.75rem; }}
-  .ev-card-ev-row {{
-    display: flex; align-items: center; gap: 6px; margin-top: 2px;
-  }}
-  .ev-card-ev {{
-    font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
-  }}
-  .ev-confirmed {{ color: var(--green); }}
-  .ev-est       {{ color: var(--amber); }}
-  .ev-model     {{ color: var(--text-dim); }}
-  .ev-card-overall {{
-    font-size: 0.62rem; color: var(--text-dim);
-  }}
-  @media (max-width: 700px) {{
-    .ev-plays-section {{ padding: 16px 16px 8px; }}
-    .ev-grid {{ grid-template-columns: repeat(3, 1fr); }}
-  }}
-  @media (max-width: 480px) {{
-    .ev-grid {{ grid-template-columns: repeat(2, 1fr); }}
-  }}
 
   /* ─── Responsive ─── */
   @media (max-width: 600px) {{

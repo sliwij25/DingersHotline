@@ -268,57 +268,6 @@ narrative = homer.run(
     scratched=SCRATCHED,
 )
 
-# ── Compute Best Bets (top-7 by EV) ──────────────────────────────────────────
-# Rank top-15 model picks by expected value. Three tiers:
-#   Tier 0: ev_10 ≥ $0.50 AND Pinnacle odds present → meaningful Pinnacle-anchored EV
-#   Tier 1: ev_10 ≥ $0.50 but no Pinnacle (consensus) → meaningful estimated EV (~)
-#   Tier 2: ev_10 < $0.50 or no odds → model score proxy
-# Minimum threshold prevents near-zero EV picks ($+0.02) from jumping
-# over high-model-score players who have no odds yet.
-_MIN_EV = 0.50
-
-def _ev_sort_key(p: dict) -> tuple:
-    sig = p.get("signals", {}) or {}
-    ev  = sig.get("ev_10")
-    if ev is not None and ev >= _MIN_EV:
-        tier = 0 if sig.get("pinnacle_odds") else 1
-        return (tier, -ev)
-    return (2, -(p.get("score") or 0))
-
-_sigs_for_bb = homer._context.get("player_signals", {})
-_ranked_for_bb = homer._rank_picks_python(_sigs_for_bb, top_n=15, verbose=False, scratched=SCRATCHED)
-_best_bets: list[dict] = sorted(_ranked_for_bb, key=_ev_sort_key)[:5]
-
-def _fmt_best_bets_terminal(best_bets: list[dict]) -> str:
-    # Stars (★☆) are "wide" Unicode chars — each takes 2 display columns.
-    # Build each row without stars first, measure, pad, then append stars at end.
-    width = 58
-    lines = [
-        "╔" + "═" * width + "╗",
-        "║  BEST BETS — Top 7 by Expected Value" + " " * (width - 37) + "║",
-        "╠" + "═" * width + "╣",
-    ]
-    star_map = {5: "★★★★★", 4: "★★★★☆", 3: "★★★☆☆", 2: "★★☆☆☆", 1: "★☆☆☆☆", 0: "☆☆☆☆☆"}
-    for i, p in enumerate(best_bets, 1):
-        sig  = p.get("signals", {}) or {}
-        ev   = sig.get("ev_10")
-        pin  = sig.get("pinnacle_odds")
-        name = p.get("player", "Unknown")[:20]
-        star_n    = (p.get("stars") or "").count("★")
-        stars_str = star_map.get(star_n, "—    ")
-        if ev is not None:
-            prefix = "" if pin else "~"
-            ev_str = f"{prefix}${ev:+.2f}"
-        else:
-            ev_str = "~est"
-        rank_label = f"#{p.get('rank') or i}"
-        # Build the ASCII portion (no stars) and pad to fill the box width
-        ascii_part = f"  #{i}  {name:<20}  EV {ev_str:<8}  {rank_label}"
-        # Stars display as 2 cols each — append after padding
-        pad = max(0, width - len(ascii_part) - 5 - 2)  # 5 star chars×2cols - 2 border spaces
-        lines.append("║" + ascii_part + " " * pad + "  " + stars_str + "║")
-    lines.append("╚" + "═" * width + "╝")
-    return "\n".join(lines)
 
 # Auto-save cache on fresh run (not needed when using --use-cache)
 if not args.use_cache:
@@ -335,8 +284,6 @@ if not args.use_cache:
     except Exception as e:
         pass  # silent fail, not critical
 
-
-print("\n" + _fmt_best_bets_terminal(_best_bets))
 
 print("\n" + "=" * 60)
 print("  TODAY'S PICKS")
@@ -383,8 +330,6 @@ try:
 
             _f.write(f"Dingers Hotline — {TODAY}\n")
             _f.write("=" * 62 + "\n\n")
-            _f.write(_fmt_best_bets_terminal(_best_bets))
-            _f.write("\n\n")
             _f.write(narrative)
             _f.write("\n")
         print(f"\n  [Export] Picks saved to {txt_path.name}")
@@ -420,7 +365,6 @@ else:
     player_signals = homer._context.get("player_signals", {})
     all_ranked = homer._rank_picks_python(player_signals, top_n=15, verbose=not args.brief, scratched=SCRATCHED)
     _all_ranked = all_ranked
-    _best_bet_names = {p.get("player") for p in _best_bets}
     saved = 0
     for rank_i, p in enumerate(all_ranked[:20], 1):  # hard cap at exactly 20
         if p.get("signals"):
@@ -432,7 +376,7 @@ else:
                                   rank=rank_i,
                                   stars=p.get("stars", "").count("★") or None,
                                   game_pk=p.get("signals", {}).get("game_pk"),
-                                  is_best_bet=1 if p.get("player") in _best_bet_names else 0)
+                                  is_best_bet=0)
                 saved += 1
             except Exception:
                 pass
@@ -636,9 +580,6 @@ try:
 
         # Compute hit rates for EV group and star buckets
         _ranked_for_html = _all_ranked or picks
-        _group_data = {
-            "best_bets": {"hit_rate": group_hit_rate(True)},
-        }
         _tier_hit_rates = {sc: star_bucket_hit_rate(sc) for sc in range(5, -1, -1)}
 
         import time as _time
@@ -654,10 +595,8 @@ try:
             model_yesterday_record=_model_yesterday_record,
             model_days_tracked=_model_days_tracked,
             streak=_streak,
-            group_data=_group_data,
             tier_hit_rates=_tier_hit_rates,
             version=_version,
-            best_bets=_best_bets,
         )
 
         # Write version.txt — JS on the page fetches this from raw.githubusercontent.com
