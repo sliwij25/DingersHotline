@@ -92,12 +92,6 @@ def generate_player_data_json(picks: list[dict], today: str) -> str:
                 "h2h_hr":             sig.get("h2h_hr"),
                 "h2h_ab":             sig.get("h2h_ab"),
                 "recent_form_14d":    sig.get("recent_form_14d"),
-                "ev_10":              sig.get("ev_10"),
-                "kelly_size":         sig.get("kelly_size"),
-                "value_edge":         sig.get("value_edge"),
-                "pinnacle_odds":      sig.get("pinnacle_odds"),
-                "best_odds":          sig.get("best_odds"),
-                "best_book":          sig.get("best_book"),
             },
         }
         players.append(entry)

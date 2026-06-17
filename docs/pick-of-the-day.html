@@ -247,16 +247,10 @@
     var banTextWrap = mk('div');
     var banTitle = mk('div', 'potd-banner-title'); banTitle.textContent = 'Pick of the Day';
     var banSub   = mk('div', 'potd-banner-sub');
-    banSub.textContent = 'Model score ' + (p.score||0).toFixed(1) + ' · Rank #1 of 20 · ' + (p.stars||'');
+    banSub.textContent = 'Model score ' + (p.score||0).toFixed(1) + ' · Rank #1 of 15 · ' + (p.stars||'');
     ap(banTextWrap, banTitle, banSub);
     ap(banLeft, fireSpan, banTextWrap);
-    var oddsPill = mk('div', 'potd-odds-pill');
-    if (s.best_odds) {
-      oddsPill.textContent = 'Best: ' + s.best_odds + (s.best_book ? ' · ' + s.best_book : '');
-    } else {
-      oddsPill.textContent = 'Model pick';
-    }
-    ap(banner, banLeft, oddsPill);
+    ap(banner, banLeft);
 
     // Body
     var body = mk('div', 'potd-body');
@@ -334,21 +328,6 @@
     ap(body, rankCol, main);
     ap(card, banner, body);
 
-    // EV strip
-    if (s.ev_10 != null || s.pinnacle_odds || s.best_odds) {
-      var strip = mk('div', 'potd-ev-strip');
-      function evItem(lbl, val, neutral) {
-        var d = mk('div', 'potd-ev-item');
-        var l = mk('span', 'ev-label'); l.textContent = lbl;
-        var v = mk('span', 'ev-value' + (neutral ? ' neutral' : '')); v.textContent = val;
-        return ap(d, l, v);
-      }
-      if (s.ev_10 != null) strip.appendChild(evItem('EV on $10', s.ev_10 >= 0 ? '+$' + s.ev_10.toFixed(2) : '-$' + Math.abs(s.ev_10).toFixed(2), false));
-      if (s.pinnacle_odds) strip.appendChild(evItem('Pinnacle', String(s.pinnacle_odds), true));
-      if (s.kelly_size != null) strip.appendChild(evItem('Kelly size', '$' + s.kelly_size.toFixed(2), true));
-      if (s.value_edge != null) strip.appendChild(evItem('Value edge', (s.value_edge >= 0 ? '+' : '') + s.value_edge.toFixed(1) + ' pp', false));
-      card.appendChild(strip);
-    }
 
     root.textContent = '';
     root.appendChild(card);
@@ -461,47 +440,6 @@
     }
     if (splitGrid.children.length) root.appendChild(sectionCard('Historical Context', splitGrid));
 
-    /* ── Odds ── */
-    if (s.best_odds || s.pinnacle_odds) {
-      var oddsBody = mk('div', 'detail-card-body');
-      var tbl = mk('table', 'odds-table');
-      var thead = mk('thead'); var hrow = mk('tr');
-      ['Book','Line','EV on $10','vs Pinnacle'].forEach(function(h) {
-        var th = mk('th'); th.textContent = h; hrow.appendChild(th);
-      });
-      thead.appendChild(hrow); tbl.appendChild(thead);
-      var tbody = mk('tbody');
-      if (s.best_odds) {
-        var brow = mk('tr', 'best-book');
-        var bk = mk('td'); var bks = mk('span','odds-book'); bks.textContent = s.best_book || 'Best Available'; bk.appendChild(bks);
-        var bl = mk('td'); bl.textContent = String(s.best_odds);
-        var be = mk('td');
-        if (s.ev_10 != null) {
-          var evsp = mk('span', s.ev_10 >= 0 ? 'ev-pos' : 'ev-neg');
-          evsp.textContent = s.ev_10 >= 0 ? '+$' + s.ev_10.toFixed(2) : '-$' + Math.abs(s.ev_10).toFixed(2);
-          be.appendChild(evsp);
-        } else { be.textContent = '—'; }
-        var bv = mk('td');
-        if (s.value_edge != null) {
-          var vesp = mk('span', s.value_edge >= 0 ? 'ev-pos' : 'ev-neg');
-          vesp.textContent = (s.value_edge >= 0 ? '+' : '') + s.value_edge.toFixed(1) + ' pp';
-          bv.appendChild(vesp);
-        } else { bv.textContent = '—'; }
-        ap(brow, bk, bl, be, bv); tbody.appendChild(brow);
-      }
-      if (s.pinnacle_odds) {
-        var prow = mk('tr');
-        var pk2 = mk('td'); var pks = mk('span','odds-book'); pks.textContent = 'Pinnacle (benchmark)'; pk2.appendChild(pks);
-        var pl = mk('td'); pl.textContent = String(s.pinnacle_odds);
-        var pd1 = mk('td'); pd1.textContent = '—';
-        var pd2 = mk('td'); pd2.textContent = '—';
-        ap(prow, pk2, pl, pd1, pd2); tbody.appendChild(prow);
-      }
-      tbl.appendChild(tbody); oddsBody.appendChild(tbl);
-      var oddsCard = mk('div', 'detail-card');
-      var oddsHdr = mk('div', 'detail-card-header'); oddsHdr.textContent = 'Odds Across Books';
-      ap(oddsCard, oddsHdr, oddsBody); root.appendChild(oddsCard);
-    }
   }
 
   /* ── Fetch #1 pick and render ─────────────────────────────────────── */

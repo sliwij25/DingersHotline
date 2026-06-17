@@ -65,12 +65,6 @@
   /* Why */
   .why-line{font-size:13px;color:var(--text-sub);line-height:1.4;font-style:italic}
   .why-label{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-right:4px;font-style:normal}
-  /* EV strip */
-  .ev-strip{background:var(--green-dim);border-top:1px solid #A7D7B8;padding:12px 22px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
-  .ev-item{display:flex;align-items:baseline;gap:7px}
-  .ev-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim)}
-  .ev-value{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--green)}
-  .ev-value.neutral{color:var(--text-sub)}
   /* Detail cards */
   .detail-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
   .detail-hdr{background:var(--navy);color:rgba(255,255,255,.80);padding:9px 16px;font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
@@ -95,14 +89,6 @@
   .split-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim)}
   .split-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--navy)}
   .split-val.hi{color:var(--red)}
-  /* Odds */
-  .odds-tbl{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:12px}
-  .odds-tbl th{text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);padding:5px 10px;font-weight:500}
-  .odds-tbl td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--navy);font-weight:700;vertical-align:middle}
-  .odds-tbl tr:last-child td{border-bottom:none}
-  .best-row td{background:var(--green-dim)}
-  .odds-book{font-size:11px;font-weight:500;color:var(--text-sub)}
-  .ev-pos{color:var(--green)} .ev-neg{color:var(--red)}
   /* Info note */
   .info-note{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-sub);padding:6px 10px;background:var(--surface2);border-radius:4px;border:1px solid var(--border)}
   /* States */
@@ -215,13 +201,6 @@
     return ap(c, t, s);
   }
 
-  function evItem(label, valueText, neutral) {
-    var d = mk('div', 'ev-item');
-    var l = mk('span', 'ev-label'); l.textContent = label;
-    var v = mk('span', 'ev-value' + (neutral ? ' neutral' : '')); v.textContent = valueText;
-    return ap(d, l, v);
-  }
-
   function starsNode(starsStr) {
     var span = mk('span', 'player-stars');
     var f = (starsStr || '').split('').filter(function(c) { return c === '★'; }).length;
@@ -272,7 +251,7 @@
 
     var rankBlk = mk('div', 'rank-block');
     var rankNum = mk('div', 'rank-num'); rankNum.textContent = '#' + p.rank;
-    var rankLbl = mk('div', 'rank-label'); rankLbl.textContent = 'of 20 picks today';
+    var rankLbl = mk('div', 'rank-label'); rankLbl.textContent = 'of 15 picks today';
     ap(rankBlk, rankNum, starsNode(p.stars), rankLbl);
     ap(heroHdr, nameBlk, rankBlk);
 
@@ -344,26 +323,6 @@
     }
 
     ap(hero, heroHdr, heroBody);
-
-    // EV strip
-    if (s.ev_10 != null || s.pinnacle_odds || s.best_odds) {
-      var strip = mk('div', 'ev-strip');
-      if (s.best_odds) {
-        var bestOddsText = s.best_odds + (s.best_book ? ' · ' + s.best_book : '');
-        strip.appendChild(evItem('Best Odds', bestOddsText, false));
-      }
-      if (s.ev_10 != null) {
-        var evText = s.ev_10 >= 0 ? '+$' + s.ev_10.toFixed(2) : '-$' + Math.abs(s.ev_10).toFixed(2);
-        strip.appendChild(evItem('EV on $10', evText, false));
-      }
-      if (s.pinnacle_odds) strip.appendChild(evItem('Pinnacle', String(s.pinnacle_odds), true));
-      if (s.kelly_size != null) strip.appendChild(evItem('Kelly', '$' + s.kelly_size.toFixed(2), true));
-      if (s.value_edge != null) {
-        var veText = (s.value_edge >= 0 ? '+' : '') + s.value_edge.toFixed(1) + ' pp';
-        strip.appendChild(evItem('Value Edge', veText, false));
-      }
-      hero.appendChild(strip);
-    }
 
     root.textContent = '';
     root.appendChild(hero);
@@ -478,56 +437,6 @@
     }
     if (splitGrid.children.length) root.appendChild(sectionCard('Historical Context', splitGrid));
 
-    /* ── Odds ── */
-    if (s.best_odds || s.pinnacle_odds) {
-      var oddsBody = mk('div', 'detail-body');
-      var tbl = mk('table', 'odds-tbl');
-      var thead = mk('thead'); var hrow = mk('tr');
-      ['Book','Line','EV on $10','vs Pinnacle'].forEach(function(h) {
-        var th = mk('th'); th.textContent = h; hrow.appendChild(th);
-      });
-      thead.appendChild(hrow); tbl.appendChild(thead);
-      var tbody = mk('tbody');
-      if (s.best_odds) {
-        var brow = mk('tr', 'best-row');
-        var bookTd = mk('td'); var bookSpan = mk('span', 'odds-book');
-        bookSpan.textContent = s.best_book || 'Best Available'; bookTd.appendChild(bookSpan);
-        var lineTd = mk('td'); lineTd.textContent = String(s.best_odds);
-        var evTd = mk('td');
-        if (s.ev_10 != null) {
-          var evSpan = mk('span', s.ev_10 >= 0 ? 'ev-pos' : 'ev-neg');
-          evSpan.textContent = s.ev_10 >= 0 ? '+$' + s.ev_10.toFixed(2) : '-$' + Math.abs(s.ev_10).toFixed(2);
-          evTd.appendChild(evSpan);
-        } else { evTd.textContent = '—'; }
-        var veTd = mk('td');
-        if (s.value_edge != null) {
-          var veSpan = mk('span', s.value_edge >= 0 ? 'ev-pos' : 'ev-neg');
-          veSpan.textContent = (s.value_edge >= 0 ? '+' : '') + s.value_edge.toFixed(1) + ' pp';
-          veTd.appendChild(veSpan);
-        } else { veTd.textContent = '—'; }
-        ap(brow, bookTd, lineTd, evTd, veTd);
-        tbody.appendChild(brow);
-      }
-      if (s.pinnacle_odds) {
-        var prow = mk('tr');
-        var pbook = mk('td'); var pbspan = mk('span', 'odds-book');
-        pbspan.textContent = 'Pinnacle (benchmark)'; pbook.appendChild(pbspan);
-        var pline = mk('td'); pline.textContent = String(s.pinnacle_odds);
-        var pd1 = mk('td'); pd1.textContent = '—';
-        var pd2 = mk('td'); pd2.textContent = '—';
-        ap(prow, pbook, pline, pd1, pd2);
-        tbody.appendChild(prow);
-      }
-      tbl.appendChild(tbody);
-      oddsBody.appendChild(tbl);
-      var note = mk('div', 'info-note');
-      note.textContent = 'Novig and ProphetX not on The Odds API — compare manually. If you beat Pinnacle, you have extra edge.';
-      oddsBody.appendChild(note);
-      var oddsCard = mk('div', 'detail-card');
-      var oddsHdr = mk('div', 'detail-hdr'); oddsHdr.textContent = 'Odds';
-      ap(oddsCard, oddsHdr, oddsBody);
-      root.appendChild(oddsCard);
-    }
   }
 
   /* ── Fetch and render ─────────────────────────────────────────────────── */
