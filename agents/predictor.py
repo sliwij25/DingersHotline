@@ -55,9 +55,9 @@ _SESSION_TTL = 3600   # re-login after 1 hour
 
 def _get_bpp_session() -> requests.Session | None:
     """
-    Return an authenticated BallparkPal session.
-    Reads BALLPARKPAL_EMAIL + BALLPARKPAL_PASSWORD from env.
-    Returns None if credentials are missing or login fails.
+    Return an authenticated BallparkPal session using Playwright to handle
+    Cloudflare's JS challenge. Extracts cookies after login and injects them
+    into a requests.Session so downstream scraping code is unchanged.
     """
     global _bpp_session, _bpp_session_ts
 
@@ -67,28 +67,63 @@ def _get_bpp_session() -> requests.Session | None:
     if not email or not password:
         return None
 
-    # Return cached session if still fresh
     if _bpp_session and (time.time() - _bpp_session_ts) < _SESSION_TTL:
         return _bpp_session
 
-    session = requests.Session()
-    session.headers.update(_HEADERS)
+    try:
+        from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+    except ImportError:
+        return None
 
     try:
-        resp = session.post(
-            BALLPARKPAL_LOGIN,
-            data={"email": email, "password": password, "login": ""},
-            timeout=20,
-            allow_redirects=True,
-        )
-        # Successful login redirects away from the checkout/login page
-        if "Secure Checkout" in resp.text or "Login" in (resp.url or ""):
-            return None   # still on login/paywall page — credentials wrong
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True)
+            ctx = browser.new_context(
+                user_agent=_HEADERS["User-Agent"],
+                locale="en-US",
+            )
+            page = ctx.new_page()
+
+            # Load login page — use 'load' not 'networkidle' (CF keeps firing requests)
+            page.goto(BALLPARKPAL_LOGIN, wait_until="load", timeout=30000)
+
+            # Wait for form to be ready past any Cloudflare challenge
+            try:
+                page.wait_for_selector('input[name="email"]', timeout=15000)
+            except PWTimeout:
+                browser.close()
+                return None
+
+            # Fill credentials and submit
+            page.fill('input[name="email"]', email)
+            page.fill('input[name="password"]', password)
+            page.click('button[type="submit"], input[type="submit"]')
+
+            # Wait for redirect away from login page
+            try:
+                page.wait_for_load_state("load", timeout=15000)
+            except PWTimeout:
+                pass
+
+            # Check we're not still on login/paywall
+            if "Secure Checkout" in page.content() or "Login" in page.url:
+                browser.close()
+                return None
+
+            # Extract all cookies and inject into a requests.Session
+            cookies = ctx.cookies()
+            browser.close()
+
+        session = requests.Session()
+        session.headers.update(_HEADERS)
+        for c in cookies:
+            session.cookies.set(c["name"], c["value"], domain=c.get("domain", ""))
 
         _bpp_session    = session
         _bpp_session_ts = time.time()
         return session
-    except requests.RequestException:
+
+    except Exception:
         return None
 
 # ── Tool definitions ───────────────────────────────────────────────────────────

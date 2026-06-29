@@ -11,3 +11,4 @@ python-dotenv
 numpy
 scikit-learn
 scipy
+playwright>=1.61.0
