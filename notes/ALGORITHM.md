@@ -105,13 +105,33 @@ final_score = (1 − ml_weight) × raw_score + ml_weight × ml_score
 ```
 
 - At **AUC = 0.50** (random): ml_weight = 0% — pure heuristic scoring
-- At **AUC = 0.634** (current): ml_weight = **33%** — model has meaningful influence
+- At **AUC = 0.612** (current): ml_weight = **28%** — model has meaningful influence
 - At **AUC ≥ 0.78**: ml_weight caps at **70%**
 
 ### Current Model Status
-- **AUC: 0.634** (trained on 4 days of live results + 2015–2025 historical data)
-- **Training data:** 188,000+ rows of Statcast + HR event data
+- **AUC: 0.612** (retrained 2026-07-06 after the historical dataset rebuild — see below)
+- **Training data:** 314,000+ rows, one row per (game, actual lineup batter) for 2015–2026
 - **Retrains automatically** each morning when ≥200 new labeled rows accumulate
+
+### 2026-07-06 historical dataset rebuild
+The historical training set used to be a cross-product of "every power hitter in the
+season pool" × "every sampled date," regardless of whether the player's team even played
+that day — so `park_hr_factor`, `is_home`, and `pitcher_hr_per_9` were always `None` for
+historical rows despite being real features. It was rebuilt in `ml/build_historical_dataset.py`
+to pull actual game-day lineups + starting pitchers from the MLB Stats API schedule
+endpoint (one call per game-day) and season-level pitcher HR/9, so every historical row
+now reflects a real game the batter actually played in, with real park/pitcher/home-away
+context. `pitcher_hr_per_9` is now the single most important feature by LightGBM gain.
+
+Headline AUC dropped from ~0.72 (last live-committed value) to 0.612 after the rebuild.
+This is not read as a regression: the old cross-product dataset repeated each player's
+*identical* static season-aggregate feature vector across every sampled date (~60+ times),
+and 5-fold CV used `shuffle=True` — so duplicate copies of the same player's feature
+vector routinely landed in both the train and validation folds, letting the model
+memorize a player's fingerprint → average outcome rate rather than learning anything
+that generalizes to a specific day. The new dataset breaks that duplication (features
+now vary game-to-game via park/pitcher/home-away context), so 0.612 is a more honest
+day-level number, not a worse model.
 
 ### ML Features (19 total)
 Barrel rate, exit velocity avg, hard hit %, sweet spot %, xISO, xSLG, xHR rate, fly ball %, launch angle, HR/FB ratio, BallparkPal HR%, park HR factor, EV on $10, value edge, recent form (14d), pitcher HR/9, is home, platoon, head-to-head HR

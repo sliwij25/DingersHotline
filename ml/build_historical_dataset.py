@@ -31,7 +31,7 @@ import os
 import sqlite3
 import sys
 import time
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 import requests
@@ -39,9 +39,12 @@ import requests
 os.chdir(str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from agents.predictor import _VENUE_PARK_CONSTANTS  # static venue -> park_hr_factor table
+
 # ── Constants ──────────────────────────────────────────────────────────────────
 
 SAVANT_BASE  = "https://baseballsavant.mlb.com"
+MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
 DB_PATH      = Path("data/bets.db")
 CACHE_DIR    = Path("cache/historical")
 CURRENT_YEAR = date.today().year
@@ -51,10 +54,6 @@ START_YEAR   = 2015
 # Only these players get scored as "could have hit a HR today".
 MIN_PA            = 100    # minimum plate appearances in the season
 MIN_BARREL_RATE   = 5.0   # minimum barrel% — filters out pure contact hitters
-
-# Sample every Nth game date to control DB size while keeping enough variance.
-# 1 = all dates (~180/season), 3 = every 3rd (~60/season), 5 = every 5th (~36/season)
-DATE_SAMPLE_EVERY = 3
 
 _HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
 
@@ -185,6 +184,151 @@ def fetch_hr_events_season(year: int) -> dict[str, list[str]]:
     return result
 
 
+# ── Game-level schedule + lineups fetch ────────────────────────────────────────
+
+def _extract_lineup_players(players: list[dict] | None) -> list[dict]:
+    """Normalize MLB API player objects to {name, id} — name matches the
+    'last, first' lowercase convention used by Statcast batter_stats keys."""
+    out = []
+    for p in players or []:
+        name = (p.get("lastFirstName") or "").strip().lower()
+        if not name:
+            continue
+        out.append({"name": name, "id": p.get("id")})
+    return out
+
+
+def fetch_season_schedule(year: int, dates: list[str]) -> dict[str, list[dict]]:
+    """
+    Fetch actual lineups, starting pitchers, and venue for every game on the
+    given dates (one MLB Stats API call per date covers all games that day).
+    Returns {date_str: [game_dict, ...]} where each game_dict has:
+      game_pk, venue, home_players, away_players, home_pitcher_id, away_pitcher_id
+    Cached for all seasons except the current year.
+    """
+    cache_key = f"schedule_{year}.json"
+    if year < CURRENT_YEAR:
+        cached = _load_cache(cache_key)
+        if cached:
+            return cached
+
+    print(f"  Fetching schedules/lineups for {len(dates)} dates in {year}...", end=" ", flush=True)
+    result: dict[str, list[dict]] = {}
+    for i, game_date in enumerate(dates):
+        try:
+            resp = requests.get(
+                f"{MLB_API_BASE}/schedule",
+                params={"sportId": 1, "date": game_date,
+                        "hydrate": "lineups(person),probablePitcher,team,venue"},
+                timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception:
+            continue
+
+        games_out = []
+        for date_entry in data.get("dates", []):
+            for game in date_entry.get("games", []):
+                venue   = (game.get("venue") or {}).get("name", "")
+                teams   = game.get("teams", {})
+                lineups = game.get("lineups") or {}
+                home_players = _extract_lineup_players(lineups.get("homePlayers"))
+                away_players = _extract_lineup_players(lineups.get("awayPlayers"))
+                if not home_players and not away_players:
+                    continue  # no confirmed lineup data for this game (postponed, etc.)
+                home_pitcher = ((teams.get("home") or {}).get("probablePitcher") or {}).get("id")
+                away_pitcher = ((teams.get("away") or {}).get("probablePitcher") or {}).get("id")
+                games_out.append({
+                    "game_pk":         game.get("gamePk"),
+                    "venue":           venue,
+                    "home_players":    home_players,
+                    "away_players":    away_players,
+                    "home_pitcher_id": home_pitcher,
+                    "away_pitcher_id": away_pitcher,
+                })
+        if games_out:
+            result[game_date] = games_out
+        if (i + 1) % 30 == 0:
+            print(f"{i + 1}...", end=" ", flush=True)
+
+    total_games = sum(len(v) for v in result.values())
+    print(f"done ({len(result)} dates, {total_games} games)")
+
+    if year < CURRENT_YEAR and result:
+        _save_cache(cache_key, result)
+    return result
+
+
+def _innings_pitched_to_float(ip_str: str) -> float | None:
+    """Convert MLB's 'X.Y' innings notation (Y = outs, 0-2) to a true float."""
+    try:
+        whole, _, outs = str(ip_str).partition(".")
+        whole = int(whole)
+        outs  = int(outs) if outs else 0
+        return whole + outs / 3.0
+    except (TypeError, ValueError):
+        return None
+
+
+def fetch_pitcher_season_hr9(year: int) -> dict[int, float]:
+    """
+    Fetch season-level HR/9 for every pitcher who appeared that season.
+    Returns {pitcher_id: hr_per_9}. Cached for all seasons except the current year.
+    """
+    cache_key = f"pitcher_hr9_{year}.json"
+    if year < CURRENT_YEAR:
+        cached = _load_cache(cache_key)
+        if cached:
+            return {int(k): v for k, v in cached.items()}
+
+    print(f"  Fetching pitcher season HR/9 {year}...", end=" ", flush=True)
+    try:
+        resp = requests.get(
+            f"{MLB_API_BASE}/stats",
+            params={"stats": "season", "group": "pitching", "season": year,
+                     "sportId": 1, "limit": 1500, "playerPool": "all"},
+            timeout=20,
+        )
+        resp.raise_for_status()
+        splits = resp.json()["stats"][0]["splits"]
+        result: dict[int, float] = {}
+        for s in splits:
+            pid    = s.get("player", {}).get("id")
+            stat   = s.get("stat", {})
+            innings = _innings_pitched_to_float(stat.get("inningsPitched"))
+            hr      = stat.get("homeRuns")
+            if pid is None or not innings or hr is None:
+                continue
+            result[pid] = round(hr / innings * 9, 3)
+        print(f"{len(result)} pitchers")
+    except Exception as e:
+        print(f"ERROR: {e}")
+        return {}
+
+    if year < CURRENT_YEAR and result:
+        _save_cache(cache_key, {str(k): v for k, v in result.items()})
+    return result
+
+
+_VENUE_LOOKUP = {k.lower(): v.get("park_hr_factor") for k, v in _VENUE_PARK_CONSTANTS.items()}
+
+
+def _park_factor_for_venue(venue_name: str) -> float | None:
+    """Resolve a venue name (as returned by the MLB schedule endpoint) to a
+    static park_hr_factor, with a substring fallback for naming drift
+    (e.g. renamed parks)."""
+    if not venue_name:
+        return None
+    v = venue_name.strip().lower()
+    if v in _VENUE_LOOKUP:
+        return _VENUE_LOOKUP[v]
+    for key, factor in _VENUE_LOOKUP.items():
+        if key in v or v in key:
+            return factor
+    return None
+
+
 # ── DB helpers ─────────────────────────────────────────────────────────────────
 
 def _get_conn() -> sqlite3.Connection:
@@ -217,100 +361,94 @@ def write_season_to_db(
     year: int,
     batter_stats: dict[str, dict],
     hr_events: dict[str, list[str]],
+    schedule: dict[str, list[dict]],
+    pitcher_hr9: dict[int, float],
     dry_run: bool = False,
 ) -> tuple[int, int]:
     """
-    For each sampled game date in hr_events, write:
-      - homered=1 for power hitters who hit a HR
-      - homered=0 for power hitters who didn't
+    For each actual game in `schedule`, write one row per power-hitter batter who
+    was actually in that game's lineup (home or away), with real is_home,
+    park_hr_factor, and opposing pitcher_hr_per_9 context.
 
     Returns (rows_written, rows_skipped_conflict).
     """
-    if not batter_stats or not hr_events:
+    if not batter_stats or not hr_events or not schedule:
         return 0, 0
 
-    all_pool = set(batter_stats.keys())  # power hitter candidate pool
     algo_ver = f"hist_{year}"
+    sorted_dates = sorted(schedule.keys())
 
-    # Sample game dates evenly across the season
-    sorted_dates = sorted(hr_events.keys())
-    sampled_dates = sorted_dates[::DATE_SAMPLE_EVERY]
+    def _build_rows():
+        for game_date in sorted_dates:
+            homers_today = set(hr_events.get(game_date, []))
+            for game in schedule[game_date]:
+                park_factor = _park_factor_for_venue(game["venue"])
+                sides = [
+                    (game["home_players"], True,  game["away_pitcher_id"]),
+                    (game["away_players"], False, game["home_pitcher_id"]),
+                ]
+                for players, is_home, opp_pitcher_id in sides:
+                    for p in players:
+                        player_key = p["name"]
+                        signals = batter_stats.get(player_key)
+                        if not signals:
+                            continue  # not in the power-hitter pool
+                        yield (
+                            game_date,
+                            player_key,
+                            game["game_pk"],
+                            algo_ver,
+                            1 if player_key in homers_today else 0,
+                            signals.get("barrel_rate"),
+                            signals.get("hard_hit_pct"),
+                            signals.get("hr_fb_ratio"),
+                            signals.get("xiso"),
+                            signals.get("xslg"),
+                            signals.get("xhr_rate"),
+                            signals.get("fb_pct"),
+                            signals.get("launch_angle"),
+                            signals.get("ev_avg"),
+                            signals.get("sweet_spot_pct"),
+                            park_factor,
+                            pitcher_hr9.get(opp_pitcher_id),
+                            1 if is_home else 0,
+                            1,  # lineup_confirmed — this is the actual final lineup
+                        )
 
     if dry_run:
-        est_pos = sum(
-            len([n for n in hr_events[d] if n in all_pool])
-            for d in sampled_dates
-        )
-        est_neg = len(sampled_dates) * len(all_pool) - est_pos
-        print(f"    [DRY RUN] {year}: {len(sampled_dates)} dates → "
-              f"~{est_pos} positives, ~{est_neg} negatives")
-        return est_pos + est_neg, 0
+        rows = list(_build_rows())
+        pos = sum(1 for r in rows if r[4] == 1)
+        print(f"    [DRY RUN] {year}: {len(sorted_dates)} dates, {len(rows)} rows → "
+              f"{pos} positives, {len(rows) - pos} negatives")
+        return len(rows), 0
 
     conn = _get_conn()
-    written = skipped = 0
+    skipped = 0
 
     try:
-        for batch_start in range(0, len(sampled_dates), 20):
-            batch = sampled_dates[batch_start:batch_start + 20]
-            rows_to_insert = []
+        rows = list(_build_rows())
+        before = conn.execute(
+            "SELECT COUNT(*) FROM pick_factors WHERE algo_version=?", (algo_ver,)
+        ).fetchone()[0]
 
-            for game_date in batch:
-                homers_today = set(hr_events.get(game_date, []))
-                for player_key, signals in batter_stats.items():
-                    homered = 1 if player_key in homers_today else 0
-                    rows_to_insert.append((
-                        game_date,
-                        player_key,          # stored as "last, first" normalized
-                        algo_ver,
-                        None,                # confidence (not applicable for historical)
-                        None,                # score (no Homer ranking for historical)
-                        None,                # rank
-                        homered,
-                        signals.get("barrel_rate"),
-                        signals.get("hard_hit_pct"),
-                        signals.get("hr_fb_ratio"),
-                        signals.get("xiso"),
-                        signals.get("xslg"),
-                        signals.get("xhr_rate"),
-                        signals.get("fb_pct"),
-                        signals.get("launch_angle"),
-                        signals.get("ev_avg"),
-                        signals.get("sweet_spot_pct"),
-                        None,  # bpp_hr_pct — not available historically
-                        None,  # park_hr_factor — not available historically
-                        None,  # ev_10 / kelly_size / value_edge / pinnacle_odds
-                        None,
-                        None,
-                        None,
-                        None,  # platoon
-                        None,  # recent_form_14d
-                        None,  # pitcher_hr_per_9
-                        None,  # h2h_hr
-                        None,  # h2h_ab
-                        None,  # is_home
-                        1,     # lineup_confirmed (season-level data = assume confirmed)
-                        None,  # venue_slugging
-                    ))
-
+        for batch_start in range(0, len(rows), 500):
+            batch = rows[batch_start:batch_start + 500]
             # Bulk insert — INSERT OR IGNORE so live picks are never overwritten
             conn.executemany("""
                 INSERT OR IGNORE INTO pick_factors
-                  (bet_date, player, algo_version, confidence, score, rank, homered,
+                  (bet_date, player, game_pk, algo_version, homered,
                    barrel_rate, hard_hit_pct, hr_fb_ratio, xiso, xslg, xhr_rate,
                    fb_pct, launch_angle, ev_avg, sweet_spot_pct,
-                   bpp_hr_pct, park_hr_factor,
-                   ev_10, kelly_size, value_edge, pinnacle_odds, platoon,
-                   recent_form_14d, pitcher_hr_per_9,
-                   h2h_hr, h2h_ab, is_home, lineup_confirmed, venue_slugging)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            """, rows_to_insert)
+                   park_hr_factor, pitcher_hr_per_9, is_home, lineup_confirmed)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, batch)
             conn.commit()
-            written  += conn.execute("SELECT changes()").fetchone()[0]
 
-        # Count total written (INSERT OR IGNORE doesn't count skipped rows in changes())
-        written = conn.execute(
+        after = conn.execute(
             "SELECT COUNT(*) FROM pick_factors WHERE algo_version=?", (algo_ver,)
         ).fetchone()[0]
+        written = after - before
+        skipped = len(rows) - written
 
     finally:
         conn.close()
@@ -373,16 +511,17 @@ def process_year(year: int, dry_run: bool = False) -> None:
         print(f"  Skipping {year} — no data returned.")
         return
 
-    written, _ = write_season_to_db(year, batter_stats, hr_events, dry_run=dry_run)
+    schedule    = fetch_season_schedule(year, sorted(hr_events.keys()))
+    pitcher_hr9 = fetch_pitcher_season_hr9(year)
+
+    if not schedule:
+        print(f"  Skipping {year} — no schedule/lineup data returned.")
+        return
+
+    written, _ = write_season_to_db(year, batter_stats, hr_events, schedule, pitcher_hr9, dry_run=dry_run)
     elapsed = time.time() - t0
     if not dry_run:
-        positive_rate = sum(
-            len([n for n in hr_events.get(d, []) if n in batter_stats])
-            for d in sorted(hr_events.keys())[::DATE_SAMPLE_EVERY]
-        )
-        total_sampled = len(sorted(hr_events.keys())[::DATE_SAMPLE_EVERY]) * len(batter_stats)
-        rate = positive_rate / total_sampled * 100 if total_sampled else 0
-        print(f"  Wrote {written:,} rows  |  HR rate in pool: {rate:.1f}%  |  {elapsed:.1f}s")
+        print(f"  Wrote {written:,} rows  |  {elapsed:.1f}s")
 
 
 def main() -> None:
@@ -392,6 +531,8 @@ def main() -> None:
     parser.add_argument("--stats",        action="store_true", help="Show DB stats and exit")
     parser.add_argument("--dry-run",      action="store_true", help="Show what would be written")
     parser.add_argument("--start",        type=int, default=START_YEAR, help=f"Start year (default {START_YEAR})")
+    parser.add_argument("--clear-old-historical", action="store_true",
+                         help="Delete existing hist_* rows before rebuilding (needed since row shape changed)")
     args = parser.parse_args()
 
     print("=" * 60)
@@ -402,6 +543,15 @@ def main() -> None:
         show_stats()
         return
 
+    if args.clear_old_historical:
+        conn = _get_conn()
+        try:
+            conn.execute("DELETE FROM pick_factors WHERE algo_version LIKE 'hist_%'")
+            conn.commit()
+            print(f"  Cleared existing hist_* rows from pick_factors.")
+        finally:
+            conn.close()
+
     years = (
         [args.year]            if args.year    else
         [CURRENT_YEAR]         if args.refresh else
@@ -410,7 +560,7 @@ def main() -> None:
 
     print(f"\n  Seasons to process: {years}")
     print(f"  Power hitter pool: barrel% ≥ {MIN_BARREL_RATE}, PA ≥ {MIN_PA}")
-    print(f"  Date sampling: every {DATE_SAMPLE_EVERY}rd game day per season")
+    print(f"  One row per (game, actual lineup batter) — real park/pitcher/home-away context")
     print(f"  Cache: cache/historical/  (2015–{CURRENT_YEAR-1} only)")
     if args.dry_run:
         print("  [DRY RUN] — no DB writes")
