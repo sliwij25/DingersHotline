@@ -2850,6 +2850,29 @@ class Homer:
                     for k in keys_to_store:
                         if k:
                             park_lookup[k] = park_entry
+            elif park_data.get("status") == "fallback":
+                # BPP session/login failed — fetch_park_factors_fallback() still gets
+                # live weather from OpenWeatherMap (keyed by exact stadium name), just
+                # no park_hr_factor (FanGraphs scrape is currently blocked with a 403).
+                # Without this branch the fallback's weather dict is silently dropped.
+                for venue_name, w in (park_data.get("weather") or {}).items():
+                    park_lookup[venue_name.strip().lower()] = {
+                        "park_hr_factor":     None,
+                        "temp_f":             w.get("temp_f"),
+                        "wind_mph":           w.get("wind_mph"),
+                        "wind_deg":           w.get("wind_deg"),
+                        "wind_direction_bpp": None,
+                        "wind_receptiveness": None,
+                        "weather_hr_factor":  None,
+                        "homerunsnumber":     None,
+                        "outfield_size":      None,
+                        "stadium_description": "",
+                        "roof_closed":        False,
+                        "altitude_ft":        None,
+                        "humidity_pct":       w.get("humidity"),
+                        "pressure_mb":        None,
+                        "carry_ft":           None,
+                    }
 
             # Augment BPP park entries with OWM wind direction at game time.
             # BPP provides game-time wind speed but not degrees; OWM /forecast gives
