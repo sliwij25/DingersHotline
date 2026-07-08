@@ -2916,6 +2916,7 @@ class Homer:
                         _pe["wind_deg"] = _city_to_deg[_city]
 
             # Merge into player_signals
+            _missing_park_venues: set[str] = set()
             for _, signals in player_signals.items():
                 player_lower = signals.get("player_name", "").lower()
 
@@ -2953,6 +2954,18 @@ class Homer:
                     signals["humidity_pct"]       = pk.get("humidity_pct")
                     signals["pressure_mb"]        = pk.get("pressure_mb")
                     signals["carry_ft"]           = pk.get("carry_ft")
+                elif venue_name:
+                    _missing_park_venues.add(signals.get("venue", ""))
+
+            # Surface any venue that got no park/weather match at all, so a gap
+            # (new stadium not yet in _VENUE_CITY/_VENUE_PARK_CONSTANTS, OWM
+            # outage, etc.) shows up in the run log instead of only being
+            # noticed by eyeballing the site.
+            if _missing_park_venues:
+                print(f"  [WARN] No park/weather data for venue(s): {', '.join(sorted(_missing_park_venues))}")
+                data["_park_coverage_warning"] = (
+                    f"No park/weather data for: {', '.join(sorted(_missing_park_venues))}"
+                )
 
         except Exception:
             pass

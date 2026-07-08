@@ -681,6 +681,9 @@ if not args.use_cache and not args.no_notify:
     ) if _top else "  no picks yet"
     _updated_prefix = "🔄 UPDATED — " if _is_rerun else ""
     _caption = f"{_updated_prefix}⚾ Dingers Hotline — {TODAY}\n\nTop 3:\n{_top3_names}\n\nFull picks → dingershotline.com"
+    _park_warning = homer._context.get("_park_coverage_warning")
+    if _park_warning:
+        _caption += f"\n\n⚠️ {_park_warning}"
 
     # 1. Telegram (primary) — send message with top-3 names + URL
     _tg_sent = False
