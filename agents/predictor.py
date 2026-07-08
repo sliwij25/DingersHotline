@@ -265,16 +265,16 @@ def fetch_ballparkpal_projections() -> str:
                        "projections": projections[:60]}, indent=2)
 
 
-def fetch_park_factors() -> str:
+def fetch_park_factors(venues: list[str] | None = None) -> str:
     session = _get_bpp_session()
     if not session:
-        return fetch_park_factors_fallback()
+        return fetch_park_factors_fallback(venues)
     try:
         resp = session.get(PARK_FACTORS_URL, timeout=20)
         resp.raise_for_status()
         # If redirected to checkout, fall back
         if "Secure Checkout" in resp.text:
-            return fetch_park_factors_fallback()
+            return fetch_park_factors_fallback(venues)
     except requests.RequestException as exc:
         return json.dumps({"status": "error", "message": str(exc)})
 
@@ -839,9 +839,11 @@ _VENUE_CITY: dict[str, str] = {
     "fenway park":              "Boston,US",
     "wrigley field":            "Chicago,US",
     "dodger stadium":           "Los Angeles,US",
+    "uniqlo field at dodger stadium": "Los Angeles,US",
     "oracle park":              "San Francisco,US",
     "coors field":              "Denver,US",
     "camden yards":             "Baltimore,US",
+    "oriole park at camden yards": "Baltimore,US",
     "citizens bank park":       "Philadelphia,US",
     "truist park":              "Atlanta,US",
     "minute maid park":         "Houston,US",
@@ -1160,57 +1162,37 @@ def fetch_odds_comparison(confirmed_teams: set | None = None) -> str:
     return out
 
 
-def fetch_park_factors_fallback() -> str:
+def fetch_park_factors_fallback(venues: list[str] | None = None) -> str:
     """
-    Fallback park factors using FanGraphs (season-level) + OpenWeatherMap (live weather).
-    Used when BallparkPal credentials are unavailable.
+    Fallback park factors + live weather, used when BallparkPal's session/login fails.
+
+    park_hr_factor comes from the static `_VENUE_PARK_CONSTANTS` table (FanGraphs'
+    guts.aspx scrape started returning 403 Forbidden and is no longer usable).
+    Weather is fetched per `venues` — today's actual game venues — rather than a
+    fixed list of marquee stadiums, so all of today's games get coverage, not just
+    whichever of ~10 hardcoded parks happen to be playing.
     """
-    season = date.today().year
-    results = []
+    results = [
+        {"venue": name, **consts}
+        for name, consts in _VENUE_PARK_CONSTANTS.items()
+    ]
 
-    # ── FanGraphs park factors ────────────────────────────────────────────────
-    try:
-        url  = FANGRAPHS_PF_URL.format(season=season)
-        resp = requests.get(url, headers=_HEADERS, timeout=20)
-        resp.raise_for_status()
-        soup   = BeautifulSoup(resp.text, "lxml")
-        table  = soup.find("table", {"id": "GutsBoard1_dg1_ctl00"}) or soup.find("table")
-        if table:
-            headers_row = table.find("tr")
-            hdrs = [th.get_text(strip=True).lower()
-                    for th in headers_row.find_all(["th", "td"])]
-            for row in table.find_all("tr")[1:]:
-                cols = [td.get_text(strip=True) for td in row.find_all("td")]
-                if len(cols) >= 2:
-                    entry = {hdrs[i]: cols[i] for i in range(min(len(hdrs), len(cols)))}
-                    results.append(entry)
-    except Exception as exc:
-        results = [{"error": f"FanGraphs scrape failed: {exc}"}]
-
-    # ── Live weather per stadium ──────────────────────────────────────────────
+    # ── Live weather per today's actual venues ────────────────────────────────
     weather_key = os.getenv("OPENWEATHER_API_KEY", "").strip()
     weather_data = {}
-    if weather_key:
-        # Key MLB stadium cities
-        stadiums = {
-            "Yankee Stadium":      ("New York", "US"),
-            "Fenway Park":         ("Boston", "US"),
-            "Wrigley Field":       ("Chicago", "US"),
-            "Dodger Stadium":      ("Los Angeles", "US"),
-            "Oracle Park":         ("San Francisco", "US"),
-            "Coors Field":         ("Denver", "US"),
-            "Camden Yards":        ("Baltimore", "US"),
-            "Citizens Bank Park":  ("Philadelphia", "US"),
-            "Truist Park":         ("Atlanta", "US"),
-            "Minute Maid Park":    ("Houston", "US"),
-        }
-        for stadium, (city, country) in stadiums.items():
+    if weather_key and venues:
+        for venue in venues:
+            if not venue:
+                continue
+            city = _VENUE_CITY.get(venue.strip().lower())
+            if not city:
+                continue
             try:
                 w = requests.get(OPENWEATHER_URL, params={
-                    "q": f"{city},{country}", "appid": weather_key,
+                    "q": city, "appid": weather_key,
                     "units": "imperial",
                 }, timeout=10).json()
-                weather_data[stadium] = {
+                weather_data[venue] = {
                     "temp_f":      round(w["main"]["temp"]),
                     "humidity":    w["main"]["humidity"],
                     "wind_mph":    round(w["wind"]["speed"]),
@@ -1222,9 +1204,9 @@ def fetch_park_factors_fallback() -> str:
 
     return json.dumps({
         "status":       "fallback",
-        "source":       "FanGraphs (season) + OpenWeatherMap (live)",
+        "source":       "Static park factors + OpenWeatherMap (live)",
         "note":         "Add BALLPARKPAL_EMAIL/PASSWORD to api/.env for full BallparkPal data",
-        "park_factors": results[:30],
+        "park_factors": results,
         "weather":      weather_data,
     }, indent=2)
 
@@ -2434,13 +2416,17 @@ class Homer:
             return raw, leaders
 
         def _fetch_bpp():
-            return fetch_pitcher_matchups(), fetch_park_factors()
+            return fetch_pitcher_matchups(), fetch_park_factors(todays_venues)
 
         # Build confirmed team names for odds quota filter (full names match Odds API event format)
+        # and today's actual venues (used by fetch_park_factors' fallback weather lookup).
         confirmed_teams: set[str] = set()
+        todays_venues: list[str] = []
         try:
             _lu = json.loads(lineups_json)
             for g in _lu.get("games", []):
+                if g.get("venue"):
+                    todays_venues.append(g["venue"])
                 for side_key in ("away", "home"):
                     side = g.get(side_key, {})
                     if side.get("lineup_confirmed"):
