@@ -360,13 +360,16 @@ else:
     except Exception:
         pass
 
-    # Save ALL ranked players (not just top 8) for unbiased ML training data.
-    # The model needs to see who didn't homer just as much as who did.
+    # Save the FULL scored candidate pool (not just the top 15/20) for unbiased ML
+    # training data. The model needs to see who didn't homer just as much as who
+    # did, and a larger daily sample lets AUC actually move between retrains.
     player_signals = homer._context.get("player_signals", {})
-    all_ranked = homer._rank_picks_python(player_signals, top_n=15, verbose=not args.brief, scratched=SCRATCHED)
+    full_ranked = homer._rank_picks_python(player_signals, top_n=len(player_signals),
+                                            verbose=not args.brief, scratched=SCRATCHED)
+    all_ranked = full_ranked[:15]
     _all_ranked = all_ranked
     saved = 0
-    for rank_i, p in enumerate(all_ranked[:20], 1):  # hard cap at exactly 20
+    for rank_i, p in enumerate(full_ranked, 1):
         if p.get("signals"):
             try:
                 save_pick_factors(TODAY, p["player"], p["signals"],
@@ -380,7 +383,7 @@ else:
                 saved += 1
             except Exception:
                 pass
-    print(f"\n  [ML Training] Saved signal snapshots for {saved} players (top 15 ranked)")
+    print(f"\n  [ML Training] Saved signal snapshots for {saved} players (full candidate pool)")
 
 
 # ── Odds comparison / value finder ────────────────────────────────────────────
