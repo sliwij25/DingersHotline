@@ -56,3 +56,49 @@ def test_save_pick_factors_k_upserts_on_conflict(monkeypatch, tmp_path):
     conn.close()
 
     assert rows == [(7.0, 1)]  # updated in place, not duplicated
+
+
+def test_update_pick_factors_k_sets_over_hit(monkeypatch, tmp_path):
+    db_path = str(tmp_path / "test_bets.db")
+    monkeypatch.setattr("agents.base.DB_PATH", db_path)
+
+    from agents import bet_tracker
+    monkeypatch.setattr(bet_tracker, "get_db_conn", lambda: sqlite3.connect(db_path))
+    bet_tracker.save_pick_factors_k(
+        "2026-08-17", "Gerrit Cole", {"k_line": 6.5}, score=10.0, rank=1, game_pk="1",
+    )
+
+    from ml import fetch_actual_k_results
+    monkeypatch.setattr(fetch_actual_k_results, "get_db_conn", lambda: sqlite3.connect(db_path))
+    fetch_actual_k_results.update_pick_factors_k("2026-08-17", {"Gerrit Cole": 9})
+
+    conn = sqlite3.connect(db_path)
+    row = conn.execute(
+        "SELECT actual_k, over_hit FROM pick_factors_k WHERE bet_date=? AND pitcher=?",
+        ("2026-08-17", "Gerrit Cole"),
+    ).fetchone()
+    conn.close()
+    assert row == (9, 1)  # 9 > 6.5 line
+
+
+def test_update_pick_factors_k_under_sets_zero(monkeypatch, tmp_path):
+    db_path = str(tmp_path / "test_bets.db")
+    monkeypatch.setattr("agents.base.DB_PATH", db_path)
+
+    from agents import bet_tracker
+    monkeypatch.setattr(bet_tracker, "get_db_conn", lambda: sqlite3.connect(db_path))
+    bet_tracker.save_pick_factors_k(
+        "2026-08-17", "Gerrit Cole", {"k_line": 6.5}, score=10.0, rank=1, game_pk="1",
+    )
+
+    from ml import fetch_actual_k_results
+    monkeypatch.setattr(fetch_actual_k_results, "get_db_conn", lambda: sqlite3.connect(db_path))
+    fetch_actual_k_results.update_pick_factors_k("2026-08-17", {"Gerrit Cole": 4})
+
+    conn = sqlite3.connect(db_path)
+    row = conn.execute(
+        "SELECT actual_k, over_hit FROM pick_factors_k WHERE bet_date=? AND pitcher=?",
+        ("2026-08-17", "Gerrit Cole"),
+    ).fetchone()
+    conn.close()
+    assert row == (4, 0)
