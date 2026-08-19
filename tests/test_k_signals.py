@@ -282,3 +282,50 @@ class TestKOddsComparison:
         assert pick["player"] == "Gerrit Cole"
         assert pick["k_line"] == 6.5
         assert pick["pinnacle"] == "-120"
+
+
+class TestAceGetPicksJson:
+
+    def test_returns_top_n_ranked_by_score(self):
+        from agents.k_predictor import Ace
+
+        ace = Ace()
+        fake_signals = {
+            "Gerrit Cole":   {"k_percent": 32.0, "whiff_percent": 33.0, "csw_percent": 34.0,
+                              "swinging_strike_percent": 15.0, "k_per_9_blended": 12.0,
+                              "pitcher_whiff_fastball": None, "pitcher_whiff_breaking": None,
+                              "pitcher_whiff_offspeed": None, "opp_whiff_vs_mix": None,
+                              "avg_ip_last3": 6.0, "avg_pitches_last3": 95.0, "days_rest": 5,
+                              "ev_10": 2.0, "value_edge": 1.0, "matchup": "NYY @ BOS"},
+            "Some Rookie":   {"k_percent": 18.0, "whiff_percent": 19.0, "csw_percent": 24.0,
+                              "swinging_strike_percent": 8.0, "k_per_9_blended": 5.5,
+                              "pitcher_whiff_fastball": None, "pitcher_whiff_breaking": None,
+                              "pitcher_whiff_offspeed": None, "opp_whiff_vs_mix": None,
+                              "avg_ip_last3": 4.0, "avg_pitches_last3": 70.0, "days_rest": 5,
+                              "ev_10": -2.0, "value_edge": -1.0, "matchup": "SF @ LAD"},
+        }
+        with patch.object(Ace, "_gather_data", return_value={"pitcher_signals": fake_signals}):
+            picks = ace.get_picks_json(top_n=10)
+
+        assert len(picks) == 2
+        assert picks[0]["pitcher"] == "Gerrit Cole"  # higher score ranks first
+        assert picks[0]["score"] > picks[1]["score"]
+        assert "signals" in picks[0]
+
+    def test_caps_at_top_n(self):
+        from agents.k_predictor import Ace
+
+        ace = Ace()
+        fake_signals = {
+            f"Pitcher {i}": {"k_percent": 20.0 + i, "whiff_percent": 24.0, "csw_percent": 28.0,
+                             "swinging_strike_percent": 10.0, "k_per_9_blended": 7.0,
+                             "pitcher_whiff_fastball": None, "pitcher_whiff_breaking": None,
+                             "pitcher_whiff_offspeed": None, "opp_whiff_vs_mix": None,
+                             "avg_ip_last3": 5.5, "avg_pitches_last3": 88.0, "days_rest": 5,
+                             "ev_10": 0.0, "value_edge": 0.0, "matchup": "X @ Y"}
+            for i in range(15)
+        }
+        with patch.object(Ace, "_gather_data", return_value={"pitcher_signals": fake_signals}):
+            picks = ace.get_picks_json(top_n=10)
+
+        assert len(picks) == 10

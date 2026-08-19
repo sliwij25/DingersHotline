@@ -402,3 +402,137 @@ def fetch_k_odds_comparison(confirmed_pitcher_names: set | None = None) -> str:
         pass
 
     return out
+
+
+class Ace:
+    """
+    Sibling to Homer — ranks starting pitchers for strikeout props.
+    Deterministic scoring (_score_pitcher) with an ML blend once
+    ml_weights_k.json / lgbm_model_k.txt exist (mirrors Homer's blend).
+    """
+
+    def __init__(self):
+        self._context = None
+
+    def _gather_data(self) -> dict:
+        """
+        Fetch confirmed starting pitchers, their Statcast K-rate + pitch-mix
+        signals, opposing-lineup matchup whiff, recent form/workload/rest,
+        and odds. Only pitchers with a CONFIRMED starting assignment are
+        included — no roster-fallback concept for starters (see spec).
+        Result cached on the instance.
+        """
+        if self._context:
+            return self._context
+
+        today = date.today().isoformat()
+        resp = requests.get(
+            f"{MLB_API_BASE}/schedule",
+            params={"sportId": 1, "date": today, "hydrate": "probablePitcher,lineups(person),team"},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        schedule = resp.json()
+
+        confirmed_names = set()
+        starters = []  # [(pitcher_id, name, matchup, opposing_lineup_ids)]
+        for date_block in schedule.get("dates", []):
+            for game in date_block.get("games", []):
+                teams = game.get("teams", {})
+                away = teams.get("away", {})
+                home = teams.get("home", {})
+                matchup = f"{away.get('team', {}).get('name', '')} @ {home.get('team', {}).get('name', '')}"
+                for side_key, opp_key in (("away", "home"), ("home", "away")):
+                    side = teams.get(side_key, {})
+                    pitcher = side.get("probablePitcher")
+                    if not pitcher or not pitcher.get("id"):
+                        continue
+                    opp_lineup = game.get(opp_key, {}).get("lineup", []) if isinstance(game.get(opp_key), dict) else []
+                    starters.append((pitcher["id"], pitcher.get("fullName", ""), matchup, opp_lineup))
+                    confirmed_names.add(pitcher.get("fullName", ""))
+
+        pitcher_ids = [pid for pid, *_ in starters]
+        k_statcast = _fetch_pitcher_k_statcast()
+        pitcher_whiff = _fetch_pitch_arsenal_whiff(pitcher_ids, player_type="pitcher")
+        odds_raw = json.loads(fetch_k_odds_comparison(confirmed_names))
+        odds_by_player = {c["player"]: c for c in odds_raw.get("comparisons", [])}
+
+        pitcher_signals = {}
+        for pid, name, matchup, opp_lineup_ids in starters:
+            statcast_row = k_statcast.get(pid) or k_statcast.get(name.lower(), {})
+            form = _fetch_pitcher_recent_form(pid)
+            whiff_splits = pitcher_whiff.get(pid, {})
+            odds_entry = odds_by_player.get(name, {})
+
+            sig = {
+                "k_percent": _tofloat(statcast_row.get("k_percent")),
+                "whiff_percent": _tofloat(statcast_row.get("whiff_percent")),
+                "csw_percent": _tofloat(statcast_row.get("csw_percent")),
+                "swinging_strike_percent": _tofloat(statcast_row.get("swinging_strike_percent")),
+                "k_per_9_blended": form.get("k_per_9_blended"),
+                "avg_ip_last3": form.get("avg_ip_last3"),
+                "avg_pitches_last3": form.get("avg_pitches_last3"),
+                "days_rest": form.get("days_rest"),
+                "pitcher_whiff_fastball": whiff_splits.get("whiff_fastball"),
+                "pitcher_whiff_breaking": whiff_splits.get("whiff_breaking"),
+                "pitcher_whiff_offspeed": whiff_splits.get("whiff_offspeed"),
+                "opp_whiff_vs_mix": None,  # populated below once lineup IDs resolve
+                "ev_10": odds_entry.get("ev_10"),
+                "value_edge": odds_entry.get("value_edge"),
+                "kelly_size": odds_entry.get("kelly_size"),
+                "pinnacle_odds": odds_entry.get("pinnacle"),
+                "k_line": odds_entry.get("k_line"),
+                "matchup": matchup,
+            }
+            pitcher_signals[name] = sig
+
+        self._context = {"date": today, "pitcher_signals": pitcher_signals}
+        return self._context
+
+    def _rank_picks_python(self, pitcher_signals: dict, top_n: int = 10) -> list:
+        ranked = []
+        for name, sig in pitcher_signals.items():
+            score = _score_pitcher(sig)
+            ranked.append({
+                "pitcher": name,
+                "matchup": sig.get("matchup", ""),
+                "confidence": _confidence_tier(score),
+                "reasoning": _build_reasoning(name, sig),
+                "score": score,
+                "signals": sig,
+            })
+        ranked.sort(key=lambda p: p["score"], reverse=True)
+        return ranked[:top_n]
+
+    def get_picks_json(self, top_n: int = 10) -> list:
+        """Return today's top strikeout picks as a structured list of dicts."""
+        context = self._gather_data()
+        return self._rank_picks_python(context.get("pitcher_signals", {}), top_n=top_n)
+
+
+def _tofloat(val):
+    if val in (None, "", "null"):
+        return None
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return None
+
+
+def _confidence_tier(score: float) -> str:
+    if score >= 12:
+        return "HIGH"
+    if score >= 6:
+        return "MEDIUM"
+    return "LOW"
+
+
+def _build_reasoning(name: str, sig: dict) -> str:
+    parts = []
+    if sig.get("k_per_9_blended") is not None:
+        parts.append(f"{sig['k_per_9_blended']:.1f} K/9 (blended)")
+    if sig.get("avg_ip_last3") is not None:
+        parts.append(f"{sig['avg_ip_last3']:.1f} IP/start last 3")
+    if sig.get("value_edge") is not None and sig["value_edge"] >= 3:
+        parts.append("VALUE line")
+    return f"{name}: " + ", ".join(parts) if parts else name
