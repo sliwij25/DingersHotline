@@ -95,6 +95,14 @@ Labeling: extend `ml/fetch_actual_results.py` (or a sibling
 `fetch_actual_k_results.py`) to pull actual strikeout totals from MLB boxscores
 after games end, same fuzzy-match-by-name pattern as HR's `update_pick_factors()`.
 
+## Pick Count
+
+Top 10 daily K picks (not top 20, and not the top-15 count used for HR's
+Telegram/site delivery). A given day has roughly 12-15 starting pitchers total
+league-wide with confirmed starts and odds — a 20-pick pool doesn't meaningfully
+exist for this market, and ranking deep into low-confidence names would just add
+noise. `Ace.get_picks_json()` returns the top 10 by score.
+
 ## Site
 
 New standalone page `docs/strikeouts.html`, linked in nav alongside
