@@ -1,0 +1,251 @@
+Yesterday's Results — 2026-06-03
+──────────────────────────────────────────────────────────────
+# 1     ★★★★☆  Ben Rice                          —  $-10.00
+# 2 HR  ★★★★☆  Kyle Schwarber                    —  $+35.00
+# 3     ★★★★☆  Yordan Alvarez                    —  $-10.00
+# 4     ★★★★☆  Juan Soto                         —  $-10.00
+# 5     ★★★★☆  Mike Trout                        —  $-10.00
+# 6     ★★★☆☆  James Wood                     +400  $-10.00
+# 7     ★★★☆☆  Miguel Vargas                  +473  $-10.00
+# 8     ★★★☆☆  Colson Montgomery              +350  $-10.00
+# 9     ★★★☆☆  Byron Buxton                   +305  $-10.00
+#10     ★★★☆☆  Kerry Carpenter                +400  $-10.00
+#11     ★★☆☆☆  Hunter Goodman                    —  $-10.00
+#12     ★★☆☆☆  Brandon Lowe                      —  $-10.00
+#13     ★★☆☆☆  Bryce Harper                      —  $-10.00
+#14     ★★☆☆☆  Spencer Torkelson              +462  $-10.00
+#15     ★★☆☆☆  Oneil Cruz                        —  $-10.00
+──────────────────────────────────────────────────────────────
+1 HR(s) / 15 picks   Day P&L: $-105.00
+
+Dingers Hotline — 2026-06-04
+==============================================================
+
+╔══════════════════════════════════════════════════════════╗
+║  BEST BETS — Top 7 by Expected Value                     ║
+╠══════════════════════════════════════════════════════════╣
+║  #1  Jackson Merrill       EV $+1.78    #1          ★★★☆☆║
+║  #2  Kyle Schwarber        EV $+1.17    #2          ★★★★☆║
+║  #3  Jake Bauers           EV $+0.78    #3          ★★★★☆║
+║  #4  Aaron Judge           EV ~est      #4          ★★★★☆║
+║  #5  Bryce Harper          EV $+0.02    #5          ★★★★☆║
+╚══════════════════════════════════════════════════════════╝
+
+TOP HR PICKS — 2026-06-04
+==============================================================
+
+──────────────────────────────────────────────────────────────
+  ★★★★☆  —  24% HR rate  (75 picks)
+
+──────────────────────────────────────────────────────────────
+#1  Aaron Judge  [WAITING]  ★★★★☆
+   Cleveland Guardians @ New York Yankees  •  1:35 PM ET
+   RHB vs Slade Cecconi (R)  •  Yankee Stadium  •  Home
+
+   Season:  17 HR         Lineup:  #10 in order
+   Barrel:  21.7%         Hard Hit: 57.3%         xISO: 0.330
+   EV avg:  94.1          Sweet Sp: 33.6%         FB%:  32.2%
+   HR/FB:   20.2%         Form 14d: 1 HR
+   Park 103% (neutral) | 84°F | wind 5mph (out) | weather 96% HR factor
+   Pitcher L3: 1.6 HR/9 | H2H: 1 HR / — AB | BPP rank #28
+   Why: xISO 0.330, barrel 21.7%, hard hit 57.3%, pitcher L3: 1.6HR/9, h2h 1HR/NoneAB, career Yankee Stadium: 199HR, 84°F, calm 5mph (wind receptive), short left porch
+
+──────────────────────────────────────────────────────────────
+#2  Kyle Schwarber  ★★★★☆
+   San Diego Padres @ Philadelphia Phillies  •  1:05 PM ET
+   LHB vs Lucas Giolito (R)  •  Citizens Bank Park  •  Home
+
+   Season:  23 HR         Lineup:  #1 in order
+   Barrel:  23.8%         Hard Hit: 50.8%         xISO: 0.310
+   EV avg:  92.9          Sweet Sp: 36.9%         FB%:  38.5%
+   HR/FB:   23.1%         Form 14d: 3 HR
+   Park 117% (HR-friendly) | 93°F | wind 6mph (in) | weather 103% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / 6 AB | BPP rank #6
+   Pinnacle +191 | EV $+1.17 | Kelly $10.39
+   Why: xISO 0.310, barrel 23.8%, hard hit 50.8%, career Citizens Bank Park: 117HR, BPP rank #6, 3HR last 14d, park 117%, 93°F, Small outfield
+
+──────────────────────────────────────────────────────────────
+#3  Bryce Harper  ★★★★☆
+   San Diego Padres @ Philadelphia Phillies  •  1:05 PM ET
+   LHB vs Lucas Giolito (R)  •  Citizens Bank Park  •  Home
+
+   Season:  14 HR         Lineup:  #3 in order
+   Barrel:  14.2%         Hard Hit: 43.8%         xISO: 0.280
+   EV avg:  89.8          Sweet Sp: 36.7%         FB%:  26.6%
+   HR/FB:   20.9%         Form 14d: 2 HR
+   Park 117% (HR-friendly) | 93°F | wind 6mph (in) | weather 103% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 2 HR / 5 AB | BPP rank #1
+   Pinnacle +349 | EV $+0.02 | Kelly $0.13
+   Why: xISO 0.280, barrel 14.2%, h2h 2HR/5AB, career Citizens Bank Park: 125HR, BPP rank #1, park 117%, 93°F, Small outfield
+
+──────────────────────────────────────────────────────────────
+#4  Yordan Alvarez  [WAITING]  ★★★★☆
+   Pittsburgh Pirates @ Houston Astros  •  8:10 PM ET
+   LHB vs Jared Jones (R)  •  Daikin Park  •  Home
+
+   Season:  21 HR         Lineup:  #11 in order
+   Barrel:  19.2%         Hard Hit: 54.2%         xISO: 0.400
+   EV avg:  94.8          Sweet Sp: 46.4%         FB%:  39.1%
+   HR/FB:   19.7%         Form 14d: 6 HR
+   Park 106% (neutral) | Dome
+   Pitcher L3: 4.4 HR/9
+   Why: xISO 0.400, barrel 19.2%, hard hit 54.2%, pitcher L3: 4.4HR/9, career Daikin Park: 85HR, 6HR last 14d
+
+──────────────────────────────────────────────────────────────
+#5  Jake Bauers  ★★★★☆
+   San Francisco Giants @ Milwaukee Brewers  •  2:10 PM ET
+   LHB vs Adrian Houser (R)  •  American Family Field  •  Home
+
+   Season:  10 HR         Lineup:  #5 in order
+   Barrel:  12.4%         Hard Hit: 53.6%         xISO: 0.220
+   EV avg:  92.0          Sweet Sp: 29.0%         FB%:  26.8%
+   HR/FB:   17.9%         Form 14d: 3 HR
+   Park 111% (HR-friendly) | 79°F | wind 13mph (cross) | weather 101% HR factor
+   Pitcher L3: 1.0 HR/9 | H2H: 0 HR / — AB | BPP rank #81
+   Pinnacle +410 | EV $+0.78 | Kelly $3.49
+   Why: xISO 0.220, barrel 12.4%, hard hit 53.6%, career American Family Field: 17HR, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+  ★★★☆☆  —  16% HR rate  (49 picks)
+
+──────────────────────────────────────────────────────────────
+#6  Jackson Merrill  ★★★☆☆
+   San Diego Padres @ Philadelphia Phillies  •  1:05 PM ET
+   LHB vs Zack Wheeler (R)  •  Citizens Bank Park  •  Away
+
+   Season:  5 HR          Lineup:  #7 in order
+   Barrel:  9.7%          Hard Hit: 45.5%         xISO: 0.170
+   EV avg:  89.5          Sweet Sp: 38.5%         FB%:  24.4%
+   HR/FB:   8.6%          Form 14d: 1 HR
+   Park 117% (HR-friendly) | 93°F | wind 6mph (in) | weather 103% HR factor
+   Pitcher L3: 0.7 HR/9 | H2H: 1 HR / — AB | BPP rank #25
+   Pinnacle +452 | EV $+1.78 | Kelly $6.46
+   Why: hard hit 45.5%, h2h 1HR/NoneAB, career Citizens Bank Park: 1HR, park 117%, 93°F, Small outfield
+
+──────────────────────────────────────────────────────────────
+#7  Nick Kurtz  [WAITING]  ★★★☆☆
+   Athletics @ Chicago Cubs  •  8:05 PM ET
+   LHB vs Shota Imanaga (L)  •  Wrigley Field  •  Away
+
+   Season:  11 HR         Lineup:  #2 in order
+   Barrel:  18.4%         Hard Hit: 58.1%         xISO: 0.250
+   EV avg:  94.3          Sweet Sp: 39.0%         FB%:  26.5%
+   HR/FB:   15.2%         Form 14d: 3 HR
+   Park 126% (HR-friendly) | 77°F | wind 11mph (out) | weather 128% HR factor
+   Pitcher L3: 1.0 HR/9
+   Why: xISO 0.250, barrel 18.4%, hard hit 58.1%, pitcher L3: 1.0HR/9, career Wrigley Field: 1HR, 3HR last 14d, park 126%, weather 128% HR factor
+
+──────────────────────────────────────────────────────────────
+#8  Willson Contreras  ★★★☆☆
+   Baltimore Orioles @ Boston Red Sox  •  1:35 PM ET
+   RHB vs Trevor Rogers (L)  •  Fenway Park  •  Home
+
+   Season:  11 HR         Lineup:  #4 in order
+   Barrel:  13.9%         Hard Hit: 43.2%         xISO: 0.240
+   EV avg:  90.3          Sweet Sp: 34.2%         FB%:  24.7%
+   HR/FB:   18.5%         Form 14d: 1 HR
+   Park 105% (neutral) | 86°F | wind 6mph (out) | weather 112% HR factor
+   Pitcher L3: 0.6 HR/9
+   Pinnacle +382 | EV $+0.00
+   Why: xISO 0.240, barrel 13.9%, career Fenway Park: 5HR, 86°F, weather 112% HR factor
+
+──────────────────────────────────────────────────────────────
+#9  Ben Rice  ★★★☆☆
+   Cleveland Guardians @ New York Yankees  •  1:35 PM ET
+   LHB vs Slade Cecconi (R)  •  Yankee Stadium  •  Home
+
+   Season:  17 HR         Lineup:  #2 in order
+   Barrel:  17.2%         Hard Hit: 51.0%         xISO: 0.270
+   EV avg:  92.4          Sweet Sp: 42.4%         FB%:  25.8%
+   HR/FB:   27.7%         Form 14d: 1 HR
+   Park 103% (neutral) | 84°F | wind 5mph (out) | weather 96% HR factor
+   Pitcher L3: 1.6 HR/9 | H2H: 0 HR / — AB | BPP rank #39
+   Pinnacle +248 | EV $+0.06 | Kelly $0.46
+   Why: xISO 0.270, barrel 17.2%, hard hit 51.0%, pitcher L3: 1.6HR/9, career Yankee Stadium: 27HR, 84°F, calm 5mph (wind receptive), short right porch
+
+──────────────────────────────────────────────────────────────
+#10  Michael Conforto  [WAITING]  ★★★☆☆
+   Athletics @ Chicago Cubs  •  8:05 PM ET
+   LHB vs J.T. Ginn (R)  •  Wrigley Field  •  Home
+
+   Season:  4 HR          Lineup:  #7 in order
+   Barrel:  16.4%         Hard Hit: 54.5%         xISO: 0.260
+   EV avg:  94.8          Sweet Sp: 40.0%         FB%:  38.2%
+   HR/FB:   11.1%         Form 14d: 1 HR
+   Park 126% (HR-friendly) | 77°F | wind 11mph (out) | weather 128% HR factor
+   Pitcher L3: 0.8 HR/9
+   Why: xISO 0.260, barrel 16.4%, hard hit 54.5%, career Wrigley Field: 4HR, park 126%, weather 128% HR factor
+
+──────────────────────────────────────────────────────────────
+  ★★☆☆☆  —  14% HR rate  (7 picks)
+
+──────────────────────────────────────────────────────────────
+#11  Brandon Lowe  [WAITING]  ★★☆☆☆
+   Pittsburgh Pirates @ Houston Astros  •  8:10 PM ET
+   LHB vs Kai-Wei Teng (R)  •  Daikin Park  •  Away
+
+   Season:  15 HR         Lineup:  #2 in order
+   Barrel:  13.4%         Hard Hit: 45.9%         xISO: 0.250
+   EV avg:  89.9          Sweet Sp: 37.6%         FB%:  33.1%
+   HR/FB:   18.3%         Form 14d: 3 HR
+   Park 106% (neutral) | Dome
+   Pitcher L3: 0.3 HR/9
+   Why: xISO 0.250, barrel 13.4%, hard hit 45.9%, career Daikin Park: 5HR, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+#12  Oneil Cruz  [WAITING]  ★★☆☆☆
+   Pittsburgh Pirates @ Houston Astros  •  8:10 PM ET
+   LHB vs Kai-Wei Teng (R)  •  Daikin Park  •  Away
+
+   Season:  14 HR         Lineup:  #10 in order
+   Barrel:  17.0%         Hard Hit: 59.1%         xISO: 0.240
+   EV avg:  95.9          Sweet Sp: 35.6%         FB%:  24.8%
+   HR/FB:   20.8%         Form 14d: 4 HR
+   Park 106% (neutral) | Dome
+   Pitcher L3: 0.3 HR/9
+   Why: xISO 0.240, barrel 17.0%, hard hit 59.1%, career Daikin Park: 1HR, 4HR last 14d
+
+──────────────────────────────────────────────────────────────
+#13  Garrett Mitchell  ★★☆☆☆
+   San Francisco Giants @ Milwaukee Brewers  •  2:10 PM ET
+   LHB vs Adrian Houser (R)  •  American Family Field  •  Home
+
+   Season:  3 HR          Lineup:  #6 in order
+   Barrel:  12.5%         Hard Hit: 50.0%         xISO: 0.170
+   EV avg:  92.7          Sweet Sp: 28.4%         FB%:  18.2%
+   HR/FB:   9.0%          Form 14d: 1 HR
+   Park 111% (HR-friendly) | 79°F | wind 13mph (cross) | weather 101% HR factor
+   Pitcher L3: 1.0 HR/9 | H2H: 0 HR / — AB | BPP rank #87
+   Pinnacle +533 | EV $+0.00
+   Why: barrel 12.5%, hard hit 50.0%, career American Family Field: 10HR
+
+──────────────────────────────────────────────────────────────
+#14  Pete Crow-Armstrong  [WAITING]  ★★☆☆☆
+   Athletics @ Chicago Cubs  •  8:05 PM ET
+   LHB vs J.T. Ginn (R)  •  Wrigley Field  •  Home
+
+   Season:  8 HR          Lineup:  #2 in order
+   Barrel:  11.0%         Hard Hit: 50.6%         xISO: 0.210
+   EV avg:  91.9          Sweet Sp: 31.1%         FB%:  30.5%
+   HR/FB:   10.1%         Form 14d: 3 HR
+   Park 126% (HR-friendly) | 77°F | wind 11mph (out) | weather 128% HR factor
+   Pitcher L3: 0.8 HR/9
+   Why: xISO 0.210, barrel 11.0%, hard hit 50.6%, career Wrigley Field: 21HR, 3HR last 14d, park 126%, weather 128% HR factor
+
+──────────────────────────────────────────────────────────────
+#15  Casey Schmitt  ★★☆☆☆
+   San Francisco Giants @ Milwaukee Brewers  •  2:10 PM ET
+   RHB vs Coleman Crow (R)  •  American Family Field  •  Away
+
+   Season:  12 HR         Lineup:  #1 in order
+   Barrel:  14.5%         Hard Hit: 43.7%         xISO: 0.230
+   EV avg:  89.4          Sweet Sp: 36.5%         FB%:  35.3%
+   HR/FB:   15.1%         Form 14d: 3 HR
+   Park 111% (HR-friendly) | 79°F | wind 13mph (cross) | weather 101% HR factor
+   Pitcher L3: 0.6 HR/9 | H2H: 0 HR / — AB | BPP rank #97
+   Pinnacle +424 | EV $+0.00
+   Why: xISO 0.230, barrel 14.5%, career American Family Field: 1HR, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+
+  Verify scratches before betting: https://www.mlb.com/starting-lineups

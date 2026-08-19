@@ -1,0 +1,253 @@
+Yesterday's Results — 2026-06-18
+──────────────────────────────────────────────────────────────
+# 1 HR  ★★★★★  Colson Montgomery                 —  $+35.00
+# 2     ★★★★★  Miguel Vargas                     —  $-10.00
+# 3     ★★★★★  Kyle Schwarber                    —  $-10.00
+# 4     ★★★★☆  Bryce Harper                      —  $-10.00
+# 5 HR  ★★★★☆  Juan Soto                         —  $+35.00
+# 6     ★★★★☆  Byron Buxton                   +285  $-10.00
+# 7     ★★★☆☆  Jarren Duran                   +575  $-10.00
+# 8     ★★★☆☆  Rhys Hoskins                   +510  $-10.00
+# 9     ★★★☆☆  Kazuma Okamoto                 +475  $-10.00
+#10     ★★☆☆☆  Jake Bauers                    +425  $-10.00
+#11     ★★☆☆☆  Alec Burleson                     —  $-10.00
+#12     ★★☆☆☆  Willson Contreras              +400  $-10.00
+#13     ★☆☆☆☆  Randal Grichuk                    —  $-10.00
+#14     ★☆☆☆☆  Wilyer Abreu                   +400  $-10.00
+#15  ?  ★☆☆☆☆  Everson Pereira                   —    —  
+──────────────────────────────────────────────────────────────
+2 HR(s) / 14 picks (1 scratched)   Day P&L: $-50.00
+
+Dingers Hotline — 2026-06-19
+==============================================================
+
+TOP HR PICKS — 2026-06-19
+==============================================================
+
+──────────────────────────────────────────────────────────────
+  ★★★★★  —  24% HR rate  (597 picks)
+
+──────────────────────────────────────────────────────────────
+#1  James Wood  ★★★★★
+   Washington Nationals @ Tampa Bay Rays  •  7:10 PM ET
+   LHB vs Griffin Jax (R)  •  Tropicana Field  •  Away
+
+   Season:  20 HR         Lineup:  #1 in order
+   Barrel:  23.9%         Hard Hit: 58.2%         xISO: 0.340
+   EV avg:  95.5          Sweet Sp: 42.4%         FB%:  29.9%
+   HR/FB:   19.2%         Form 14d: 4 HR
+   Park 97% (neutral) | Dome
+   Pitcher L3: 0.9 HR/9 | H2H: 0 HR / — AB | BPP rank #49
+   Pinnacle +353 | EV $+0.00
+   Why: xISO 0.340, barrel 23.9%, hard hit 58.2%, 4HR last 14d
+
+──────────────────────────────────────────────────────────────
+#2  Miguel Vargas  ★★★★★
+   Chicago White Sox @ Detroit Tigers  •  6:40 PM ET
+   RHB vs Tarik Skubal (L)  •  Comerica Park  •  Away
+
+   Season:  16 HR         Lineup:  #3 in order
+   Barrel:  14.7%         Hard Hit: 45.5%         xISO: 0.270
+   EV avg:  90.1          Sweet Sp: 42.0%         FB%:  35.4%
+   HR/FB:   14.3%         Form 14d: 1 HR
+   Park 99% (neutral) | 77°F | wind 13mph (out) | weather 109% HR factor
+   Pitcher L3: 0.5 HR/9 | H2H: 0 HR / 5 AB
+   Pinnacle +408 | EV $+1.81 | Kelly $7.24
+   Why: xISO 0.270, barrel 14.7%, hard hit 45.5%
+
+──────────────────────────────────────────────────────────────
+#3  Pete Alonso  ★★★★★
+   Baltimore Orioles @ Los Angeles Dodgers  •  10:10 PM ET
+   RHB vs Roki Sasaki (R)  •  UNIQLO Field at Dodger Stadium  •  Away
+
+   Season:  16 HR         Lineup:  #4 in order
+   Barrel:  12.1%         Hard Hit: 55.1%         xISO: 0.240
+   EV avg:  94.8          Sweet Sp: 31.8%         FB%:  30.8%
+   HR/FB:   15.8%         Form 14d: 4 HR
+   Park 104% (neutral) | 66°F | wind 10mph (out) | weather 86% HR factor
+   Pitcher L3: 1.9 HR/9
+   Pinnacle +365 | EV $+0.00
+   Why: xISO 0.240, barrel 12.1%, hard hit 55.1%, pitcher L3: 1.9HR/9, career UNIQLO Field at Dodger: 10HR, 4HR last 14d, weather 86% HR factor
+
+──────────────────────────────────────────────────────────────
+  ★★★★☆  —  26% HR rate  (136 picks)
+
+──────────────────────────────────────────────────────────────
+#4  Matt Olson  ★★★★☆
+   Milwaukee Brewers @ Atlanta Braves  •  7:15 PM ET
+   LHB vs Jacob Misiorowski (R)  •  Truist Park  •  Home
+
+   Season:  20 HR         Lineup:  #3 in order
+   Barrel:  14.4%         Hard Hit: 52.3%         xISO: 0.270
+   EV avg:  93.5          Sweet Sp: 32.4%         FB%:  34.3%
+   HR/FB:   18.2%         Form 14d: 3 HR
+   Park 103% (neutral) | 82°F | wind 7mph (out) | weather 107% HR factor
+   Pitcher L3: 0.8 HR/9
+   Pinnacle +477 | EV $+0.00
+   Why: xISO 0.270, barrel 14.4%, hard hit 52.3%, career Truist Park: 74HR, 3HR last 14d, 82°F
+
+──────────────────────────────────────────────────────────────
+#5  Yordan Alvarez  ★★★★☆
+   Cleveland Guardians @ Houston Astros  •  8:10 PM ET
+   LHB vs Tanner Bibee (R)  •  Daikin Park  •  Home
+
+   Season:  24 HR         Lineup:  #2 in order
+   Barrel:  18.7%         Hard Hit: 53.8%         xISO: 0.380
+   EV avg:  94.5          Sweet Sp: 46.2%         FB%:  37.1%
+   HR/FB:   19.8%         Form 14d: 3 HR
+   Park 105% (neutral) | Dome
+   Pitcher L3: 1.9 HR/9 | H2H: 1 HR / 6 AB
+   Pinnacle +226 | EV $-0.00
+   Why: xISO 0.380, barrel 18.7%, hard hit 53.8%, pitcher L3: 1.9HR/9, h2h 1HR/6AB, career Daikin Park: 86HR, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+#6  Hunter Goodman  ★★★★☆
+   Pittsburgh Pirates @ Colorado Rockies  •  8:40 PM ET
+   RHB vs Bubba Chandler (R)  •  Coors Field  •  Home
+
+   Season:  21 HR         Lineup:  #4 in order
+   Barrel:  16.3%         Hard Hit: 46.4%         xISO: 0.230
+   EV avg:  91.0          Sweet Sp: 35.1%         FB%:  33.3%
+   HR/FB:   21.6%         Form 14d: 6 HR
+   Park 128% (HR-friendly) | 84°F | wind 7mph (cross) | weather 108% HR factor
+   Pitcher L3: 1.2 HR/9
+   Pinnacle +243 | EV $+0.00
+   Why: xISO 0.230, barrel 16.3%, hard hit 46.4%, pitcher L3: 1.2HR/9, career Coors Field: 32HR, 6HR last 14d, park 128%, 84°F
+
+──────────────────────────────────────────────────────────────
+  ★★★☆☆  —  20% HR rate  (100 picks)
+
+──────────────────────────────────────────────────────────────
+#7  Jac Caglianone  ★★★☆☆
+   St. Louis Cardinals @ Kansas City Royals  •  8:15 PM ET
+   LHB vs Michael McGreevy (R)  •  Kauffman Stadium  •  Home
+
+   Season:  9 HR          Lineup:  #3 in order
+   Barrel:  14.5%         Hard Hit: 56.6%         xISO: 0.210
+   EV avg:  93.4          Sweet Sp: 39.0%         FB%:  23.9%
+   HR/FB:   14.3%         Form 14d: 3 HR
+   Park 108% (neutral) | 86°F | wind 2mph (out) | weather 95% HR factor
+   Pitcher L3: 0.8 HR/9
+   Pinnacle — | EV $+0.00
+   Why: xISO 0.210, barrel 14.5%, hard hit 56.6%, career Kauffman Stadium: 9HR, 3HR last 14d, 86°F, calm 2mph (wind receptive)
+
+──────────────────────────────────────────────────────────────
+#8  Shea Langeliers  ★★★☆☆
+   Los Angeles Angels @ Athletics  •  9:40 PM ET
+   RHB vs José Soriano (R)  •  Sutter Health Park  •  Home
+
+   Season:  19 HR         Lineup:  #3 in order
+   Barrel:  14.7%         Hard Hit: 43.6%         xISO: 0.260
+   EV avg:  91.6          Sweet Sp: 38.2%         FB%:  32.0%
+   HR/FB:   19.0%         Form 14d: 3 HR
+   Park 136% (HR-friendly) | 79°F | wind 14mph (out) | weather 104% HR factor
+   Pitcher L3: 0.7 HR/9 | H2H: 2 HR / 14 AB
+   Pinnacle +278 | EV $+0.85 | Kelly $5.46
+   Why: xISO 0.260, barrel 14.7%, h2h 2HR/14AB, career Sutter Health Park: 19HR, 3HR last 14d, park 136%
+
+──────────────────────────────────────────────────────────────
+#9  Jo Adell  ★★★☆☆
+   Los Angeles Angels @ Athletics  •  9:40 PM ET
+   RHB vs Jeffrey Springs (L)  •  Sutter Health Park  •  Away
+
+   Season:  10 HR         Lineup:  #3 in order
+   Barrel:  8.5%          Hard Hit: 44.9%         xISO: 0.180
+   EV avg:  90.3          Sweet Sp: 34.1%         FB%:  25.7%
+   HR/FB:   12.2%         Form 14d: 1 HR
+   Park 136% (HR-friendly) | 79°F | wind 14mph (out) | weather 104% HR factor
+   Pitcher L3: 0.9 HR/9 | H2H: 2 HR / 9 AB
+   Pinnacle +277 | EV $+0.00
+   Why: h2h 2HR/9AB, career Sutter Health Park: 2HR, park 136%
+
+──────────────────────────────────────────────────────────────
+  ★★☆☆☆  —  12% HR rate  (17 picks)
+
+──────────────────────────────────────────────────────────────
+#10  Colson Montgomery  ★★☆☆☆
+   Chicago White Sox @ Detroit Tigers  •  6:40 PM ET
+   LHB vs Tarik Skubal (L)  •  Comerica Park  •  Away
+
+   Season:  20 HR         Lineup:  #4 in order
+   Barrel:  14.3%         Hard Hit: 47.0%         xISO: 0.240
+   EV avg:  90.1          Sweet Sp: 35.5%         FB%:  34.3%
+   HR/FB:   20.0%         Form 14d: 5 HR
+   Park 99% (neutral) | 77°F | wind 13mph (out) | weather 109% HR factor
+   Pitcher L3: 0.5 HR/9
+   Pinnacle — | EV $+0.00
+   Why: xISO 0.240, barrel 14.3%, hard hit 47.0%, career Comerica Park: 1HR, 5HR last 14d
+
+──────────────────────────────────────────────────────────────
+#11  Michael Harris II  [WAITING]  ★★☆☆☆
+   Milwaukee Brewers @ Atlanta Braves  •  7:15 PM ET
+   LHB vs Jacob Misiorowski (R)  •  Truist Park  •  Home
+
+   Season:  14 HR         Lineup:  #12 in order
+   Barrel:  15.0%         Hard Hit: 51.5%         xISO: 0.240
+   EV avg:  92.3          Sweet Sp: 30.9%         FB%:  24.2%
+   HR/FB:   22.3%         Form 14d: 1 HR
+   Park 103% (neutral) | 82°F | wind 7mph (out) | weather 107% HR factor
+   Pitcher L3: 0.8 HR/9
+   Why: xISO 0.240, barrel 15.0%, hard hit 51.5%, career Truist Park: 30HR, 82°F
+
+──────────────────────────────────────────────────────────────
+#12  Marcell Ozuna  ★★☆☆☆
+   Pittsburgh Pirates @ Colorado Rockies  •  8:40 PM ET
+   RHB vs Kyle Freeland (L)  •  Coors Field  •  Away
+
+   Season:  6 HR          Lineup:  #6 in order
+   Barrel:  8.7%          Hard Hit: 38.5%         xISO: 0.180
+   EV avg:  89.4          Sweet Sp: 39.2%         FB%:  29.2%
+   HR/FB:   9.6%          Form 14d: 1 HR
+   Park 128% (HR-friendly) | 84°F | wind 7mph (cross) | weather 108% HR factor
+   Pitcher L3: 1.2 HR/9
+   Pinnacle +348 | EV $+0.27 | Kelly $1.49
+   Why: pitcher L3: 1.2HR/9, career Coors Field: 6HR, park 128%, 84°F
+
+──────────────────────────────────────────────────────────────
+  ★☆☆☆☆  —  20% HR rate  (35 picks)
+
+──────────────────────────────────────────────────────────────
+#13  Nick Kurtz  ★☆☆☆☆
+   Los Angeles Angels @ Athletics  •  9:40 PM ET
+   LHB vs José Soriano (R)  •  Sutter Health Park  •  Home
+
+   Season:  18 HR         Lineup:  #2 in order
+   Barrel:  17.5%         Hard Hit: 57.9%         xISO: 0.250
+   EV avg:  94.2          Sweet Sp: 38.0%         FB%:  29.2%
+   HR/FB:   18.2%         Form 14d: 7 HR
+   Park 136% (HR-friendly) | 79°F | wind 14mph (out) | weather 104% HR factor
+   Pitcher L3: 0.7 HR/9 | H2H: 1 HR / 12 AB
+   Pinnacle +251 | EV $+0.40 | Kelly $3.01
+   Why: xISO 0.250, barrel 17.5%, hard hit 57.9%, h2h 1HR/12AB, career Sutter Health Park: 30HR, 7HR last 14d, park 136%
+
+──────────────────────────────────────────────────────────────
+#14  Bryan Reynolds  ★☆☆☆☆
+   Pittsburgh Pirates @ Colorado Rockies  •  8:40 PM ET
+   SHB vs Kyle Freeland (L)  •  Coors Field  •  Away
+
+   Season:  10 HR         Lineup:  #3 in order
+   Barrel:  10.4%         Hard Hit: 46.0%         xISO: 0.190
+   EV avg:  91.3          Sweet Sp: 35.6%         FB%:  24.3%
+   HR/FB:   12.7%         Form 14d: 4 HR
+   Park 128% (HR-friendly) | 84°F | wind 7mph (cross) | weather 108% HR factor
+   Pitcher L3: 1.2 HR/9 | H2H: 0 HR / 13 AB
+   Pinnacle +328 | EV $+0.51 | Kelly $2.94
+   Why: barrel 10.4%, hard hit 46.0%, pitcher L3: 1.2HR/9, career Coors Field: 2HR, 4HR last 14d, park 128%, 84°F
+
+──────────────────────────────────────────────────────────────
+#15  Endy Rodríguez  ★☆☆☆☆
+   Pittsburgh Pirates @ Colorado Rockies  •  8:40 PM ET
+   SHB vs Kyle Freeland (L)  •  Coors Field  •  Away
+
+   Season:  3 HR          Lineup:  #7 in order
+   Barrel:  14.0%         Hard Hit: 41.9%         xISO: 0.210
+   EV avg:  92.0          Sweet Sp: 41.9%         FB%:  32.6%
+   HR/FB:   12.1%         Form 14d: 2 HR
+   Park 128% (HR-friendly) | 84°F | wind 7mph (cross) | weather 108% HR factor
+   Pitcher L3: 1.2 HR/9
+   Pinnacle — | EV $+0.00
+   Why: xISO 0.210, barrel 14.0%, pitcher L3: 1.2HR/9, park 128%, 84°F
+
+──────────────────────────────────────────────────────────────
+
+  Verify scratches before betting: https://www.mlb.com/starting-lineups

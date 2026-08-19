@@ -1,0 +1,231 @@
+Yesterday's Results — 2026-06-30
+──────────────────────────────────────────────────────────────
+# 1     ★★★★★  Kyle Schwarber                 +138  $-10.00
+# 2     ★★★★★  Hunter Goodman                 +261  $-10.00
+# 3 HR  ★★★★★  Yordan Alvarez                 +238  $+23.80
+# 4     ★★★★☆  Juan Soto                      +301  $-10.00
+# 5     ★★★★☆  Esmerlyn Valdez                   —  $-10.00
+# 6     ★★★★☆  Elly De La Cruz                   —  $-10.00
+# 7     ★★★☆☆  Jac Caglianone                 +355  $-10.00
+# 8     ★★★☆☆  Pete Alonso                    +324  $-10.00
+# 9     ★★★☆☆  Bryce Harper                   +252  $-10.00
+#10 HR  ★★☆☆☆  Mickey Moniak                  +348  $+34.80
+#11     ★★☆☆☆  James Wood                     +366  $-10.00
+#12     ★★☆☆☆  Nick Kurtz                        —  $-10.00
+#13     ★☆☆☆☆  Matt Olson                     +313  $-10.00
+#14     ★☆☆☆☆  Shea Langeliers                   —  $-10.00
+#15 HR  ★☆☆☆☆  Jake Bauers                       —  $+35.00
+──────────────────────────────────────────────────────────────
+3 HR(s) / 15 picks   Day P&L: $-26.40
+
+Dingers Hotline — 2026-07-01
+==============================================================
+
+TOP HR PICKS — 2026-07-01
+==============================================================
+
+──────────────────────────────────────────────────────────────
+  ★★★★★  —  23% HR rate  (695 picks)
+
+──────────────────────────────────────────────────────────────
+#1  Byron Buxton  [WAITING]  ★★★★★
+   Minnesota Twins @ Houston Astros  •  8:10 PM ET
+   RHB vs Tatsuya Imai (R)  •  Daikin Park  •  Away
+
+   Season:  25 HR         Lineup:  #4 in order
+   Barrel:  18.5%         Hard Hit: 47.3%         xISO: 0.270
+   EV avg:  90.6          Sweet Sp: 32.4%         FB%:  36.9%
+   HR/FB:   20.6%         Form 14d: 2 HR
+   Pitcher L3: 2.1 HR/9
+   Why: xISO 0.270, barrel 18.5%, hard hit 47.3%, pitcher L3: 2.1HR/9
+
+──────────────────────────────────────────────────────────────
+#2  Kyle Schwarber  ★★★★★
+   Pittsburgh Pirates @ Philadelphia Phillies  •  6:40 PM ET
+   LHB vs Paul Skenes (R)  •  Citizens Bank Park  •  Home
+
+   Season:  30 HR         Lineup:  #2 in order
+   Barrel:  20.0%         Hard Hit: 53.2%         xISO: 0.290
+   EV avg:  93.3          Sweet Sp: 40.3%         FB%:  36.0%
+   HR/FB:   22.8%         Form 14d: 5 HR
+   Pitcher L3: 1.0 HR/9
+   Pinnacle +192 | EV $+0.00
+   Why: xISO 0.290, barrel 20.0%, hard hit 53.2%, career Citizens Bank Park: 122HR, 5HR last 14d
+
+──────────────────────────────────────────────────────────────
+#3  Colson Montgomery  [WAITING]  ★★★★★
+   Chicago White Sox @ Baltimore Orioles  •  12:35 PM ET
+   LHB vs Dean Kremer (R)  •  Oriole Park at Camden Yards  •  Away
+
+   Season:  21 HR         Lineup:  #4 in order
+   Barrel:  14.7%         Hard Hit: 44.7%         xISO: 0.240
+   EV avg:  89.8          Sweet Sp: 35.1%         FB%:  38.2%
+   HR/FB:   16.3%         Form 14d: 4 HR
+   Pitcher L3: 3.3 HR/9
+   Why: xISO 0.240, barrel 14.7%, pitcher L3: 3.3HR/9, career Oriole Park at Camden : 1HR, 4HR last 14d
+
+──────────────────────────────────────────────────────────────
+  ★★★★☆  —  24% HR rate  (164 picks)
+
+──────────────────────────────────────────────────────────────
+#4  James Wood  ★★★★☆
+   Washington Nationals @ Boston Red Sox  •  1:35 PM ET
+   LHB vs Payton Tolle (L)  •  Fenway Park  •  Away
+
+   Season:  21 HR         Lineup:  #1 in order
+   Barrel:  23.0%         Hard Hit: 59.6%         xISO: 0.320
+   EV avg:  95.2          Sweet Sp: 42.3%         FB%:  29.1%
+   HR/FB:   17.8%         Form 14d: 1 HR
+   Pitcher L3: 0.6 HR/9
+   Pinnacle +320 | EV $+0.00
+   Why: xISO 0.320, barrel 23.0%, hard hit 59.6%, career Fenway Park: 1HR
+
+──────────────────────────────────────────────────────────────
+#5  Matt Olson  ★★★★☆
+   St. Louis Cardinals @ Atlanta Braves  •  7:15 PM ET
+   LHB vs Michael McGreevy (R)  •  Truist Park  •  Home
+
+   Season:  20 HR         Lineup:  #3 in order
+   Barrel:  13.7%         Hard Hit: 51.2%         xISO: 0.260
+   EV avg:  92.8          Sweet Sp: 31.4%         FB%:  33.5%
+   HR/FB:   16.5%         Form 14d: —
+   Pitcher L3: 0.8 HR/9
+   Pinnacle +341 | EV $+0.00
+   Why: xISO 0.260, barrel 13.7%, hard hit 51.2%, career Truist Park: 74HR
+
+──────────────────────────────────────────────────────────────
+#6  Miguel Vargas  ★★★★☆
+   Chicago White Sox @ Baltimore Orioles  •  12:35 PM ET
+   RHB vs Dean Kremer (R)  •  Oriole Park at Camden Yards  •  Away
+
+   Season:  19 HR         Lineup:  #2 in order
+   Barrel:  14.3%         Hard Hit: 45.9%         xISO: 0.270
+   EV avg:  90.2          Sweet Sp: 42.0%         FB%:  35.5%
+   HR/FB:   14.8%         Form 14d: 3 HR
+   Pitcher L3: 3.3 HR/9 | H2H: 0 HR / 5 AB
+   Why: xISO 0.270, barrel 14.3%, hard hit 45.9%, pitcher L3: 3.3HR/9, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+  ★★★☆☆  —  19% HR rate  (136 picks)
+
+──────────────────────────────────────────────────────────────
+#7  Pete Alonso  ★★★☆☆
+   Chicago White Sox @ Baltimore Orioles  •  12:35 PM ET
+   RHB vs Noah Schultz (L)  •  Oriole Park at Camden Yards  •  Home
+
+   Season:  19 HR         Lineup:  #4 in order
+   Barrel:  12.7%         Hard Hit: 54.0%         xISO: 0.250
+   EV avg:  94.2          Sweet Sp: 33.3%         FB%:  31.2%
+   HR/FB:   16.2%         Form 14d: 3 HR
+   Pitcher L3: 0.7 HR/9
+   Why: xISO 0.250, barrel 12.7%, hard hit 54.0%, career Oriole Park at Camden : 15HR, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+#8  Shea Langeliers  [WAITING]  ★★★☆☆
+   Los Angeles Dodgers @ Athletics  •  9:40 PM ET
+   RHB vs TBD (?)  •  Sutter Health Park  •  Home
+
+   Season:  19 HR         Lineup:  #2 in order
+   Barrel:  14.3%         Hard Hit: 43.3%         xISO: 0.240
+   EV avg:  91.5          Sweet Sp: 36.5%         FB%:  32.9%
+   HR/FB:   16.2%         Form 14d: 1 HR
+   Park 132% (HR-friendly)
+   Why: xISO 0.240, barrel 14.3%, park 132%
+
+──────────────────────────────────────────────────────────────
+#9  Yandy Díaz  [WAITING]  ★★★☆☆
+   Tampa Bay Rays @ Kansas City Royals  •  7:40 PM ET
+   RHB vs TBD (?)  •  Kauffman Stadium  •  Away
+
+   Season:  12 HR         Lineup:  #1 in order
+   Barrel:  7.5%          Hard Hit: 47.8%         xISO: 0.170
+   EV avg:  91.1          Sweet Sp: 29.2%         FB%:  21.4%
+   HR/FB:   16.2%         Form 14d: 0 HR
+   Park 115% (HR-friendly)
+   Pitcher L3: 0.4 HR/9
+   Why: hard hit 47.8%, park 115%
+
+──────────────────────────────────────────────────────────────
+  ★★☆☆☆  —  12% HR rate  (25 picks)
+
+──────────────────────────────────────────────────────────────
+#10  Michael Harris II  ★★☆☆☆
+   St. Louis Cardinals @ Atlanta Braves  •  7:15 PM ET
+   LHB vs Michael McGreevy (R)  •  Truist Park  •  Home
+
+   Season:  14 HR         Lineup:  #4 in order
+   Barrel:  14.5%         Hard Hit: 50.2%         xISO: 0.230
+   EV avg:  91.7          Sweet Sp: 30.8%         FB%:  23.5%
+   HR/FB:   20.1%         Form 14d: —
+   Pitcher L3: 0.8 HR/9
+   Pinnacle +370 | EV $+0.00
+   Why: xISO 0.230, barrel 14.5%, hard hit 50.2%, career Truist Park: 30HR
+
+──────────────────────────────────────────────────────────────
+#11  Christian Walker  ★★☆☆☆
+   Minnesota Twins @ Houston Astros  •  8:10 PM ET
+   RHB vs Taj Bradley (R)  •  Daikin Park  •  Home
+
+   Season:  19 HR         Lineup:  #4 in order
+   Barrel:  9.8%          Hard Hit: 43.9%         xISO: 0.170
+   EV avg:  89.9          Sweet Sp: 30.1%         FB%:  28.5%
+   HR/FB:   18.6%         Form 14d: 1 HR
+   Pitcher L3: 0.5 HR/9
+   Pinnacle +400 | EV $+0.00
+   Why: career Daikin Park: 15HR
+
+──────────────────────────────────────────────────────────────
+#12  Coby Mayo  ★★☆☆☆
+   Chicago White Sox @ Baltimore Orioles  •  12:35 PM ET
+   RHB vs Noah Schultz (L)  •  Oriole Park at Camden Yards  •  Home
+
+   Season:  10 HR         Lineup:  #5 in order
+   Barrel:  9.7%          Hard Hit: 49.3%         xISO: 0.160
+   EV avg:  91.9          Sweet Sp: 27.6%         FB%:  32.8%
+   HR/FB:   13.2%         Form 14d: 1 HR
+   Pitcher L3: 0.7 HR/9
+   Why: hard hit 49.3%, career Oriole Park at Camden : 8HR
+
+──────────────────────────────────────────────────────────────
+  ★☆☆☆☆  —  17% HR rate  (41 picks)
+
+──────────────────────────────────────────────────────────────
+#13  JJ Bleday  [WAITING]  ★☆☆☆☆
+   Cincinnati Reds @ Milwaukee Brewers  •  8:10 PM ET
+   LHB vs Shane Drohan (L)  •  American Family Field  •  Away
+
+   Season:  13 HR         Lineup:  #3 in order
+   Barrel:  9.7%          Hard Hit: 44.9%         xISO: 0.200
+   EV avg:  89.3          Sweet Sp: 42.7%         FB%:  31.2%
+   HR/FB:   17.4%         Form 14d: —
+   Pitcher L3: 0.3 HR/9
+   Why: xISO 0.200
+
+──────────────────────────────────────────────────────────────
+#14  Andrew Benintendi  ★☆☆☆☆
+   Chicago White Sox @ Baltimore Orioles  •  12:35 PM ET
+   LHB vs Dean Kremer (R)  •  Oriole Park at Camden Yards  •  Away
+
+   Season:  10 HR         Lineup:  #3 in order
+   Barrel:  10.5%         Hard Hit: 49.1%         xISO: 0.190
+   EV avg:  89.8          Sweet Sp: 36.8%         FB%:  31.0%
+   HR/FB:   12.5%         Form 14d: 2 HR
+   Pitcher L3: 3.3 HR/9 | H2H: 0 HR / 10 AB
+   Why: barrel 10.5%, hard hit 49.1%, pitcher L3: 3.3HR/9, career Oriole Park at Camden : 7HR
+
+──────────────────────────────────────────────────────────────
+#15  Mickey Moniak  ★☆☆☆☆
+   Miami Marlins @ Colorado Rockies  •  8:40 PM ET
+   LHB vs Max Meyer (R)  •  Coors Field  •  Home
+
+   Season:  13 HR         Lineup:  #2 in order
+   Barrel:  12.6%         Hard Hit: 40.2%         xISO: 0.230
+   EV avg:  89.6          Sweet Sp: 32.3%         FB%:  40.9%
+   HR/FB:   16.9%         Form 14d: 1 HR
+   Pitcher L3: 1.1 HR/9
+   Pinnacle +348 | EV $+0.00
+   Why: xISO 0.230, barrel 12.6%, pitcher L3: 1.1HR/9, career Coors Field: 26HR
+
+──────────────────────────────────────────────────────────────
+
+  Verify scratches before betting: https://www.mlb.com/starting-lineups

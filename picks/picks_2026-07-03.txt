@@ -1,0 +1,231 @@
+Yesterday's Results — 2026-07-02
+──────────────────────────────────────────────────────────────
+# 1     ★★★★★  Kyle Schwarber                 +176  $-10.00
+# 2     ★★★★★  Matt Olson                        —  $-10.00
+# 3     ★★★★★  Jac Caglianone                    —  $-10.00
+# 4     ★★★★☆  Miguel Vargas                  +394  $-10.00
+# 5     ★★★★☆  Max Muncy                      +313  $-10.00
+# 6     ★★★★☆  Andy Pages                     +372  $-10.00
+# 7     ★★★☆☆  Michael Harris II                 —  $-10.00
+# 8     ★★★☆☆  Colson Montgomery              +281  $-10.00
+# 9     ★★★☆☆  Brice Turang                      —  $-10.00
+#10     ★★☆☆☆  Luke Raley                        —  $-10.00
+#11     ★★☆☆☆  Shohei Ohtani                  +182  $-10.00
+#12 HR  ★★☆☆☆  Mickey Moniak                     —  $+35.00
+#13     ★☆☆☆☆  Bryce Harper                   +313  $-10.00
+#14     ★☆☆☆☆  JJ Bleday                         —  $-10.00
+#15     ★☆☆☆☆  Elly De La Cruz                   —  $-10.00
+──────────────────────────────────────────────────────────────
+1 HR(s) / 15 picks   Day P&L: $-105.00
+
+Dingers Hotline — 2026-07-03
+==============================================================
+
+TOP HR PICKS — 2026-07-03
+==============================================================
+
+──────────────────────────────────────────────────────────────
+  ★★★★★  —  23% HR rate  (705 picks)
+
+──────────────────────────────────────────────────────────────
+#1  Colson Montgomery  [WAITING]  ★★★★★
+   Chicago White Sox @ Cleveland Guardians  •  7:10 PM ET
+   LHB vs Gavin Williams (R)  •  Progressive Field  •  Away
+
+   Season:  21 HR         Lineup:  #5 in order
+   Barrel:  14.5%         Hard Hit: 44.6%         xISO: 0.230
+   EV avg:  89.7          Sweet Sp: 35.1%         FB%:  38.7%
+   HR/FB:   15.9%         Form 14d: 1 HR
+   Pitcher L3: 1.2 HR/9
+   Why: xISO 0.230, barrel 14.5%, pitcher L3: 1.2HR/9
+
+──────────────────────────────────────────────────────────────
+#2  Matt Olson  [WAITING]  ★★★★★
+   New York Mets @ Atlanta Braves  •  7:15 PM ET
+   LHB vs Christian Scott (R)  •  Truist Park  •  Home
+
+   Season:  20 HR         Lineup:  #3 in order
+   Barrel:  13.3%         Hard Hit: 51.0%         xISO: 0.260
+   EV avg:  92.8          Sweet Sp: 30.9%         FB%:  34.5%
+   HR/FB:   15.7%         Form 14d: —
+   Pitcher L3: 0.8 HR/9
+   Why: xISO 0.260, barrel 13.3%, hard hit 51.0%, career Truist Park: 74HR
+
+──────────────────────────────────────────────────────────────
+#3  Jordan Walker  ★★★★★
+   St. Louis Cardinals @ Chicago Cubs  •  4:05 PM ET
+   RHB vs David Peterson (L)  •  Wrigley Field  •  Away
+
+   Season:  19 HR         Lineup:  #4 in order
+   Barrel:  13.4%         Hard Hit: 50.9%         xISO: 0.220
+   EV avg:  93.7          Sweet Sp: 34.5%         FB%:  25.4%
+   HR/FB:   21.4%         Form 14d: 1 HR
+   Pitcher L3: 0.4 HR/9
+   Pinnacle +241 | EV $+1.29 | Kelly $9.05
+   Why: xISO 0.220, barrel 13.4%, hard hit 50.9%, career Wrigley Field: 2HR
+
+──────────────────────────────────────────────────────────────
+  ★★★★☆  —  25% HR rate  (167 picks)
+
+──────────────────────────────────────────────────────────────
+#4  Esmerlyn Valdez  [WAITING]  ★★★★☆
+   Pittsburgh Pirates @ Washington Nationals  •  6:45 PM ET
+   RHB vs Foster Griffin (L)  •  Nationals Park  •  Away
+
+   Season:  6 HR          Lineup:  #5 in order
+   Barrel:  29.7%         Hard Hit: 56.8%         xISO: 0.360
+   EV avg:  92.6          Sweet Sp: 43.2%         FB%:  40.5%
+   HR/FB:   23.1%         Form 14d: 4 HR
+   Pitcher L3: 1.3 HR/9
+   Why: xISO 0.360, barrel 29.7%, hard hit 56.8%, pitcher L3: 1.3HR/9, 4HR last 14d
+
+──────────────────────────────────────────────────────────────
+#5  Shea Langeliers  [WAITING]  ★★★★☆
+   Miami Marlins @ Athletics  •  9:40 PM ET
+   RHB vs TBD (?)  •  Sutter Health Park  •  Home
+
+   Season:  20 HR         Lineup:  #1 in order
+   Barrel:  14.5%         Hard Hit: 43.4%         xISO: 0.250
+   EV avg:  91.4          Sweet Sp: 36.7%         FB%:  32.4%
+   HR/FB:   17.1%         Form 14d: 1 HR
+   Park 132% (HR-friendly)
+   Pitcher L3: 0.5 HR/9
+   Why: xISO 0.250, barrel 14.5%, park 132%
+
+──────────────────────────────────────────────────────────────
+#6  Elly De La Cruz  ★★★★☆
+   Baltimore Orioles @ Cincinnati Reds  •  7:10 PM ET
+   SHB vs Trevor Rogers (L)  •  Great American Ball Park  •  Home
+
+   Season:  13 HR         Lineup:  #1 in order
+   Barrel:  15.1%         Hard Hit: 52.7%         xISO: 0.220
+   EV avg:  94.4          Sweet Sp: 35.9%         FB%:  31.0%
+   HR/FB:   14.1%         Form 14d: 1 HR
+   Pitcher L3: 0.4 HR/9
+   Pinnacle +252 | EV $+1.22 | Kelly $8.28
+   Why: xISO 0.220, barrel 15.1%, hard hit 52.7%, career Great American Ball Pa: 35HR
+
+──────────────────────────────────────────────────────────────
+  ★★★☆☆  —  19% HR rate  (139 picks)
+
+──────────────────────────────────────────────────────────────
+#7  Yordan Alvarez  [WAITING]  ★★★☆☆
+   Tampa Bay Rays @ Houston Astros  •  8:15 PM ET
+   LHB vs TBD (?)  •  Daikin Park  •  Home
+
+   Season:  26 HR         Lineup:  #2 in order
+   Barrel:  19.0%         Hard Hit: 54.0%         xISO: 0.370
+   EV avg:  94.6          Sweet Sp: 43.6%         FB%:  38.8%
+   HR/FB:   17.7%         Form 14d: 4 HR
+   Park 106% (neutral)
+   Pitcher L3: 1.4 HR/9
+   Why: xISO 0.370, barrel 19.0%, hard hit 54.0%, pitcher L3: 1.4HR/9, 4HR last 14d
+
+──────────────────────────────────────────────────────────────
+#8  Byron Buxton  [WAITING]  ★★★☆☆
+   Minnesota Twins @ New York Yankees  •  7:05 PM ET
+   RHB vs Gerrit Cole (R)  •  Yankee Stadium  •  Away
+
+   Season:  25 HR         Lineup:  #12 in order
+   Barrel:  18.5%         Hard Hit: 47.3%         xISO: 0.270
+   EV avg:  90.6          Sweet Sp: 32.4%         FB%:  36.9%
+   HR/FB:   20.6%         Form 14d: 2 HR
+   Pitcher L3: 1.6 HR/9
+   Why: xISO 0.270, barrel 18.5%, hard hit 47.3%, pitcher L3: 1.6HR/9, career Yankee Stadium: 2HR
+
+──────────────────────────────────────────────────────────────
+#9  Tyler Stephenson  ★★★☆☆
+   Baltimore Orioles @ Cincinnati Reds  •  7:10 PM ET
+   RHB vs Trevor Rogers (L)  •  Great American Ball Park  •  Home
+
+   Season:  6 HR          Lineup:  #7 in order
+   Barrel:  11.1%         Hard Hit: 47.6%         xISO: 0.200
+   EV avg:  91.1          Sweet Sp: 41.5%         FB%:  32.7%
+   HR/FB:   7.9%          Form 14d: 1 HR
+   Pitcher L3: 0.4 HR/9
+   Pinnacle +414 | EV $+0.00
+   Why: xISO 0.200, barrel 11.1%, hard hit 47.6%, career Great American Ball Pa: 36HR
+
+──────────────────────────────────────────────────────────────
+  ★★☆☆☆  —  11% HR rate  (27 picks)
+
+──────────────────────────────────────────────────────────────
+#10  Pete Alonso  ★★☆☆☆
+   Baltimore Orioles @ Cincinnati Reds  •  7:10 PM ET
+   RHB vs Brady Singer (R)  •  Great American Ball Park  •  Away
+
+   Season:  19 HR         Lineup:  #4 in order
+   Barrel:  12.6%         Hard Hit: 53.8%         xISO: 0.250
+   EV avg:  94.1          Sweet Sp: 33.2%         FB%:  31.1%
+   HR/FB:   16.1%         Form 14d: 3 HR
+   Pitcher L3: 1.6 HR/9
+   Pinnacle +258 | EV $+0.20 | Kelly $1.48
+   Why: xISO 0.250, barrel 12.6%, hard hit 53.8%, pitcher L3: 1.6HR/9, career Great American Ball Pa: 5HR, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+#11  Juan Soto  [WAITING]  ★★☆☆☆
+   New York Mets @ Atlanta Braves  •  7:15 PM ET
+   LHB vs Grant Holmes (R)  •  Truist Park  •  Away
+
+   Season:  17 HR         Lineup:  #2 in order
+   Barrel:  14.6%         Hard Hit: 50.2%         xISO: 0.300
+   EV avg:  93.0          Sweet Sp: 31.4%         FB%:  33.8%
+   HR/FB:   17.4%         Form 14d: —
+   Pitcher L3: 1.3 HR/9
+   Why: xISO 0.300, barrel 14.6%, hard hit 50.2%, pitcher L3: 1.3HR/9, career Truist Park: 14HR
+
+──────────────────────────────────────────────────────────────
+#12  Michael Harris II  [WAITING]  ★★☆☆☆
+   New York Mets @ Atlanta Braves  •  7:15 PM ET
+   LHB vs Christian Scott (R)  •  Truist Park  •  Home
+
+   Season:  14 HR         Lineup:  #4 in order
+   Barrel:  14.1%         Hard Hit: 50.4%         xISO: 0.220
+   EV avg:  91.9          Sweet Sp: 30.3%         FB%:  23.7%
+   HR/FB:   19.4%         Form 14d: —
+   Pitcher L3: 0.8 HR/9
+   Why: xISO 0.220, barrel 14.1%, hard hit 50.4%, career Truist Park: 30HR
+
+──────────────────────────────────────────────────────────────
+  ★☆☆☆☆  —  17% HR rate  (53 picks)
+
+──────────────────────────────────────────────────────────────
+#13  Max Muncy  [WAITING]  ★☆☆☆☆
+   San Diego Padres @ Los Angeles Dodgers  •  10:10 PM ET
+   LHB vs Michael King (R)  •  UNIQLO Field at Dodger Stadium  •  Home
+
+   Season:  17 HR         Lineup:  #5 in order
+   Barrel:  14.1%         Hard Hit: 44.4%         xISO: 0.240
+   EV avg:  90.0          Sweet Sp: 33.3%         FB%:  32.3%
+   HR/FB:   17.1%         Form 14d: 1 HR
+   Pitcher L3: 0.7 HR/9
+   Why: xISO 0.240, barrel 14.1%, career UNIQLO Field at Dodger: 129HR
+
+──────────────────────────────────────────────────────────────
+#14  Gunnar Henderson  ★☆☆☆☆
+   Baltimore Orioles @ Cincinnati Reds  •  7:10 PM ET
+   LHB vs Brady Singer (R)  •  Great American Ball Park  •  Away
+
+   Season:  16 HR         Lineup:  #1 in order
+   Barrel:  7.7%          Hard Hit: 43.9%         xISO: 0.160
+   EV avg:  89.5          Sweet Sp: 29.2%         FB%:  26.6%
+   HR/FB:   15.1%         Form 14d: 1 HR
+   Pitcher L3: 1.6 HR/9
+   Pinnacle +254 | EV $+0.59 | Kelly $4.31
+   Why: pitcher L3: 1.6HR/9
+
+──────────────────────────────────────────────────────────────
+#15  Dominic Canzone  [WAITING]  ★☆☆☆☆
+   Toronto Blue Jays @ Seattle Mariners  •  10:10 PM ET
+   LHB vs Dylan Cease (R)  •  T-Mobile Park  •  Home
+
+   Season:  13 HR         Lineup:  #3 in order
+   Barrel:  15.7%         Hard Hit: 49.0%         xISO: 0.250
+   EV avg:  93.2          Sweet Sp: 38.6%         FB%:  28.1%
+   HR/FB:   20.7%         Form 14d: 2 HR
+   Pitcher L3: 0.2 HR/9
+   Why: xISO 0.250, barrel 15.7%, hard hit 49.0%, career T-Mobile Park: 15HR
+
+──────────────────────────────────────────────────────────────
+
+  Verify scratches before betting: https://www.mlb.com/starting-lineups

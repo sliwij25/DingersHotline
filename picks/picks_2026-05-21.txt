@@ -1,0 +1,243 @@
+Yesterday's Results — 2026-05-20
+──────────────────────────────────────────────────────────────
+# 1     ★★★★☆  JJ Bleday                         —  $-10.00
+# 2     ★★★★☆  Munetaka Murakami              +292  $-10.00
+# 3     ★★★★☆  Ben Rice                       +350  $-10.00
+# 4     ★★★★☆  Matt Olson                     +390  $-10.00
+# 5     ★★★★☆  Elly De La Cruz                   —  $-10.00
+# 6     ★★★☆☆  Aaron Judge                    +260  $-10.00
+# 7     ★★★☆☆  Max Muncy                      +430  $-10.00
+# 8     ★★★☆☆  Spencer Steer                     —  $-10.00
+# 9     ★★★☆☆  Mike Trout                     +338  $-10.00
+#10 HR  ★★★☆☆  Shohei Ohtani                  +300  $+30.00
+#11     ★★☆☆☆  Colson Montgomery              +378  $-10.00
+#12     ★★☆☆☆  Kazuma Okamoto                 +510  $-10.00
+#13     ★★☆☆☆  Luke Raley                        —  $-10.00
+#14 HR  ★★☆☆☆  Casey Schmitt                     —  $+35.00
+#15     ★★☆☆☆  Trent Grisham                  +480  $-10.00
+──────────────────────────────────────────────────────────────
+2 HR(s) / 15 picks   Day P&L: $-65.00
+
+Dingers Hotline — 2026-05-21
+==============================================================
+
+╔══════════════════════════════════════════════════════════╗
+║  BEST BETS — Top 7 by Expected Value                     ║
+╠══════════════════════════════════════════════════════════╣
+║  #1  Brandon Lowe          EV $+1.10    #1          ★★★☆☆║
+║  #2  Mike Trout            EV ~est      #2          ★★★★☆║
+║  #3  Aaron Judge           EV ~est      #3          ★★★★☆║
+║  #4  Matt Olson            EV ~est      #4          ★★★★☆║
+║  #5  Shea Langeliers       EV ~est      #5          ★★★★☆║
+╚══════════════════════════════════════════════════════════╝
+
+TOP HR PICKS — 2026-05-21
+==============================================================
+
+──────────────────────────────────────────────────────────────
+  ★★★★☆  —  22% HR rate  (58 picks)
+
+──────────────────────────────────────────────────────────────
+#1  Mike Trout  [WAITING]  ★★★★☆
+   Athletics @ Los Angeles Angels  •  9:38 PM ET
+   RHB vs Luis Severino (R)  •  Angel Stadium  •  Home
+
+   Season:  12 HR         Lineup:  #2 in order
+   Barrel:  22.4%         Hard Hit: 50.4%         xISO: 0.330
+   EV avg:  91.7          Sweet Sp: 33.3%         FB%:  36.8%
+   HR/FB:   15.1%         Form 14d: 1 HR
+   Park 105% (neutral) | 75°F | wind 9mph (out) | weather 96% HR factor
+   Pitcher L3: 0.5 HR/9 | H2H: 0 HR / — AB | BPP rank #7
+   Why: xISO 0.330, barrel 22.4%, hard hit 50.4%, career Angel Stadium: 207HR, BPP rank #7, Small outfield
+
+──────────────────────────────────────────────────────────────
+#2  Aaron Judge  [WAITING]  ★★★★☆
+   Toronto Blue Jays @ New York Yankees  •  7:05 PM ET
+   RHB vs Braydon Fisher (R)  •  Yankee Stadium  •  Home
+
+   Season:  16 HR         Lineup:  #2 in order
+   Barrel:  23.5%         Hard Hit: 55.7%         xISO: 0.350
+   EV avg:  93.8          Sweet Sp: 36.5%         FB%:  31.3%
+   HR/FB:   23.6%         Form 14d: 1 HR
+   Park 88% (HR-suppressor) | 59°F | wind 5mph (cross) | weather 84% HR factor
+   H2H: 0 HR / — AB | BPP rank #10
+   Why: xISO 0.350, barrel 23.5%, hard hit 55.7%, career Yankee Stadium: 198HR, BPP rank #10, calm 5mph (wind receptive), weather 84% HR factor, short left porch
+
+──────────────────────────────────────────────────────────────
+#3  Matt Olson  [WAITING]  ★★★★☆
+   Atlanta Braves @ Miami Marlins  •  6:40 PM ET
+   LHB vs Sandy Alcantara (R)  •  loanDepot park  •  Away
+
+   Season:  14 HR         Lineup:  #3 in order
+   Barrel:  16.7%         Hard Hit: 51.4%         xISO: 0.310
+   EV avg:  93.7          Sweet Sp: 34.1%         FB%:  34.8%
+   HR/FB:   18.8%         Form 14d: 1 HR
+   Park 88% (HR-suppressor) | Dome
+   Pitcher L3: 0.2 HR/9 | H2H: 0 HR / — AB | BPP rank #17
+   Why: xISO 0.310, barrel 16.7%, hard hit 51.4%, career loanDepot park: 8HR
+
+──────────────────────────────────────────────────────────────
+#4  Shea Langeliers  [WAITING]  ★★★★☆
+   Athletics @ Los Angeles Angels  •  9:38 PM ET
+   RHB vs José Soriano (R)  •  Angel Stadium  •  Away
+
+   Season:  12 HR         Lineup:  #2 in order
+   Barrel:  15.3%         Hard Hit: 47.4%         xISO: 0.280
+   EV avg:  92.4          Sweet Sp: 38.0%         FB%:  30.7%
+   HR/FB:   19.7%         Form 14d: 2 HR
+   Park 105% (neutral) | 75°F | wind 9mph (out) | weather 96% HR factor
+   Pitcher L3: 0.6 HR/9 | H2H: 2 HR / — AB | BPP rank #77
+   Why: xISO 0.280, barrel 15.3%, hard hit 47.4%, h2h 2HR/NoneAB, career Angel Stadium: 4HR, Small outfield
+
+──────────────────────────────────────────────────────────────
+#5  Ben Rice  [WAITING]  ★★★★☆
+   Toronto Blue Jays @ New York Yankees  •  7:05 PM ET
+   LHB vs Braydon Fisher (R)  •  Yankee Stadium  •  Home
+
+   Season:  16 HR         Lineup:  #1 in order
+   Barrel:  19.6%         Hard Hit: 54.5%         xISO: 0.300
+   EV avg:  93.0          Sweet Sp: 39.3%         FB%:  26.8%
+   HR/FB:   32.4%         Form 14d: 4 HR
+   Park 88% (HR-suppressor) | 59°F | wind 5mph (cross) | weather 84% HR factor
+   Why: xISO 0.300, barrel 19.6%, hard hit 54.5%, career Yankee Stadium: 27HR, 4HR last 14d, calm 5mph (wind receptive), weather 84% HR factor, short right porch
+
+──────────────────────────────────────────────────────────────
+  ★★★☆☆  —  17% HR rate  (36 picks)
+
+──────────────────────────────────────────────────────────────
+#6  Brandon Lowe  ★★★☆☆
+   Pittsburgh Pirates @ St. Louis Cardinals  •  1:15 PM ET
+   LHB vs Dustin May (R)  •  Busch Stadium  •  Away
+
+   Season:  12 HR         Lineup:  #2 in order
+   Barrel:  13.3%         Hard Hit: 45.0%         xISO: 0.260
+   EV avg:  89.0          Sweet Sp: 38.3%         FB%:  32.5%
+   HR/FB:   19.6%         Form 14d: 3 HR
+   Park 74% (HR-suppressor) | 66°F | wind 9mph (in) | weather 82% HR factor
+   Pitcher L3: 1.1 HR/9 | H2H: 0 HR / — AB | BPP rank #50
+   Pinnacle — | EV $+1.10 | Kelly $4.31
+   Why: xISO 0.260, barrel 13.3%, hard hit 45.0%, pitcher L3: 1.1HR/9, career Busch Stadium: 2HR, 3HR last 14d, park 74%, weather 82% HR factor
+
+──────────────────────────────────────────────────────────────
+#7  Brent Rooker  [WAITING]  ★★★☆☆
+   Athletics @ Los Angeles Angels  •  9:38 PM ET
+   RHB vs José Soriano (R)  •  Angel Stadium  •  Away
+
+   Season:  7 HR          Lineup:  #4 in order
+   Barrel:  16.5%         Hard Hit: 46.3%         xISO: 0.240
+   EV avg:  90.5          Sweet Sp: 36.3%         FB%:  38.8%
+   HR/FB:   13.2%         Form 14d: 4 HR
+   Park 105% (neutral) | 75°F | wind 9mph (out) | weather 96% HR factor
+   Pitcher L3: 0.6 HR/9 | H2H: 1 HR / — AB | BPP rank #71
+   Why: xISO 0.240, barrel 16.5%, hard hit 46.3%, h2h 1HR/NoneAB, career Angel Stadium: 10HR, 4HR last 14d, Small outfield
+
+──────────────────────────────────────────────────────────────
+#8  Hunter Goodman  [WAITING]  ★★★☆☆
+   Colorado Rockies @ Arizona Diamondbacks  •  9:40 PM ET
+   RHB vs Eduardo Rodriguez (L)  •  Chase Field  •  Away
+
+   Season:  11 HR         Lineup:  #2 in order
+   Barrel:  13.6%         Hard Hit: 48.1%         xISO: 0.190
+   EV avg:  92.3          Sweet Sp: 34.6%         FB%:  36.5%
+   HR/FB:   16.4%         Form 14d: 2 HR
+   Park 89% (HR-suppressor) | 91°F | wind 6mph (in) | weather 96% HR factor
+   Pitcher L3: 0.6 HR/9
+   Why: barrel 13.6%, hard hit 48.1%, career Chase Field: 1HR, 91°F
+
+──────────────────────────────────────────────────────────────
+#9  Michael Harris II  [WAITING]  ★★★☆☆
+   Atlanta Braves @ Miami Marlins  •  6:40 PM ET
+   LHB vs Sandy Alcantara (R)  •  loanDepot park  •  Away
+
+   Season:  9 HR          Lineup:  #2 in order
+   Barrel:  16.8%         Hard Hit: 57.1%         xISO: 0.270
+   EV avg:  94.6          Sweet Sp: 28.6%         FB%:  24.6%
+   HR/FB:   22.0%         Form 14d: 2 HR
+   Park 88% (HR-suppressor) | Dome
+   Pitcher L3: 0.2 HR/9 | H2H: 0 HR / — AB | BPP rank #88
+   Why: xISO 0.270, barrel 16.8%, hard hit 57.1%, career loanDepot park: 7HR
+
+──────────────────────────────────────────────────────────────
+#10  Mickey Moniak  [WAITING]  ★★★☆☆
+   Colorado Rockies @ Arizona Diamondbacks  •  9:40 PM ET
+   LHB vs Eduardo Rodriguez (L)  •  Chase Field  •  Away
+
+   Season:  12 HR         Lineup:  #9 in order
+   Barrel:  13.9%         Hard Hit: 41.7%         xISO: 0.250
+   EV avg:  89.6          Sweet Sp: 32.4%         FB%:  38.9%
+   HR/FB:   19.4%         Form 14d: 1 HR
+   Park 89% (HR-suppressor) | 91°F | wind 6mph (in) | weather 96% HR factor
+   Pitcher L3: 0.6 HR/9 | H2H: 0 HR / — AB | BPP rank #65
+   Why: xISO 0.250, barrel 13.9%, 91°F
+
+──────────────────────────────────────────────────────────────
+  ★★☆☆☆  —  0% HR rate  (1 picks)
+
+──────────────────────────────────────────────────────────────
+#11  Nick Kurtz  [WAITING]  ★★☆☆☆
+   Athletics @ Los Angeles Angels  •  9:38 PM ET
+   LHB vs José Soriano (R)  •  Angel Stadium  •  Away
+
+   Season:  8 HR          Lineup:  #3 in order
+   Barrel:  16.8%         Hard Hit: 58.9%         xISO: 0.240
+   EV avg:  95.0          Sweet Sp: 40.2%         FB%:  27.1%
+   HR/FB:   13.7%         Form 14d: 3 HR
+   Park 105% (neutral) | 75°F | wind 9mph (out) | weather 96% HR factor
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.240, barrel 16.8%, hard hit 58.9%, career Angel Stadium: 1HR, 3HR last 14d, Small outfield
+
+──────────────────────────────────────────────────────────────
+#12  Kazuma Okamoto  [WAITING]  ★★☆☆☆
+   Toronto Blue Jays @ New York Yankees  •  7:05 PM ET
+   RHB vs Carlos Rodón (L)  •  Yankee Stadium  •  Away
+
+   Season:  10 HR         Lineup:  #4 in order
+   Barrel:  14.8%         Hard Hit: 53.9%         xISO: 0.240
+   EV avg:  93.3          Sweet Sp: 33.9%         FB%:  29.6%
+   HR/FB:   17.4%         Form 14d: —
+   Park 88% (HR-suppressor) | 59°F | wind 5mph (cross) | weather 84% HR factor
+   Pitcher L3: 0.0 HR/9 | H2H: 0 HR / — AB | BPP rank #96
+   Why: xISO 0.240, barrel 14.8%, hard hit 53.9%, calm 5mph (wind receptive), weather 84% HR factor, short left porch
+
+──────────────────────────────────────────────────────────────
+#13  Paul Goldschmidt  [WAITING]  ★★☆☆☆
+   Toronto Blue Jays @ New York Yankees  •  7:05 PM ET
+   RHB vs Braydon Fisher (R)  •  Yankee Stadium  •  Home
+
+   Season:  5 HR          Lineup:  #5 in order
+   Barrel:  20.8%         Hard Hit: 56.6%         xISO: 0.320
+   EV avg:  92.3          Sweet Sp: 41.5%         FB%:  24.5%
+   HR/FB:   24.6%         Form 14d: 3 HR
+   Park 88% (HR-suppressor) | 59°F | wind 5mph (cross) | weather 84% HR factor
+   H2H: 0 HR / — AB | BPP rank #1
+   Why: xISO 0.320, barrel 20.8%, hard hit 56.6%, career Yankee Stadium: 7HR, BPP rank #1, 3HR last 14d, calm 5mph (wind receptive), weather 84% HR factor, short left porch
+
+──────────────────────────────────────────────────────────────
+#14  Corbin Carroll  [WAITING]  ★★☆☆☆
+   Colorado Rockies @ Arizona Diamondbacks  •  9:40 PM ET
+   LHB vs Zach Agnos (R)  •  Chase Field  •  Home
+
+   Season:  7 HR          Lineup:  #3 in order
+   Barrel:  14.5%         Hard Hit: 47.0%         xISO: 0.250
+   EV avg:  91.0          Sweet Sp: 35.0%         FB%:  30.8%
+   HR/FB:   12.0%         Form 14d: 3 HR
+   Park 89% (HR-suppressor) | 91°F | wind 6mph (in) | weather 96% HR factor
+   Pitcher L3: 1.7 HR/9
+   Why: xISO 0.250, barrel 14.5%, hard hit 47.0%, pitcher L3: 1.7HR/9, career Chase Field: 44HR, 3HR last 14d, 91°F
+
+──────────────────────────────────────────────────────────────
+#15  Jorge Soler  [WAITING]  ★★☆☆☆
+   Athletics @ Los Angeles Angels  •  9:38 PM ET
+   RHB vs Luis Severino (R)  •  Angel Stadium  •  Home
+
+   Season:  8 HR          Lineup:  #4 in order
+   Barrel:  11.4%         Hard Hit: 42.9%         xISO: 0.170
+   EV avg:  88.3          Sweet Sp: 34.3%         FB%:  24.8%
+   HR/FB:   17.0%         Form 14d: 1 HR
+   Park 105% (neutral) | 75°F | wind 9mph (out) | weather 96% HR factor
+   Pitcher L3: 0.5 HR/9 | H2H: 0 HR / — AB | BPP rank #21
+   Why: barrel 11.4%, career Angel Stadium: 13HR, Small outfield
+
+──────────────────────────────────────────────────────────────
+
+  Verify scratches before betting: https://www.mlb.com/starting-lineups

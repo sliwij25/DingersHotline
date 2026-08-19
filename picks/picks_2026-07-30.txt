@@ -1,0 +1,233 @@
+Yesterday's Results — 2026-07-29
+──────────────────────────────────────────────────────────────
+# 1     ★★★★☆  Yordan Alvarez                    —  $-10.00
+# 2     ★★★★☆  Shohei Ohtani                     —  $-10.00
+# 3     ★★★★☆  Esmerlyn Valdez                +330  $-10.00
+# 4 HR  ★★★★☆  Munetaka Murakami              +306  $+30.60
+# 5     ★★★★☆  Miguel Vargas                  +420  $-10.00
+# 6     ★★★☆☆  Mike Trout                        —  $-10.00
+# 7     ★★★☆☆  Ben Rice                       +283  $-10.00
+# 8     ★★★☆☆  Max Muncy                         —  $-10.00
+# 9 HR  ★★★☆☆  Matt Olson                        —  $+35.00
+#10 HR  ★★★☆☆  Pete Crow-Armstrong               —  $+35.00
+#11     ★★☆☆☆  Bryce Harper                      —  $-10.00
+#12     ★★☆☆☆  James Wood                     +298  $-10.00
+#13 HR  ★★☆☆☆  Heriberto Hernández               —  $+35.00
+#14     ★★☆☆☆  Michael Harris II                 —  $-10.00
+#15     ★★☆☆☆  Drake Baldwin                     —  $-10.00
+──────────────────────────────────────────────────────────────
+4 HR(s) / 15 picks   Day P&L: $+25.60
+
+Dingers Hotline — 2026-07-30
+==============================================================
+
+TOP HR PICKS — 2026-07-30
+==============================================================
+
+──────────────────────────────────────────────────────────────
+  ★★★★☆  —  22% HR rate  (219 picks)
+
+──────────────────────────────────────────────────────────────
+#1  Miguel Vargas  [WAITING]  ★★★★☆
+   New York Yankees @ Chicago White Sox  •  2:10 PM ET
+   RHB vs Ryan Weathers (L)  •  Rate Field  •  Home
+
+   Season:  22 HR         Lineup:  #3 in order
+   Barrel:  14.5%         Hard Hit: 46.7%         xISO: 0.250
+   EV avg:  90.6          Sweet Sp: 40.3%         FB%:  36.5%
+   HR/FB:   13.0%         Form 14d: 1 HR
+   78°F | wind 1mph
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.250, barrel 14.5%, hard hit 46.7%, career Rate Field: 19HR, calm 1mph
+
+──────────────────────────────────────────────────────────────
+#2  Munetaka Murakami  [WAITING]  ★★★★☆
+   New York Yankees @ Chicago White Sox  •  2:10 PM ET
+   LHB vs Ryan Weathers (L)  •  Rate Field  •  Home
+
+   Season:  23 HR         Lineup:  #2 in order
+   Barrel:  20.3%         Hard Hit: 60.1%         xISO: 0.300
+   EV avg:  94.2          Sweet Sp: 30.7%         FB%:  39.9%
+   HR/FB:   18.4%         Form 14d: 3 HR
+   78°F | wind 1mph
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.300, barrel 20.3%, hard hit 60.1%, career Rate Field: 13HR, 3HR last 14d, calm 1mph
+
+──────────────────────────────────────────────────────────────
+#3  Matt Olson  [WAITING]  ★★★★☆
+   Washington Nationals @ Atlanta Braves  •  7:15 PM ET
+   LHB vs Jake Irvin (R)  •  Truist Park  •  Home
+
+   Season:  28 HR         Lineup:  #3 in order
+   Barrel:  14.4%         Hard Hit: 50.7%         xISO: 0.260
+   EV avg:  92.7          Sweet Sp: 31.0%         FB%:  34.0%
+   HR/FB:   17.3%         Form 14d: 3 HR
+   79°F | wind 1mph
+   Pitcher L3: 1.6 HR/9
+   Why: xISO 0.260, barrel 14.4%, hard hit 50.7%, pitcher L3: 1.6HR/9, career Truist Park: 79HR, 3HR last 14d, calm 1mph
+
+──────────────────────────────────────────────────────────────
+#4  James Wood  [WAITING]  ★★★★☆
+   Washington Nationals @ Atlanta Braves  •  7:15 PM ET
+   LHB vs Grant Holmes (R)  •  Truist Park  •  Away
+
+   Season:  30 HR         Lineup:  #1 in order
+   Barrel:  21.5%         Hard Hit: 58.5%         xISO: 0.320
+   EV avg:  95.2          Sweet Sp: 40.7%         FB%:  28.4%
+   HR/FB:   20.6%         Form 14d: 2 HR
+   79°F | wind 1mph
+   Pitcher L3: 1.2 HR/9
+   Why: xISO 0.320, barrel 21.5%, hard hit 58.5%, pitcher L3: 1.2HR/9, career Truist Park: 4HR, calm 1mph
+
+──────────────────────────────────────────────────────────────
+#5  Esmerlyn Valdez  [WAITING]  ★★★★☆
+   Pittsburgh Pirates @ Cincinnati Reds  •  7:10 PM ET
+   RHB vs Rhett Lowder (R)  •  Great American Ball Park  •  Away
+
+   Season:  14 HR         Lineup:  #4 in order
+   Barrel:  26.9%         Hard Hit: 53.8%         xISO: 0.310
+   EV avg:  92.9          Sweet Sp: 37.2%         FB%:  42.3%
+   HR/FB:   21.4%         Form 14d: 4 HR
+   75°F | wind 1mph
+   Pitcher L3: 0.8 HR/9
+   Why: xISO 0.310, barrel 26.9%, hard hit 53.8%, 4HR last 14d, calm 1mph
+
+──────────────────────────────────────────────────────────────
+  ★★★☆☆  —  20% HR rate  (169 picks)
+
+──────────────────────────────────────────────────────────────
+#6  Shohei Ohtani  [WAITING]  ★★★☆☆
+   Seattle Mariners @ Los Angeles Dodgers  •  10:10 PM ET
+   LHB vs Bryan Woo (R)  •  UNIQLO Field at Dodger Stadium  •  Home
+
+   Season:  23 HR         Lineup:  #1 in order
+   Barrel:  16.8%         Hard Hit: 53.7%         xISO: 0.280
+   EV avg:  93.7          Sweet Sp: 39.5%         FB%:  31.7%
+   HR/FB:   15.9%         Form 14d: 1 HR
+   71°F | wind 3mph
+   Pitcher L3: 0.4 HR/9
+   Why: xISO 0.280, barrel 16.8%, hard hit 53.7%, career UNIQLO Field at Dodger: 72HR, calm 3mph
+
+──────────────────────────────────────────────────────────────
+#7  Elly De La Cruz  [WAITING]  ★★★☆☆
+   Pittsburgh Pirates @ Cincinnati Reds  •  7:10 PM ET
+   SHB vs Yohan Ramírez (R)  •  Great American Ball Park  •  Home
+
+   Season:  18 HR         Lineup:  #1 in order
+   Barrel:  15.1%         Hard Hit: 52.9%         xISO: 0.210
+   EV avg:  94.3          Sweet Sp: 36.5%         FB%:  27.9%
+   HR/FB:   16.3%         Form 14d: 3 HR
+   75°F | wind 1mph
+   Pitcher L3: 3.0 HR/9
+   Why: xISO 0.210, barrel 15.1%, hard hit 52.9%, pitcher L3: 3.0HR/9, career Great American Ball Pa: 37HR, 3HR last 14d, calm 1mph
+
+──────────────────────────────────────────────────────────────
+#8  Ben Rice  [WAITING]  ★★★☆☆
+   New York Yankees @ Chicago White Sox  •  2:10 PM ET
+   LHB vs Sean Burke (R)  •  Rate Field  •  Away
+
+   Season:  31 HR         Lineup:  #2 in order
+   Barrel:  15.7%         Hard Hit: 48.2%         xISO: 0.250
+   EV avg:  92.1          Sweet Sp: 40.4%         FB%:  29.6%
+   HR/FB:   23.6%         Form 14d: 2 HR
+   78°F | wind 1mph
+   Pitcher L3: 0.4 HR/9
+   Why: xISO 0.250, barrel 15.7%, hard hit 48.2%, calm 1mph
+
+──────────────────────────────────────────────────────────────
+#9  Colson Montgomery  [WAITING]  ★★★☆☆
+   New York Yankees @ Chicago White Sox  •  2:10 PM ET
+   LHB vs Ryan Weathers (L)  •  Rate Field  •  Home
+
+   Season:  24 HR         Lineup:  #4 in order
+   Barrel:  12.8%         Hard Hit: 42.2%         xISO: 0.210
+   EV avg:  89.2          Sweet Sp: 33.5%         FB%:  35.9%
+   HR/FB:   15.8%         Form 14d: 1 HR
+   78°F | wind 1mph
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.210, barrel 12.8%, career Rate Field: 19HR, calm 1mph
+
+──────────────────────────────────────────────────────────────
+#10  JJ Bleday  [WAITING]  ★★★☆☆
+   Pittsburgh Pirates @ Cincinnati Reds  •  7:10 PM ET
+   LHB vs Yohan Ramírez (R)  •  Great American Ball Park  •  Home
+
+   Season:  18 HR         Lineup:  #7 in order
+   Barrel:  10.8%         Hard Hit: 42.1%         xISO: 0.210
+   EV avg:  89.0          Sweet Sp: 42.8%         FB%:  34.0%
+   HR/FB:   16.0%         Form 14d: 2 HR
+   75°F | wind 1mph
+   Pitcher L3: 3.0 HR/9
+   Why: xISO 0.210, barrel 10.8%, pitcher L3: 3.0HR/9, career Great American Ball Pa: 14HR, calm 1mph
+
+──────────────────────────────────────────────────────────────
+  ★★☆☆☆  —  12% HR rate  (33 picks)
+
+──────────────────────────────────────────────────────────────
+#11  Drake Baldwin  [WAITING]  ★★☆☆☆
+   Washington Nationals @ Atlanta Braves  •  7:15 PM ET
+   LHB vs Jake Irvin (R)  •  Truist Park  •  Home
+
+   Season:  20 HR         Lineup:  #2 in order
+   Barrel:  14.7%         Hard Hit: 50.6%         xISO: 0.240
+   EV avg:  91.5          Sweet Sp: 37.5%         FB%:  23.9%
+   HR/FB:   22.1%         Form 14d: 5 HR
+   79°F | wind 1mph
+   Pitcher L3: 1.6 HR/9
+   Why: xISO 0.240, barrel 14.7%, hard hit 50.6%, pitcher L3: 1.6HR/9, career Truist Park: 21HR, 5HR last 14d, calm 1mph
+
+──────────────────────────────────────────────────────────────
+#12  Nick Kurtz  [WAITING]  ★★☆☆☆
+   Boston Red Sox @ Athletics  •  9:40 PM ET
+   LHB vs Sonny Gray (R)  •  Sutter Health Park  •  Home
+
+   Season:  21 HR         Lineup:  #11 in order
+   Barrel:  18.2%         Hard Hit: 57.4%         xISO: 0.240
+   EV avg:  93.4          Sweet Sp: 38.8%         FB%:  29.2%
+   HR/FB:   16.9%         Form 14d: 1 HR
+   65°F | wind 2mph
+   Pitcher L3: 0.8 HR/9
+   Why: xISO 0.240, barrel 18.2%, hard hit 57.4%, career Sutter Health Park: 32HR, calm 2mph
+
+──────────────────────────────────────────────────────────────
+#13  Luke Raley  [WAITING]  ★★☆☆☆
+   Seattle Mariners @ Los Angeles Dodgers  •  10:10 PM ET
+   LHB vs Roki Sasaki (R)  •  UNIQLO Field at Dodger Stadium  •  Away
+
+   Season:  15 HR         Lineup:  #7 in order
+   Barrel:  15.9%         Hard Hit: 47.6%         xISO: 0.230
+   EV avg:  90.8          Sweet Sp: 40.0%         FB%:  28.8%
+   HR/FB:   18.3%         Form 14d: 1 HR
+   71°F | wind 3mph
+   Pitcher L3: 2.0 HR/9
+   Why: xISO 0.230, barrel 15.9%, hard hit 47.6%, pitcher L3: 2.0HR/9, calm 3mph
+
+──────────────────────────────────────────────────────────────
+#14  Randal Grichuk  [WAITING]  ★★☆☆☆
+   New York Yankees @ Chicago White Sox  •  2:10 PM ET
+   RHB vs Ryan Weathers (L)  •  Rate Field  •  Home
+
+   Season:  9 HR          Lineup:  #1 in order
+   Barrel:  12.0%         Hard Hit: 46.2%         xISO: 0.210
+   EV avg:  90.3          Sweet Sp: 38.5%         FB%:  29.1%
+   HR/FB:   19.1%         Form 14d: —
+   78°F | wind 1mph
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.210, barrel 12.0%, hard hit 46.2%, career Rate Field: 7HR, calm 1mph
+
+──────────────────────────────────────────────────────────────
+#15  Alec Burleson  [WAITING]  ★★☆☆☆
+   Chicago Cubs @ St. Louis Cardinals  •  2:15 PM ET
+   LHB vs Javier Assad (R)  •  Busch Stadium  •  Home
+
+   Season:  15 HR         Lineup:  #4 in order
+   Barrel:  11.4%         Hard Hit: 48.4%         xISO: 0.240
+   EV avg:  91.6          Sweet Sp: 35.0%         FB%:  27.1%
+   HR/FB:   12.2%         Form 14d: —
+   78°F | wind 1mph
+   Pitcher L3: 1.7 HR/9
+   Why: xISO 0.240, barrel 11.4%, hard hit 48.4%, pitcher L3: 1.7HR/9, career Busch Stadium: 30HR, calm 1mph
+
+──────────────────────────────────────────────────────────────
+
+  Verify scratches before betting: https://www.mlb.com/starting-lineups

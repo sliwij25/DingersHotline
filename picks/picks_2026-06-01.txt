@@ -1,0 +1,249 @@
+Yesterday's Results — 2026-05-31
+──────────────────────────────────────────────────────────────
+# 1     ★★★★☆  Kyle Schwarber                    —  $-10.00
+# 2     ★★★★☆  Aaron Judge                       —  $-10.00
+# 3 HR  ★★★★☆  James Wood                     +411  $+41.10
+# 4 HR  ★★★★☆  Max Muncy                         —  $+35.00
+# 5     ★★★★☆  Yordan Alvarez                 +313  $-10.00
+# 6     ★★★☆☆  Matt Olson                     +415  $-10.00
+# 7     ★★★☆☆  Carter Jensen                  +550  $-10.00
+# 8 HR  ★★★☆☆  Ronald Acuña Jr.               +325  $+32.50
+# 9     ★★★☆☆  Elly De La Cruz                +450  $-10.00
+#10     ★★★☆☆  Jackson Merrill                +500  $-10.00
+#11     ★★☆☆☆  Nick Kurtz                        —  $-10.00
+#12     ★★☆☆☆  CJ Abrams                      +390  $-10.00
+#13     ★★☆☆☆  Bryce Harper                      —  $-10.00
+#14     ★★☆☆☆  Mike Trout                     +380  $-10.00
+#15 HR  ★★☆☆☆  Jake Bauers                    +544  $+54.40
+──────────────────────────────────────────────────────────────
+4 HR(s) / 15 picks   Day P&L: $+53.00
+
+Dingers Hotline — 2026-06-01
+==============================================================
+
+╔══════════════════════════════════════════════════════════╗
+║  BEST BETS — Top 7 by Expected Value                     ║
+╠══════════════════════════════════════════════════════════╣
+║  #1  Mike Trout            EV ~est      #1          ★★★★☆║
+║  #2  Juan Soto             EV ~est      #2          ★★★★☆║
+║  #3  Jorge Soler           EV ~est      #3          ★★★★☆║
+║  #4  James Wood            EV $+0.00    #4          ★★★★☆║
+║  #5  Carter Jensen         EV $+0.00    #5          ★★★★☆║
+╚══════════════════════════════════════════════════════════╝
+
+TOP HR PICKS — 2026-06-01
+==============================================================
+
+──────────────────────────────────────────────────────────────
+  ★★★★☆  —  24% HR rate  (70 picks)
+
+──────────────────────────────────────────────────────────────
+#1  Mike Trout  [WAITING]  ★★★★☆
+   Colorado Rockies @ Los Angeles Angels  •  9:38 PM ET
+   RHB vs Kyle Freeland (L)  •  Angel Stadium  •  Home
+
+   Season:  14 HR         Lineup:  #2 in order
+   Barrel:  21.4%         Hard Hit: 49.3%         xISO: 0.320
+   EV avg:  91.2          Sweet Sp: 34.9%         FB%:  37.0%
+   HR/FB:   14.2%         Form 14d: 3 HR
+   Park 108% (neutral) | 77°F | wind 9mph (out)
+   Pitcher L3: 1.4 HR/9
+   Why: xISO 0.320, barrel 21.4%, hard hit 49.3%, pitcher L3: 1.4HR/9, career Angel Stadium: 208HR, 3HR last 14d, Small outfield
+
+──────────────────────────────────────────────────────────────
+#2  Juan Soto  [WAITING]  ★★★★☆
+   New York Mets @ Seattle Mariners  •  9:40 PM ET
+   LHB vs Emerson Hancock (R)  •  T-Mobile Park  •  Away
+
+   Season:  13 HR         Lineup:  #8 in order
+   Barrel:  18.8%         Hard Hit: 50.4%         xISO: 0.350
+   EV avg:  93.1          Sweet Sp: 30.2%         FB%:  37.2%
+   HR/FB:   19.4%         Form 14d: 7 HR
+   Park 94% (neutral) | 75°F | wind 8mph (in) | weather 94% HR factor
+   Pitcher L3: 0.8 HR/9 | H2H: 0 HR / — AB | BPP rank #96
+   Why: xISO 0.350, barrel 18.8%, hard hit 50.4%, career T-Mobile Park: 1HR, 7HR last 14d, Small outfield
+
+──────────────────────────────────────────────────────────────
+#3  Jorge Soler  [WAITING]  ★★★★☆
+   Colorado Rockies @ Los Angeles Angels  •  9:38 PM ET
+   RHB vs Kyle Freeland (L)  •  Angel Stadium  •  Home
+
+   Season:  9 HR          Lineup:  #4 in order
+   Barrel:  11.3%         Hard Hit: 42.1%         xISO: 0.170
+   EV avg:  88.0          Sweet Sp: 35.3%         FB%:  24.1%
+   HR/FB:   16.2%         Form 14d: 1 HR
+   Park 108% (neutral) | 77°F | wind 9mph (out)
+   Pitcher L3: 1.4 HR/9
+   Why: barrel 11.3%, pitcher L3: 1.4HR/9, career Angel Stadium: 13HR, Small outfield
+
+──────────────────────────────────────────────────────────────
+#4  James Wood  ★★★★☆
+   Miami Marlins @ Washington Nationals  •  6:45 PM ET
+   LHB vs Sandy Alcantara (R)  •  Nationals Park  •  Home
+
+   Season:  16 HR         Lineup:  #1 in order
+   Barrel:  25.9%         Hard Hit: 60.5%         xISO: 0.360
+   EV avg:  96.5          Sweet Sp: 42.2%         FB%:  31.3%
+   HR/FB:   18.1%         Form 14d: 4 HR
+   Park 84% (HR-suppressor) | 79°F | wind 7mph (in) | weather 83% HR factor
+   Pitcher L3: 0.4 HR/9 | H2H: 0 HR / 6 AB | BPP rank #24
+   Pinnacle +326 | EV $+0.00
+   Why: xISO 0.360, barrel 25.9%, hard hit 60.5%, career Nationals Park: 32HR, 4HR last 14d, park 84%, weather 83% HR factor
+
+──────────────────────────────────────────────────────────────
+#5  Carter Jensen  ★★★★☆
+   Kansas City Royals @ Cincinnati Reds  •  7:10 PM ET
+   LHB vs Lyon Richardson (R)  •  Great American Ball Park  •  Away
+
+   Season:  7 HR          Lineup:  #1 in order
+   Barrel:  8.5%          Hard Hit: 40.7%         xISO: 0.140
+   EV avg:  89.7          Sweet Sp: 28.8%         FB%:  36.4%
+   HR/FB:   9.9%          Form 14d: 1 HR
+   Park 105% (neutral) | 72°F | wind 7mph (in) | weather 91% HR factor
+   Pinnacle +419 | EV $+0.00
+   Why: Small outfield
+
+──────────────────────────────────────────────────────────────
+  ★★★☆☆  —  17% HR rate  (46 picks)
+
+──────────────────────────────────────────────────────────────
+#6  Casey Schmitt  ★★★☆☆
+   San Francisco Giants @ Milwaukee Brewers  •  7:40 PM ET
+   RHB vs Shane Drohan (L)  •  American Family Field  •  Away
+
+   Season:  12 HR         Lineup:  #1 in order
+   Barrel:  14.7%         Hard Hit: 45.2%         xISO: 0.240
+   EV avg:  89.8          Sweet Sp: 36.9%         FB%:  36.3%
+   HR/FB:   15.7%         Form 14d: 4 HR
+   Park 95% (neutral) | 73°F | wind 6mph (cross) | weather 85% HR factor
+   Pitcher L3: 0.2 HR/9
+   Pinnacle +521 | EV $+0.06 | Kelly $0.25
+   Why: xISO 0.240, barrel 14.7%, hard hit 45.2%, career American Family Field: 1HR, 4HR last 14d, weather 85% HR factor
+
+──────────────────────────────────────────────────────────────
+#7  Colson Montgomery  ★★★☆☆
+   Chicago White Sox @ Minnesota Twins  •  7:40 PM ET
+   LHB vs Joe Ryan (R)  •  Target Field  •  Away
+
+   Season:  15 HR         Lineup:  #4 in order
+   Barrel:  14.1%         Hard Hit: 44.4%         xISO: 0.230
+   EV avg:  90.1          Sweet Sp: 35.9%         FB%:  34.5%
+   HR/FB:   17.9%         Form 14d: 2 HR
+   Park 90% (HR-suppressor) | 81°F | wind 7mph (in) | weather 96% HR factor
+   Pitcher L3: 0.2 HR/9
+   Pinnacle — | EV $+0.49 | Kelly $2.79
+   Why: xISO 0.230, barrel 14.1%, career Target Field: 2HR, 81°F
+
+──────────────────────────────────────────────────────────────
+#8  JJ Bleday  ★★★☆☆
+   Kansas City Royals @ Cincinnati Reds  •  7:10 PM ET
+   LHB vs Luinder Avila (R)  •  Great American Ball Park  •  Home
+
+   Season:  9 HR          Lineup:  #3 in order
+   Barrel:  14.9%         Hard Hit: 50.0%         xISO: 0.270
+   EV avg:  91.1          Sweet Sp: 44.3%         FB%:  31.8%
+   HR/FB:   22.1%         Form 14d: 3 HR
+   Park 105% (neutral) | 72°F | wind 7mph (in) | weather 91% HR factor
+   Pitcher L3: 0.9 HR/9
+   Pinnacle +330 | EV $+0.00
+   Why: xISO 0.270, barrel 14.9%, hard hit 50.0%, career Great American Ball Pa: 7HR, 3HR last 14d, Small outfield
+
+──────────────────────────────────────────────────────────────
+#9  Jo Adell  [WAITING]  ★★★☆☆
+   Colorado Rockies @ Los Angeles Angels  •  9:38 PM ET
+   RHB vs Kyle Freeland (L)  •  Angel Stadium  •  Home
+
+   Season:  9 HR          Lineup:  #5 in order
+   Barrel:  8.6%          Hard Hit: 46.0%         xISO: 0.190
+   EV avg:  91.0          Sweet Sp: 32.4%         FB%:  26.7%
+   HR/FB:   13.5%         Form 14d: 3 HR
+   Park 108% (neutral) | 77°F | wind 9mph (out)
+   Pitcher L3: 1.4 HR/9
+   Why: hard hit 46.0%, pitcher L3: 1.4HR/9, career Angel Stadium: 44HR, 3HR last 14d, Small outfield
+
+──────────────────────────────────────────────────────────────
+#10  Corbin Carroll  [WAITING]  ★★★☆☆
+   Los Angeles Dodgers @ Arizona Diamondbacks  •  9:40 PM ET
+   LHB vs Emmet Sheehan (R)  •  Chase Field  •  Home
+
+   Season:  7 HR          Lineup:  #2 in order
+   Barrel:  12.6%         Hard Hit: 49.0%         xISO: 0.220
+   EV avg:  91.4          Sweet Sp: 32.5%         FB%:  27.8%
+   HR/FB:   10.7%         Form 14d: —
+   Park 92% (neutral) | Dome
+   Pitcher L3: 2.2 HR/9
+   Why: xISO 0.220, barrel 12.6%, hard hit 49.0%, pitcher L3: 2.2HR/9, career Chase Field: 44HR
+
+──────────────────────────────────────────────────────────────
+  ★★☆☆☆  —  17% HR rate  (6 picks)
+
+──────────────────────────────────────────────────────────────
+#11  Ketel Marte  [WAITING]  ★★☆☆☆
+   Los Angeles Dodgers @ Arizona Diamondbacks  •  9:40 PM ET
+   SHB vs Emmet Sheehan (R)  •  Chase Field  •  Home
+
+   Season:  9 HR          Lineup:  #1 in order
+   Barrel:  10.7%         Hard Hit: 44.4%         xISO: 0.200
+   EV avg:  90.7          Sweet Sp: 33.2%         FB%:  23.0%
+   HR/FB:   16.2%         Form 14d: 4 HR
+   Park 92% (neutral) | Dome
+   Pitcher L3: 2.2 HR/9
+   Why: xISO 0.200, barrel 10.7%, pitcher L3: 2.2HR/9, career Chase Field: 75HR, 4HR last 14d
+
+──────────────────────────────────────────────────────────────
+#12  Byron Buxton  ★★☆☆☆
+   Chicago White Sox @ Minnesota Twins  •  7:40 PM ET
+   RHB vs TBD (?)  •  Target Field  •  Home
+
+   Season:  17 HR         Lineup:  #1 in order
+   Barrel:  18.9%         Hard Hit: 47.3%         xISO: 0.250
+   EV avg:  90.1          Sweet Sp: 32.4%         FB%:  37.2%
+   HR/FB:   20.0%         Form 14d: 2 HR
+   Park 90% (HR-suppressor) | 81°F | wind 7mph (in) | weather 96% HR factor
+   Pinnacle — | EV $+0.36 | Kelly $2.60
+   Why: xISO 0.250, barrel 18.9%, hard hit 47.3%, career Target Field: 94HR, 81°F
+
+──────────────────────────────────────────────────────────────
+#13  Max Muncy  [WAITING]  ★★☆☆☆
+   Los Angeles Dodgers @ Arizona Diamondbacks  •  9:40 PM ET
+   LHB vs Eduardo Rodriguez (L)  •  Chase Field  •  Away
+
+   Season:  14 HR         Lineup:  #6 in order
+   Barrel:  17.7%         Hard Hit: 49.2%         xISO: 0.290
+   EV avg:  91.3          Sweet Sp: 33.9%         FB%:  35.5%
+   HR/FB:   19.5%         Form 14d: 2 HR
+   Park 92% (neutral) | Dome
+   Pitcher L3: 0.6 HR/9
+   Why: xISO 0.290, barrel 17.7%, hard hit 49.2%, career Chase Field: 3HR
+
+──────────────────────────────────────────────────────────────
+#14  Jonathan Aranda  ★★☆☆☆
+   Detroit Tigers @ Tampa Bay Rays  •  6:40 PM ET
+   LHB vs Ty Madden (R)  •  Tropicana Field  •  Home
+
+   Season:  11 HR         Lineup:  #2 in order
+   Barrel:  13.4%         Hard Hit: 48.3%         xISO: 0.240
+   EV avg:  91.3          Sweet Sp: 40.9%         FB%:  32.2%
+   HR/FB:   14.0%         Form 14d: 3 HR
+   Park 97% (neutral) | Dome
+   Pitcher L3: 0.8 HR/9 | H2H: 0 HR / — AB | BPP rank #30
+   Pinnacle — | EV $+0.36 | Kelly $1.43
+   Why: xISO 0.240, barrel 13.4%, hard hit 48.3%, career Tropicana Field: 11HR, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+#15  Sal Stewart  ★★☆☆☆
+   Kansas City Royals @ Cincinnati Reds  •  7:10 PM ET
+   RHB vs Luinder Avila (R)  •  Great American Ball Park  •  Home
+
+   Season:  12 HR         Lineup:  #4 in order
+   Barrel:  15.3%         Hard Hit: 40.0%         xISO: 0.230
+   EV avg:  90.5          Sweet Sp: 35.9%         FB%:  28.2%
+   HR/FB:   16.8%         Form 14d: 2 HR
+   Park 105% (neutral) | 72°F | wind 7mph (in) | weather 91% HR factor
+   Pitcher L3: 0.9 HR/9
+   Pinnacle +380 | EV $+0.00
+   Why: xISO 0.230, barrel 15.3%, career Great American Ball Pa: 7HR, Small outfield
+
+──────────────────────────────────────────────────────────────
+
+  Verify scratches before betting: https://www.mlb.com/starting-lineups

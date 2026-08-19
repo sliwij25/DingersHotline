@@ -1,0 +1,256 @@
+Yesterday's Results — 2026-05-17
+──────────────────────────────────────────────────────────────
+# 1     ★★★★☆  Munetaka Murakami              +285  $-10.00
+# 2     ★★★★☆  Colson Montgomery              +350  $-10.00
+# 3     ★★★★☆  JJ Bleday                      +460  $-10.00
+# 4     ★★★★☆  Matt Olson                     +300  $-10.00
+# 5     ★★★★☆  Yordan Alvarez                 +286  $-10.00
+# 6     ★★★☆☆  Aaron Judge                    +230  $-10.00
+# 7     ★★★☆☆  Mike Trout                        —  $-10.00
+# 8     ★★★☆☆  Miguel Vargas                  +500  $-10.00
+# 9 HR  ★★★☆☆  Ben Rice                       +360  $+36.00
+#10     ★★★☆☆  Jordan Walker                  +475  $-10.00
+#11     ★★☆☆☆  Drake Baldwin                  +420  $-10.00
+#12     ★★☆☆☆  Kyle Schwarber                 +275  $-10.00
+#13 HR  ★★☆☆☆  Elly De La Cruz                +567  $+56.70
+#14     ★★☆☆☆  James Wood                     +293  $-10.00
+#15 HR  ★★☆☆☆  Michael Conforto               +556  $+55.60
+──────────────────────────────────────────────────────────────
+3 HR(s) / 15 picks   Day P&L: $+28.30
+
+Dingers Hotline — 2026-05-18
+==============================================================
+
+╔══════════════════════════════════════════════════════════╗
+║  BEST BETS — Top 7 by Expected Value                     ║
+╠══════════════════════════════════════════════════════════╣
+║  #1  Kazuma Okamoto        EV $+1.50    #1          ★★★☆☆║
+║  #2  Juan Soto             EV $+1.09    #2          ★★★☆☆║
+║  #3  James Wood            EV $+0.77    #3          ★★★☆☆║
+║  #4  Ian Happ              EV $+0.65    #4          ★★★☆☆║
+║  #5  Matt Olson            EV $+0.50    #5          ★★★★☆║
+╚══════════════════════════════════════════════════════════╝
+
+TOP HR PICKS — 2026-05-18
+==============================================================
+
+──────────────────────────────────────────────────────────────
+  ★★★★☆  —  22% HR rate  (58 picks)
+
+──────────────────────────────────────────────────────────────
+#1  Kyle Schwarber  [WAITING]  ★★★★☆
+   Cincinnati Reds @ Philadelphia Phillies  •  6:40 PM ET
+   LHB vs Nick Lodolo (L)  •  Citizens Bank Park  •  Home
+
+   Season:  20 HR         Lineup:  #2 in order
+   Barrel:  25.9%         Hard Hit: 50.9%         xISO: 0.340
+   EV avg:  93.4          Sweet Sp: 37.0%         FB%:  38.9%
+   HR/FB:   24.1%         Form 14d: 9 HR
+   Park 130% (HR-friendly) | 95°F | wind 9mph (out) | weather 115% HR factor
+   Pitcher L3: 3.0 HR/9 | H2H: 0 HR / — AB | BPP rank #98
+   Why: xISO 0.340, barrel 25.9%, hard hit 50.9%, pitcher L3: 3.0HR/9, career Citizens Bank Park: 116HR, 9HR last 14d, park 130%, 95°F, weather 115% HR factor, Small outfield
+
+──────────────────────────────────────────────────────────────
+#2  Aaron Judge  ★★★★☆
+   Toronto Blue Jays @ New York Yankees  •  7:05 PM ET
+   RHB vs Patrick Corbin (L)  •  Yankee Stadium  •  Home
+
+   Season:  16 HR         Lineup:  #3 in order
+   Barrel:  22.5%         Hard Hit: 55.9%         xISO: 0.350
+   EV avg:  93.7          Sweet Sp: 36.0%         FB%:  30.6%
+   HR/FB:   25.0%         Form 14d: 3 HR
+   Park 108% (neutral) | 82°F | wind 9mph (cross) | weather 103% HR factor
+   Pitcher L3: 1.1 HR/9 | H2H: 1 HR / 12 AB | BPP rank #26
+   Pinnacle +187 | EV $+0.00
+   Why: xISO 0.350, barrel 22.5%, hard hit 55.9%, pitcher L3: 1.1HR/9, h2h 1HR/12AB, career Yankee Stadium: 198HR, 3HR last 14d, 82°F, short left porch
+
+──────────────────────────────────────────────────────────────
+#3  Michael Conforto  ★★★★☆
+   Milwaukee Brewers @ Chicago Cubs  •  7:40 PM ET
+   LHB vs Brandon Sproat (R)  •  Wrigley Field  •  Home
+
+   Season:  3 HR          Lineup:  #6 in order
+   Barrel:  14.6%         Hard Hit: 58.5%         xISO: 0.280
+   EV avg:  95.8          Sweet Sp: 46.3%         FB%:  34.1%
+   HR/FB:   12.9%         Form 14d: 3 HR
+   Park 141% (HR-friendly) | 74°F | wind 14mph (out) | weather 143% HR factor
+   Pitcher L3: 3.1 HR/9 | H2H: 0 HR / — AB | BPP rank #59
+   Pinnacle +451 | EV $+0.00
+   Why: xISO 0.280, barrel 14.6%, hard hit 58.5%, pitcher L3: 3.1HR/9, career Wrigley Field: 4HR, 3HR last 14d, park 141%, weather 143% HR factor
+
+──────────────────────────────────────────────────────────────
+#4  Ben Rice  ★★★★☆
+   Toronto Blue Jays @ New York Yankees  •  7:05 PM ET
+   LHB vs Patrick Corbin (L)  •  Yankee Stadium  •  Home
+
+   Season:  15 HR         Lineup:  #2 in order
+   Barrel:  21.0%         Hard Hit: 55.2%         xISO: 0.310
+   EV avg:  93.5          Sweet Sp: 39.0%         FB%:  27.6%
+   HR/FB:   31.1%         Form 14d: 3 HR
+   Park 108% (neutral) | 82°F | wind 9mph (cross) | weather 103% HR factor
+   Pitcher L3: 1.1 HR/9
+   Pinnacle +331 | EV $+0.00
+   Why: xISO 0.310, barrel 21.0%, hard hit 55.2%, pitcher L3: 1.1HR/9, career Yankee Stadium: 26HR, 3HR last 14d, 82°F, short right porch
+
+──────────────────────────────────────────────────────────────
+#5  Matt Olson  ★★★★☆
+   Atlanta Braves @ Miami Marlins  •  6:40 PM ET
+   LHB vs Max Meyer (R)  •  loanDepot park  •  Away
+
+   Season:  14 HR         Lineup:  #3 in order
+   Barrel:  17.4%         Hard Hit: 50.8%         xISO: 0.310
+   EV avg:  93.5          Sweet Sp: 34.1%         FB%:  34.8%
+   HR/FB:   19.5%         Form 14d: 3 HR
+   Park 87% (HR-suppressor) | Dome
+   Pitcher L3: 1.1 HR/9 | H2H: 1 HR / 6 AB | BPP rank #55
+   Pinnacle +319 | EV $+0.50 | Kelly $2.95
+   Why: xISO 0.310, barrel 17.4%, hard hit 50.8%, pitcher L3: 1.1HR/9, h2h 1HR/6AB, career loanDepot park: 8HR, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+  ★★★☆☆  —  17% HR rate  (36 picks)
+
+──────────────────────────────────────────────────────────────
+#6  Kazuma Okamoto  ★★★☆☆
+   Toronto Blue Jays @ New York Yankees  •  7:05 PM ET
+   RHB vs Ryan Weathers (L)  •  Yankee Stadium  •  Away
+
+   Season:  10 HR         Lineup:  #3 in order
+   Barrel:  15.3%         Hard Hit: 54.1%         xISO: 0.250
+   EV avg:  93.2          Sweet Sp: 35.1%         FB%:  30.6%
+   HR/FB:   17.7%         Form 14d: 1 HR
+   Park 108% (neutral) | 82°F | wind 9mph (cross) | weather 103% HR factor
+   Pitcher L3: 0.5 HR/9
+   Pinnacle — | EV $+1.50 | Kelly $7.14
+   Why: xISO 0.250, barrel 15.3%, hard hit 54.1%, 82°F, short left porch
+
+──────────────────────────────────────────────────────────────
+#7  JJ Bleday  ★★★☆☆
+   Cincinnati Reds @ Philadelphia Phillies  •  6:40 PM ET
+   LHB vs Andrew Painter (R)  •  Citizens Bank Park  •  Away
+
+   Season:  6 HR          Lineup:  #3 in order
+   Barrel:  14.8%         Hard Hit: 53.7%         xISO: 0.310
+   EV avg:  92.6          Sweet Sp: 46.3%         FB%:  38.9%
+   HR/FB:   19.5%         Form 14d: 4 HR
+   Park 130% (HR-friendly) | 95°F | wind 9mph (out) | weather 115% HR factor
+   Pitcher L3: 0.7 HR/9
+   Pinnacle +310 | EV $-0.00
+   Why: xISO 0.310, barrel 14.8%, hard hit 53.7%, career Citizens Bank Park: 1HR, 4HR last 14d, park 130%, 95°F, weather 115% HR factor, Small outfield
+
+──────────────────────────────────────────────────────────────
+#8  Juan Soto  ★★★☆☆
+   New York Mets @ Washington Nationals  •  6:45 PM ET
+   LHB vs Jake Irvin (R)  •  Nationals Park  •  Away
+
+   Season:  6 HR          Lineup:  #3 in order
+   Barrel:  18.3%         Hard Hit: 51.1%         xISO: 0.290
+   EV avg:  92.7          Sweet Sp: 28.7%         FB%:  34.0%
+   HR/FB:   13.3%         Form 14d: 3 HR
+   Park 105% (neutral) | 99°F | wind 5mph (out) | weather 102% HR factor
+   Pitcher L3: 1.7 HR/9 | H2H: 1 HR / 9 AB
+   Pinnacle +229 | EV $+1.09 | Kelly $8.26 | VALUE +3.0pp
+   Why: xISO 0.290, barrel 18.3%, hard hit 51.1%, VALUE +3.0pp, pitcher L3: 1.7HR/9, h2h 1HR/9AB, career Nationals Park: 51HR, 3HR last 14d, 99°F, calm 5mph (wind receptive)
+
+──────────────────────────────────────────────────────────────
+#9  James Wood  ★★★☆☆
+   New York Mets @ Washington Nationals  •  6:45 PM ET
+   LHB vs Christian Scott (R)  •  Nationals Park  •  Home
+
+   Season:  12 HR         Lineup:  #1 in order
+   Barrel:  26.6%         Hard Hit: 62.4%         xISO: 0.340
+   EV avg:  96.5          Sweet Sp: 38.5%         FB%:  31.2%
+   HR/FB:   17.4%         Form 14d: 2 HR
+   Park 105% (neutral) | 99°F | wind 5mph (out) | weather 102% HR factor
+   Pitcher L3: 0.7 HR/9
+   Pinnacle — | EV $+0.77 | Kelly $5.59
+   Why: xISO 0.340, barrel 26.6%, hard hit 62.4%, career Nationals Park: 30HR, 99°F, calm 5mph (wind receptive)
+
+──────────────────────────────────────────────────────────────
+#10  Ian Happ  ★★★☆☆
+   Milwaukee Brewers @ Chicago Cubs  •  7:40 PM ET
+   SHB vs Brandon Sproat (R)  •  Wrigley Field  •  Home
+
+   Season:  10 HR         Lineup:  #4 in order
+   Barrel:  17.5%         Hard Hit: 44.7%         xISO: 0.270
+   EV avg:  90.4          Sweet Sp: 35.9%         FB%:  34.0%
+   HR/FB:   14.4%         Form 14d: 2 HR
+   Park 141% (HR-friendly) | 74°F | wind 14mph (out) | weather 143% HR factor
+   Pitcher L3: 3.1 HR/9
+   Pinnacle +285 | EV $+0.65 | Kelly $4.19
+   Why: xISO 0.270, barrel 17.5%, pitcher L3: 3.1HR/9, park 141%, weather 143% HR factor
+
+──────────────────────────────────────────────────────────────
+  ★★☆☆☆  —  0% HR rate  (1 picks)
+
+──────────────────────────────────────────────────────────────
+#11  Yordan Alvarez  ★★☆☆☆
+   Houston Astros @ Minnesota Twins  •  7:40 PM ET
+   LHB vs Kendry Rojas (L)  •  Target Field  •  Away
+
+   Season:  15 HR         Lineup:  #3 in order
+   Barrel:  17.7%         Hard Hit: 53.5%         xISO: 0.380
+   EV avg:  94.4          Sweet Sp: 46.5%         FB%:  38.7%
+   HR/FB:   18.6%         Form 14d: 3 HR
+   Park 94% (neutral) | 57°F | wind 6mph (out)
+   Pitcher L3: 0.0 HR/9
+   Pinnacle +306 | EV $+0.00
+   Why: xISO 0.380, barrel 17.7%, hard hit 53.5%, career Target Field: 5HR, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+#12  Paul Goldschmidt  ★★☆☆☆
+   Toronto Blue Jays @ New York Yankees  •  7:05 PM ET
+   RHB vs Patrick Corbin (L)  •  Yankee Stadium  •  Home
+
+   Season:  4 HR          Lineup:  #1 in order
+   Barrel:  18.4%         Hard Hit: 55.1%         xISO: 0.280
+   EV avg:  92.1          Sweet Sp: 40.8%         FB%:  24.5%
+   HR/FB:   21.5%         Form 14d: 3 HR
+   Park 108% (neutral) | 82°F | wind 9mph (cross) | weather 103% HR factor
+   Pitcher L3: 1.1 HR/9 | H2H: 1 HR / 14 AB | BPP rank #3
+   Pinnacle +429 | EV $+0.00
+   Why: xISO 0.280, barrel 18.4%, hard hit 55.1%, pitcher L3: 1.1HR/9, h2h 1HR/14AB, career Yankee Stadium: 6HR, BPP rank #3, 3HR last 14d, 82°F, short left porch
+
+──────────────────────────────────────────────────────────────
+#13  Jac Caglianone  ★★☆☆☆
+   Boston Red Sox @ Kansas City Royals  •  7:10 PM ET
+   LHB vs Sonny Gray (R)  •  Kauffman Stadium  •  Home
+
+   Season:  5 HR          Lineup:  #6 in order
+   Barrel:  17.6%         Hard Hit: 54.9%         xISO: 0.220
+   EV avg:  94.0          Sweet Sp: 37.4%         FB%:  26.4%
+   HR/FB:   12.8%         Form 14d: 2 HR
+   Park 130% (HR-friendly) | 95°F | wind 9mph (out) | weather 115% HR factor
+   Pitcher L3: 0.8 HR/9
+   Pinnacle — | EV $+0.50 | Kelly $2.22
+   Why: xISO 0.220, barrel 17.6%, hard hit 54.9%, career Kauffman Stadium: 6HR, park 130%, 95°F, weather 115% HR factor, Small outfield
+
+──────────────────────────────────────────────────────────────
+#14  Bobby Witt Jr.  ★★☆☆☆
+   Boston Red Sox @ Kansas City Royals  •  7:10 PM ET
+   RHB vs Sonny Gray (R)  •  Kauffman Stadium  •  Home
+
+   Season:  7 HR          Lineup:  #2 in order
+   Barrel:  12.7%         Hard Hit: 53.3%         xISO: 0.220
+   EV avg:  93.5          Sweet Sp: 36.8%         FB%:  25.7%
+   HR/FB:   13.0%         Form 14d: 5 HR
+   Park 130% (HR-friendly) | 95°F | wind 9mph (out) | weather 115% HR factor
+   Pitcher L3: 0.8 HR/9 | H2H: 0 HR / 8 AB
+   Pinnacle +440 | EV $-0.00
+   Why: xISO 0.220, barrel 12.7%, hard hit 53.3%, career Kauffman Stadium: 56HR, 5HR last 14d, park 130%, 95°F, weather 115% HR factor, Small outfield
+
+──────────────────────────────────────────────────────────────
+#15  Max Muncy  [WAITING]  ★★☆☆☆
+   Los Angeles Dodgers @ San Diego Padres  •  9:40 PM ET
+   LHB vs Michael King (R)  •  Petco Park  •  Away
+
+   Season:  12 HR         Lineup:  #6 in order
+   Barrel:  18.7%         Hard Hit: 53.3%         xISO: 0.310
+   EV avg:  92.0          Sweet Sp: 34.6%         FB%:  34.6%
+   HR/FB:   19.9%         Form 14d: 3 HR
+   Park 94% (neutral) | 66°F | wind 7mph (out) | weather 98% HR factor
+   Pitcher L3: 0.6 HR/9 | H2H: 0 HR / — AB | BPP rank #21
+   Why: xISO 0.310, barrel 18.7%, hard hit 53.3%, career Petco Park: 6HR, 3HR last 14d
+
+──────────────────────────────────────────────────────────────
+
+  Verify scratches before betting: https://www.mlb.com/starting-lineups
