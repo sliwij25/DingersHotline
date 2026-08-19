@@ -329,3 +329,35 @@ class TestAceGetPicksJson:
             picks = ace.get_picks_json(top_n=10)
 
         assert len(picks) == 10
+
+
+class TestAceMlBlend:
+
+    def test_ml_score_returns_none_when_no_model_file(self):
+        from agents.k_predictor import Ace
+        Ace._ml_weights_loaded = False
+        Ace._ml_weights = None
+
+        with patch("agents.k_predictor.Path.exists", return_value=False):
+            result = Ace._ml_score(_base_k_sig())
+
+        assert result is None
+
+    def test_rank_picks_blends_ml_score_when_model_present(self):
+        from agents.k_predictor import Ace
+
+        ace = Ace()
+        fake_signals = {
+            "Gerrit Cole": {**_base_k_sig(), "matchup": "NYY @ BOS"},
+        }
+        with patch.object(Ace, "_ml_score", return_value=18.0), \
+             patch.object(Ace, "_ml_weights", {"cv_auc_mean": 0.65}), \
+             patch.object(Ace, "_ml_weights_loaded", True):
+            picks = ace._rank_picks_python(fake_signals, top_n=10)
+
+        raw_score = picks[0]["score"]
+        # ml_weight at AUC=0.65 → min(0.7, (0.65-0.5)*2.5) = 0.375
+        # Final score should differ from the pure heuristic score
+        from agents.k_predictor import _score_pitcher
+        pure_score = _score_pitcher(_base_k_sig())
+        assert raw_score != pure_score

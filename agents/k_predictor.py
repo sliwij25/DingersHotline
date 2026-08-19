@@ -411,8 +411,42 @@ class Ace:
     ml_weights_k.json / lgbm_model_k.txt exist (mirrors Homer's blend).
     """
 
+    _ml_weights = None
+    _ml_weights_loaded = False
+    _ml_booster = None
+
     def __init__(self):
         self._context = None
+
+    @staticmethod
+    def _ml_score(sig: dict) -> float | None:
+        """Score a signal dict with the trained LightGBM K-model. Returns
+        None if ml_weights_k.json / lgbm_model_k.txt don't exist yet
+        (cold start) — mirrors Homer._ml_score's fallback behavior."""
+        from ml.optimize_weights_k import FEATURE_NAMES_K, WEIGHTS_PATH_K, LGBM_MODEL_PATH_K
+
+        if not Ace._ml_weights_loaded:
+            Ace._ml_weights_loaded = True
+            weights_path = Path(WEIGHTS_PATH_K)
+            model_path = Path(LGBM_MODEL_PATH_K)
+            if weights_path.exists() and model_path.exists():
+                try:
+                    import lightgbm as lgb
+                    Ace._ml_weights = json.loads(weights_path.read_text())
+                    Ace._ml_booster = lgb.Booster(model_file=str(model_path))
+                except Exception:
+                    Ace._ml_weights = None
+                    Ace._ml_booster = None
+
+        if Ace._ml_weights is None or Ace._ml_booster is None:
+            return None
+
+        row = [sig.get(name) if sig.get(name) is not None else 0.0 for name in FEATURE_NAMES_K]
+        try:
+            pred = Ace._ml_booster.predict([row])[0]
+            return float(pred) * 20.0  # scale probability [0,1] to score range, matches Homer's convention
+        except Exception:
+            return None
 
     def _gather_data(self) -> dict:
         """
@@ -492,7 +526,14 @@ class Ace:
     def _rank_picks_python(self, pitcher_signals: dict, top_n: int = 10) -> list:
         ranked = []
         for name, sig in pitcher_signals.items():
-            score = _score_pitcher(sig)
+            raw_score = _score_pitcher(sig)
+            ml = Ace._ml_score(sig)
+            if ml is not None and Ace._ml_weights:
+                auc = Ace._ml_weights.get("cv_auc_mean", 0.5)
+                ml_weight = min(0.7, max(0.0, (auc - 0.5) * 2.5))
+                score = (1.0 - ml_weight) * raw_score + ml_weight * ml
+            else:
+                score = raw_score
             ranked.append({
                 "pitcher": name,
                 "matchup": sig.get("matchup", ""),
