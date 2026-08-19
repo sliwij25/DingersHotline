@@ -677,6 +677,18 @@ try:
         with open(_hr_path, "w", encoding="utf-8") as _hf:
             _hf.write(_hr_html)
 
+        # Generate strikeout (Ace) picks page
+        try:
+            from tools.generate_html import generate_k_picks_html
+            k_html = generate_k_picks_html(k_picks, TODAY)
+            with open("docs/strikeouts.html", "w") as f:
+                f.write(k_html)
+            with open(f"picks/k_picks_{TODAY}.html", "w") as f:
+                f.write(k_html)
+            print("  [Ace] docs/strikeouts.html written")
+        except Exception as e:
+            print(f"  [Ace] Skipped K-picks HTML ({e})")
+
         print(f"  [HTML] GitHub Pages updated → docs/index.html + docs/leaderboard.html + docs/player-data.json + docs/hit-rate.html")
 except Exception as _he:
     print(f"  [HTML] Skipped: {_he}")
@@ -694,15 +706,15 @@ try:
             "ml/optimize_weights.py", "ml/fetch_actual_results.py",
             "ml/build_historical_dataset.py", "README.md", "requirements.txt",
             "tools/generate_html.py", "docs/index.html", "docs/leaderboard.html",
-            "docs/player-data.json", "docs/hit-rate.html",
+            "docs/player-data.json", "docs/hit-rate.html", "docs/strikeouts.html",
             "agents/k_predictor.py", "ml/optimize_weights_k.py",
             "ml/fetch_actual_k_results.py", "ml/build_historical_k_dataset.py",
-            "ml_weights_k.json",
+            "ml_weights_k.json", f"picks/k_picks_{TODAY}.html",
         ]
         _commit_msg = f"Auto-update {TODAY} — picks run"
     else:
         # Cache run: only commit HTML (picks changed, P&L/chips must stay correct)
-        _git_files = ["docs/index.html", "docs/leaderboard.html", "docs/player-data.json", "docs/hit-rate.html", f"picks/picks_{TODAY}.html"]
+        _git_files = ["docs/index.html", "docs/leaderboard.html", "docs/player-data.json", "docs/hit-rate.html", "docs/strikeouts.html", f"picks/picks_{TODAY}.html", f"picks/k_picks_{TODAY}.html"]
         _commit_msg = f"picks({TODAY}): re-run from cache — lineup update"
 
     _sp.run(["/usr/bin/git", "-C", _repo, "add"] + _git_files, capture_output=True)
