@@ -106,6 +106,19 @@ def _auto_maintain():
     except Exception as e:
         print(f"skipped ({e})")
 
+    # 1b. Label yesterday's strikeout results ───────────────────────────────────
+    print("  [Auto] Labeling yesterday's K results...", end=" ", flush=True)
+    try:
+        from fetch_actual_k_results import fetch_strikeouts_for_date, update_pick_factors_k
+        actual_ks = fetch_strikeouts_for_date(yesterday)
+        if actual_ks:
+            update_pick_factors_k(yesterday, actual_ks)
+            print(f"{len(actual_ks)} pitcher results")
+        else:
+            print("no completed games")
+    except Exception as e:
+        print(f"skipped ({e})")
+
     # 2. Refresh 2026 training data ────────────────────────────────────────────
     print("  [Auto] Refreshing 2026 Statcast + HR data...", end=" ", flush=True)
     try:
@@ -344,6 +357,34 @@ print("=" * 60)
 
 picks = homer.get_picks_json(top_n=15, scratched=SCRATCHED)
 _all_ranked: list[dict] = []  # filled below; used for HTML generation
+
+# ── Strikeout model (Ace) — independent pipeline, runs after HR picks ──────────
+print("\n[Ace] Fetching today's strikeout picks...")
+try:
+    from agents.k_predictor import Ace
+    from agents.bet_tracker import save_pick_factors_k
+    ace = Ace()
+    k_picks = ace.get_picks_json(top_n=10)
+
+    k_full_ranked = ace._rank_picks_python(
+        ace._gather_data().get("pitcher_signals", {}), top_n=10_000,
+    )
+    for rank_i, p in enumerate(k_full_ranked, 1):
+        save_pick_factors_k(
+            TODAY, p["pitcher"], p["signals"],
+            confidence=p["confidence"], algo_version="1.0",
+            score=p["score"], rank=rank_i,
+        )
+
+    k_txt_path = f"picks/k_picks_{TODAY}.txt"
+    with open(k_txt_path, "w") as f:
+        f.write(f"Strikeout Picks — {TODAY}\n{'=' * 40}\n\n")
+        for i, p in enumerate(k_picks, 1):
+            f.write(f"{i}. {p['pitcher']} ({p['matchup']}) — {p['confidence']} — score {p['score']:.1f}\n")
+            f.write(f"   {p['reasoning']}\n\n")
+    print(f"  [Ace] {len(k_picks)} K picks written to {k_txt_path}")
+except Exception as e:
+    print(f"  [Ace] Skipped strikeout picks ({e})")
 
 # Re-run if a notification was already sent today (survives failed first runs)
 _notify_flag = Path(__file__).parent.parent / "cache" / f"notified_{TODAY}.flag"
@@ -654,6 +695,9 @@ try:
             "ml/build_historical_dataset.py", "README.md", "requirements.txt",
             "tools/generate_html.py", "docs/index.html", "docs/leaderboard.html",
             "docs/player-data.json", "docs/hit-rate.html",
+            "agents/k_predictor.py", "ml/optimize_weights_k.py",
+            "ml/fetch_actual_k_results.py", "ml/build_historical_k_dataset.py",
+            "ml_weights_k.json",
         ]
         _commit_msg = f"Auto-update {TODAY} — picks run"
     else:
