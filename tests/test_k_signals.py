@@ -91,3 +91,31 @@ class TestPitcherRecentFormKFields:
             result = _fetch_pitcher_recent_form(12345, n_starts=3)
 
         assert result["avg_pitches_last3"] is None
+
+
+class TestPitcherKStatcastFetch:
+
+    def test_fetches_and_keys_by_player_id_and_name(self):
+        from agents.k_predictor import _fetch_pitcher_k_statcast
+
+        csv_text = (
+            '"last_name, first_name",player_id,k_percent,whiff_percent,csw_percent,swinging_strike_percent\n'
+            '"Cole, Gerrit",543037,32.5,29.1,31.0,14.2\n'
+        )
+        fake_resp = MagicMock()
+        fake_resp.raise_for_status.return_value = None
+        fake_resp.text = csv_text
+
+        with patch("agents.k_predictor.requests.get", return_value=fake_resp):
+            result = _fetch_pitcher_k_statcast()
+
+        assert result[543037]["k_percent"] == "32.5"
+        assert result["cole, gerrit"]["whiff_percent"] == "29.1"
+
+    def test_returns_empty_dict_on_request_failure(self):
+        from agents.k_predictor import _fetch_pitcher_k_statcast
+
+        with patch("agents.k_predictor.requests.get", side_effect=Exception("network down")):
+            result = _fetch_pitcher_k_statcast()
+
+        assert result == {}
