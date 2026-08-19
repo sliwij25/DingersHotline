@@ -875,6 +875,50 @@ _VENUE_CITY: dict[str, str] = {
 }
 
 
+# Home-plate-to-center-field compass bearing per park, in degrees (0=N, 90=E, ...).
+# Fixed geography — doesn't depend on any live session/login. Sourced from Clem's
+# Baseball Stadium Statistics (andrewclem.com/Baseball/Stadium_statistics.html),
+# which reports 16-point compass orientation (nearest 22.5°), not exact degrees.
+# Parks with no listing there (e.g. the Athletics' current park) are omitted —
+# they simply fall back to no computed direction, same as today's behavior.
+_PARK_ORIENTATION: dict[str, float] = {
+    "yankee stadium":           67.5,   # ENE
+    "fenway park":               45.0,  # NE
+    "wrigley field":              45.0,  # NE
+    "dodger stadium":            22.5,  # NNE
+    "uniqlo field at dodger stadium": 22.5,
+    "oracle park":               112.5, # ESE
+    "coors field":                0.0,  # N
+    "camden yards":               22.5, # NNE
+    "oriole park at camden yards": 22.5,
+    "citizens bank park":        22.5,  # NNE
+    "truist park":               157.5, # SSE
+    "minute maid park":          67.5,  # ENE
+    "daikin park":                67.5,  # ENE
+    "citi field":                 22.5,  # NNE
+    "busch stadium":              45.0,  # NE
+    "comerica park":             157.5, # SSE
+    "pnc park":                  112.5, # ESE
+    "petco park":                 0.0,  # N
+    "t-mobile park":              45.0,  # NE
+    "target field":               90.0,  # E
+    "american family field":     135.0, # SE
+    "globe life field":           67.5,  # ENE
+    "angel stadium":              45.0,  # NE
+    "tropicana field":            45.0,  # NE
+    "rogers centre":             337.5, # NNW
+    "guaranteed rate field":     112.5, # ESE
+    "rate field":                112.5,
+    "progressive field":           0.0,  # N
+    "kauffman stadium":           45.0,  # NE
+    "nationals park":             22.5,  # NNE
+    "loandepot park":            112.5, # ESE
+    "great american ball park":  112.5, # ESE
+    "chase field":                 0.0,  # N
+    "loanDepot park":            112.5,
+}
+
+
 def _team_to_venue(team_str: str) -> str | None:
     """Try to resolve a team name/abbreviation to a stadium name."""
     t = team_str.strip().lower()
@@ -886,6 +930,40 @@ def _team_to_venue(team_str: str) -> str | None:
         if key in t or t in key:
             return venue
     return None
+
+
+def _park_bearing_for_venue(venue_name: str) -> float | None:
+    """Resolve a venue name (possibly a partial/fuzzy MLB API string) to its
+    static home-plate→center-field bearing, using the same substring-match
+    fallback as the park_lookup resolution above."""
+    if not venue_name:
+        return None
+    if venue_name in _PARK_ORIENTATION:
+        return _PARK_ORIENTATION[venue_name]
+    return next(
+        (v for k, v in _PARK_ORIENTATION.items() if k in venue_name or venue_name in k),
+        None,
+    )
+
+
+def _wind_direction_from_bearing(park_bearing: float | None, wind_from_deg: float | None) -> str | None:
+    """Classify wind as blowing 'in' (toward home plate), 'out' (toward center
+    field), or 'cross', given the park's CF bearing and OWM's wind_deg (the
+    direction the wind is blowing FROM). Independent of BallparkPal's session."""
+    if park_bearing is None or wind_from_deg is None:
+        return None
+
+    def _angular_diff(a: float, b: float) -> float:
+        d = abs(a - b) % 360
+        return min(d, 360 - d)
+
+    # Wind FROM the center-field side blows the ball IN toward home plate.
+    if _angular_diff(wind_from_deg, park_bearing) <= 45:
+        return "in"
+    # Wind FROM the home-plate side blows the ball OUT toward center field.
+    if _angular_diff(wind_from_deg, (park_bearing + 180) % 360) <= 45:
+        return "out"
+    return "cross"
 
 
 def _platoon_edge(bat_side: str, pitcher_throws: str) -> str:
@@ -2993,7 +3071,15 @@ class Homer:
                     signals["temp_f"]             = pk["temp_f"]
                     signals["wind_mph"]           = pk["wind_mph"]
                     signals["wind_deg"]           = pk.get("wind_deg")
-                    signals["wind_direction_bpp"] = pk.get("wind_direction_bpp")
+                    _computed_dir = None
+                    if not pk.get("roof_closed") and (pk.get("wind_mph") or 0) >= 1:
+                        _computed_dir = _wind_direction_from_bearing(
+                            _park_bearing_for_venue(venue_name), pk.get("wind_deg"),
+                        )
+                    # BPP's own reading (when its session is live) is a direct
+                    # site observation; our computed bearing is the reliable
+                    # fallback whenever BPP's login fails.
+                    signals["wind_direction_bpp"] = pk.get("wind_direction_bpp") or _computed_dir
                     signals["wind_receptiveness"] = pk.get("wind_receptiveness")
                     signals["homerunsnumber"]     = pk.get("homerunsnumber")
                     signals["weather_hr_factor"]  = pk.get("weather_hr_factor")
