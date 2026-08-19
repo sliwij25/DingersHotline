@@ -1209,6 +1209,11 @@ def save_pick_factors_k(bet_date: str, pitcher: str, signals: dict,
     _ensure_pick_factors_k_table()
     conn = get_db_conn()
     try:
+        if game_pk is None:
+            conn.execute(
+                "DELETE FROM pick_factors_k WHERE bet_date=? AND pitcher=? AND game_pk IS NULL",
+                (bet_date, pitcher)
+            )
         conn.execute("""
             INSERT INTO pick_factors_k
               (bet_date, pitcher, game_pk, matchup, algo_version, confidence, score, rank,
