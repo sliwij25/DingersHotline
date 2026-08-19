@@ -164,3 +164,65 @@ class TestPitchArsenalWhiff:
     def test_weighted_opp_whiff_returns_none_for_empty_lineup(self):
         from agents.k_predictor import _weighted_opp_whiff
         assert _weighted_opp_whiff({"fastball": 1.0, "breaking": 0.0, "offspeed": 0.0}, []) is None
+
+
+def _base_k_sig():
+    return {
+        "k_percent": 22.0, "whiff_percent": 24.0, "csw_percent": 28.0,
+        "swinging_strike_percent": 10.5, "k_per_9_blended": 8.0,
+        "pitcher_whiff_fastball": None, "pitcher_whiff_breaking": None,
+        "pitcher_whiff_offspeed": None, "opp_whiff_vs_mix": None,
+        "avg_ip_last3": 5.5, "avg_pitches_last3": 88.0, "days_rest": 5,
+        "ev_10": 0.0, "value_edge": 0.0,
+    }
+
+
+class TestScorePitcher:
+
+    def test_elite_k_rate_scores_higher_than_average(self):
+        from agents.k_predictor import _score_pitcher
+
+        avg = _base_k_sig()
+        elite = _base_k_sig()
+        elite.update({"k_percent": 32.0, "whiff_percent": 33.0,
+                      "csw_percent": 34.0, "swinging_strike_percent": 15.0,
+                      "k_per_9_blended": 12.0})
+
+        assert _score_pitcher(elite) > _score_pitcher(avg)
+
+    def test_short_workload_penalizes_score(self):
+        from agents.k_predictor import _score_pitcher
+
+        normal = _base_k_sig()
+        short  = _base_k_sig()
+        short["avg_ip_last3"] = 4.0
+        short["avg_pitches_last3"] = 72.0
+
+        assert _score_pitcher(short) < _score_pitcher(normal)
+
+    def test_short_rest_penalizes_score(self):
+        from agents.k_predictor import _score_pitcher
+
+        normal = _base_k_sig()
+        rested = _base_k_sig()
+        rested["days_rest"] = 3
+
+        assert _score_pitcher(rested) < _score_pitcher(normal)
+
+    def test_favorable_matchup_boosts_score(self):
+        from agents.k_predictor import _score_pitcher
+
+        no_matchup = _base_k_sig()
+        good_matchup = _base_k_sig()
+        good_matchup["opp_whiff_vs_mix"] = 30.0
+
+        assert _score_pitcher(good_matchup) > _score_pitcher(no_matchup)
+
+    def test_positive_ev_boosts_score(self):
+        from agents.k_predictor import _score_pitcher
+
+        no_ev = _base_k_sig()
+        good_ev = _base_k_sig()
+        good_ev["ev_10"] = 4.0
+
+        assert _score_pitcher(good_ev) > _score_pitcher(no_ev)

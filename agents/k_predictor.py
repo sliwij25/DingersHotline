@@ -181,3 +181,92 @@ def _weighted_opp_whiff(pitcher_mix: dict, batter_splits: list[dict]) -> float |
     if not per_batter:
         return None
     return round(sum(per_batter) / len(per_batter), 2)
+
+
+def _score_pitcher(sig: dict) -> float:
+    """
+    Score a starting pitcher 0-∞ for strikeout prop value. Higher = better
+    K pick today. Deterministic — no LLM involved. Thresholds are seeded
+    from published K-prop research (MLB average K% ~22-23%, whiff% ~24-25%,
+    CSW% ~29%, SwStr% ~11%) and are meant to be tuned later via
+    optimize_weights_k.py's correlation report once labeled data exists.
+    """
+    score = 0.0
+
+    k_pct = sig.get("k_percent")
+    if k_pct is not None:
+        if k_pct >= 30: score += 4
+        elif k_pct >= 27: score += 3
+        elif k_pct >= 24: score += 2
+        elif k_pct >= 21: score += 1
+        elif k_pct < 18: score -= 1
+
+    whiff = sig.get("whiff_percent")
+    if whiff is not None:
+        if whiff >= 32: score += 3
+        elif whiff >= 28: score += 2
+        elif whiff >= 25: score += 1
+        elif whiff < 20: score -= 1
+
+    csw = sig.get("csw_percent")
+    if csw is not None:
+        if csw >= 33: score += 2
+        elif csw >= 30: score += 1
+        elif csw < 26: score -= 1
+
+    swstr = sig.get("swinging_strike_percent")
+    if swstr is not None:
+        if swstr >= 14: score += 2
+        elif swstr >= 12: score += 1
+        elif swstr < 9: score -= 1
+
+    k9 = sig.get("k_per_9_blended")
+    if k9 is not None:
+        if k9 >= 11: score += 4
+        elif k9 >= 9.5: score += 3
+        elif k9 >= 8: score += 2
+        elif k9 >= 6.5: score += 1
+        elif k9 < 5: score -= 1
+
+    for key in ("pitcher_whiff_fastball", "pitcher_whiff_breaking", "pitcher_whiff_offspeed"):
+        val = sig.get(key)
+        if val is None:
+            continue
+        if val >= 35: score += 1
+        elif val < 20: score -= 0.5
+
+    opp_whiff = sig.get("opp_whiff_vs_mix")
+    if opp_whiff is not None:
+        if opp_whiff >= 27: score += 3
+        elif opp_whiff >= 24: score += 2
+        elif opp_whiff >= 21: score += 1
+        elif opp_whiff < 17: score -= 1
+
+    avg_ip = sig.get("avg_ip_last3")
+    if avg_ip is not None:
+        if avg_ip >= 6.0: score += 2
+        elif avg_ip >= 5.5: score += 1
+        elif avg_ip < 4.5: score -= 2
+
+    avg_pitches = sig.get("avg_pitches_last3")
+    if avg_pitches is not None:
+        if avg_pitches >= 95: score += 1
+        elif avg_pitches < 80: score -= 1
+
+    rest = sig.get("days_rest")
+    if rest is not None:
+        if rest <= 3: score -= 2
+        elif rest == 4: score -= 1
+        elif 5 <= rest <= 7: pass
+        elif 8 <= rest <= 10: score += 0.5
+        else: score -= 1  # >10 days — likely rust from an extended layoff
+
+    ev = sig.get("ev_10")
+    if ev is not None:
+        if ev > 3: score += 5
+        elif ev > 1: score += 3
+        elif ev > 0: score += 1
+        elif ev > -1: score -= 1
+        else: score -= 3
+
+    return score
