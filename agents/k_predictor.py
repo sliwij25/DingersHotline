@@ -270,3 +270,135 @@ def _score_pitcher(sig: dict) -> float:
         else: score -= 3
 
     return score
+import json
+import os
+
+
+def _fmt_odds(o: int | None) -> str:
+    if o is None:
+        return "—"
+    return f"+{o}" if o > 0 else str(o)
+
+
+def fetch_k_odds_comparison(confirmed_pitcher_names: set | None = None) -> str:
+    """
+    Fetch pitcher strikeout O/U prop odds from all available sportsbooks via
+    The Odds API's pitcher_strikeouts market. Same Pinnacle-benchmark, EV,
+    Kelly, and value-edge math as Homer's fetch_odds_comparison, but reads
+    outcome["point"] as the real strikeout line (not a fixed 0.5 threshold)
+    and only considers "Over" outcomes as the tracked pick side.
+    """
+    api_key = os.getenv("ODDS_API_KEY")
+    if not api_key:
+        return json.dumps({"status": "no_api_key", "message": "ODDS_API_KEY not set in api/.env"})
+
+    today = date.today().isoformat()
+    cache_path = Path("cache") / f"k_odds_{today}.json"
+    if cache_path.exists():
+        try:
+            cached = json.loads(cache_path.read_text())
+            if cached.get("status") == "success":
+                return cache_path.read_text()
+        except Exception:
+            pass
+
+    try:
+        events_resp = requests.get(f"{ODDS_API_BASE}/sports/baseball_mlb/events?apiKey={api_key}", timeout=15)
+        events_resp.raise_for_status()
+        events = events_resp.json()
+    except Exception as exc:
+        return json.dumps({"status": "error", "message": str(exc)})
+
+    if not events:
+        return json.dumps({"status": "no_events", "message": "No MLB events found today."})
+
+    all_player_odds: dict[str, dict] = {}
+    for event in events[:12]:
+        event_id = event.get("id")
+        matchup = f"{event.get('away_team', '')} @ {event.get('home_team', '')}"
+        try:
+            resp = requests.get(
+                f"{ODDS_API_BASE}/sports/baseball_mlb/events/{event_id}/odds"
+                f"?apiKey={api_key}&regions=us,eu&markets=pitcher_strikeouts&oddsFormat=american",
+                timeout=15,
+            )
+            if resp.status_code in (401, 422):
+                continue
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception:
+            continue
+
+        for bookmaker in data.get("bookmakers", []):
+            book_title = bookmaker.get("title", bookmaker.get("key", ""))
+            is_pinnacle = bookmaker.get("key") == "pinnacle"
+            for market in bookmaker.get("markets", []):
+                if market.get("key") != "pitcher_strikeouts":
+                    continue
+                for outcome in market.get("outcomes", []):
+                    if outcome.get("name") != "Over":
+                        continue
+                    player_name = (outcome.get("description") or "").strip()
+                    price = outcome.get("price")
+                    point = outcome.get("point")
+                    if not player_name or price is None or point is None:
+                        continue
+
+                    if confirmed_pitcher_names is not None and player_name not in confirmed_pitcher_names:
+                        continue
+
+                    entry = all_player_odds.setdefault(player_name, {"matchup": matchup, "books": {}, "pinnacle": None, "k_line": point})
+                    existing = entry["books"].get(book_title)
+                    if existing is None or price > existing:
+                        entry["books"][book_title] = price
+                    if is_pinnacle:
+                        curr = entry["pinnacle"]
+                        if curr is None or price > curr:
+                            entry["pinnacle"] = price
+
+    if not all_player_odds:
+        return json.dumps({"status": "no_data", "message": "No strikeout prop data returned yet."})
+
+    results = []
+    for player_name, info in all_player_odds.items():
+        books = info["books"]
+        if not books:
+            continue
+        probs = {book: _american_to_implied_prob(odds) for book, odds in books.items()}
+        consensus_prob = sum(probs.values()) / len(probs)
+        best_book = max(books, key=lambda b: books[b])
+        best_odds_int = books[best_book]
+        best_prob = probs[best_book]
+        value_edge = consensus_prob - best_prob
+
+        pinnacle_odds = info["pinnacle"]
+        pinnacle_prob = _american_to_implied_prob(pinnacle_odds) if pinnacle_odds else None
+        true_prob = pinnacle_prob if pinnacle_prob is not None else consensus_prob
+
+        results.append({
+            "player": player_name,
+            "matchup": info["matchup"],
+            "k_line": info["k_line"],
+            "books_sampled": len(books),
+            "pinnacle": _fmt_odds(pinnacle_odds),
+            "pinnacle_prob": f"{pinnacle_prob * 100:.1f}%" if pinnacle_prob else f"{consensus_prob * 100:.1f}% (consensus)",
+            "best_book": best_book,
+            "best_odds": _fmt_odds(best_odds_int),
+            "consensus_prob": f"{consensus_prob * 100:.1f}%",
+            "value_edge": round(value_edge * 100, 1),
+            "value_flag": "VALUE" if value_edge >= 0.03 else "",
+            "ev_10": _compute_ev(true_prob, best_odds_int),
+            "kelly_size": _compute_kelly(true_prob, best_odds_int),
+            "all_books": {book: _fmt_odds(o) for book, o in sorted(books.items(), key=lambda x: x[1], reverse=True)},
+        })
+
+    results.sort(key=lambda x: x["value_edge"], reverse=True)
+    out = json.dumps({"status": "success", "players_found": len(results), "comparisons": results}, indent=2)
+
+    try:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        cache_path.write_text(out)
+    except Exception:
+        pass
+
+    return out

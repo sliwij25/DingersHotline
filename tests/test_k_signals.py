@@ -226,3 +226,59 @@ class TestScorePitcher:
         good_ev["ev_10"] = 4.0
 
         assert _score_pitcher(good_ev) > _score_pitcher(no_ev)
+
+
+class TestKOddsComparison:
+
+    def test_parses_pitcher_strikeouts_market_into_comparisons(self):
+        from agents.k_predictor import fetch_k_odds_comparison
+        import json
+
+        events_payload = [{"id": "evt1", "away_team": "NYY", "home_team": "BOS"}]
+        odds_payload = {
+            "bookmakers": [
+                {
+                    "key": "draftkings", "title": "DraftKings",
+                    "markets": [{
+                        "key": "pitcher_strikeouts",
+                        "outcomes": [
+                            {"description": "Gerrit Cole", "name": "Over", "point": 6.5, "price": -115},
+                            {"description": "Gerrit Cole", "name": "Under", "point": 6.5, "price": -105},
+                        ],
+                    }],
+                },
+                {
+                    "key": "pinnacle", "title": "Pinnacle",
+                    "markets": [{
+                        "key": "pitcher_strikeouts",
+                        "outcomes": [
+                            {"description": "Gerrit Cole", "name": "Over", "point": 6.5, "price": -120},
+                        ],
+                    }],
+                },
+            ]
+        }
+
+        events_resp = MagicMock()
+        events_resp.status_code = 200
+        events_resp.json.return_value = events_payload
+        events_resp.raise_for_status.return_value = None
+
+        odds_resp = MagicMock()
+        odds_resp.status_code = 200
+        odds_resp.json.return_value = odds_payload
+        odds_resp.raise_for_status.return_value = None
+
+        with patch("agents.k_predictor.os.getenv", return_value="fake_key"), \
+             patch("agents.k_predictor.Path") as mock_path_cls, \
+             patch("agents.k_predictor.requests.get", side_effect=[events_resp, odds_resp]):
+            mock_path_cls.return_value.exists.return_value = False
+            mock_path_cls.return_value.parent.mkdir.return_value = None
+            result = json.loads(fetch_k_odds_comparison())
+
+        assert result["status"] == "success"
+        assert result["players_found"] == 1
+        pick = result["comparisons"][0]
+        assert pick["player"] == "Gerrit Cole"
+        assert pick["k_line"] == 6.5
+        assert pick["pinnacle"] == "-120"
