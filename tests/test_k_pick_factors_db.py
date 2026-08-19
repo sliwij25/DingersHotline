@@ -102,3 +102,41 @@ def test_update_pick_factors_k_under_sets_zero(monkeypatch, tmp_path):
     ).fetchone()
     conn.close()
     assert row == (4, 0)
+
+
+def test_write_k_season_to_db_inserts_rows_with_over_hit(monkeypatch, tmp_path):
+    db_path = str(tmp_path / "test_bets.db")
+    monkeypatch.setattr("agents.base.DB_PATH", db_path)
+
+    from agents import bet_tracker
+    monkeypatch.setattr(bet_tracker, "get_db_conn", lambda: sqlite3.connect(db_path))
+
+    from ml import build_historical_k_dataset as bhkd
+    monkeypatch.setattr(bhkd, "get_db_conn", lambda: sqlite3.connect(db_path))
+    monkeypatch.setattr(
+        bhkd, "fetch_strikeouts_for_date",
+        lambda game_date: {"Gerrit Cole": 8},
+    )
+    monkeypatch.setattr(
+        bhkd, "_pitcher_name",
+        lambda pid: {543037: "Gerrit Cole"}.get(pid),
+    )
+
+    schedule = {
+        "2025-06-01": [{
+            "game_pk": "999", "venue": "Yankee Stadium",
+            "home_pitcher_id": 543037, "away_pitcher_id": None,
+        }]
+    }
+    n_written, n_skipped = bhkd.write_k_season_to_db(2025, schedule)
+
+    conn = sqlite3.connect(db_path)
+    row = conn.execute(
+        "SELECT pitcher, actual_k, over_hit FROM pick_factors_k WHERE bet_date=?",
+        ("2025-06-01",),
+    ).fetchone()
+    conn.close()
+
+    assert n_written == 1
+    assert row[0] == "Gerrit Cole"
+    assert row[1] == 8
