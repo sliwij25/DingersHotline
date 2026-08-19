@@ -1557,8 +1557,9 @@ _TOOL_FNS = {
 def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
     """
     Fetch pitcher game log from the MLB Stats API.
-    Returns blended HR/9: 60% last-3-starts + 40% season, plus raw values.
-    A start = appearance with >= 3 innings pitched.
+    Returns blended HR/9 and K/9 (60% last-3-starts + 40% season), plus
+    workload (avg IP, avg pitch count over last n_starts) and days of rest
+    since the most recent start. A start = appearance with >= 3 innings pitched.
     """
     if not pitcher_id:
         return {}
@@ -1584,11 +1585,14 @@ def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
                 ip = 0
             if ip < 3:
                 continue
+            pitches = stat.get("numberOfPitches")
             all_logs.append({
                 "date":       split.get("date", ""),
                 "hr_allowed": int(stat.get("homeRuns") or 0),
+                "so":         int(stat.get("strikeOuts") or 0),
                 "ip":         ip,
                 "er":         int(stat.get("earnedRuns") or 0),
+                "pitches":    int(pitches) if pitches not in (None, "") else None,
             })
 
     if not all_logs:
@@ -1596,15 +1600,33 @@ def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
 
     recent_logs = all_logs[:n_starts]
     recent_hr   = sum(g["hr_allowed"] for g in recent_logs)
+    recent_so   = sum(g["so"] for g in recent_logs)
     recent_ip   = sum(g["ip"] for g in recent_logs)
     recent_hr9  = round(recent_hr / recent_ip * 9, 2) if recent_ip else 0
+    recent_k9   = round(recent_so / recent_ip * 9, 2) if recent_ip else 0
 
     season_hr  = sum(g["hr_allowed"] for g in all_logs)
+    season_so  = sum(g["so"] for g in all_logs)
     season_ip  = sum(g["ip"] for g in all_logs)
     season_hr9 = round(season_hr / season_ip * 9, 2) if season_ip else 0
+    season_k9  = round(season_so / season_ip * 9, 2) if season_ip else 0
 
     # Blend: 60% recent form, 40% season — captures current vulnerability + baseline
     blended_hr9 = round(0.6 * recent_hr9 + 0.4 * season_hr9, 2)
+    blended_k9  = round(0.6 * recent_k9 + 0.4 * season_k9, 2)
+
+    avg_ip_last3 = round(recent_ip / len(recent_logs), 2) if recent_logs else None
+    pitch_counts = [g["pitches"] for g in recent_logs if g["pitches"] is not None]
+    avg_pitches_last3 = round(sum(pitch_counts) / len(pitch_counts), 2) if pitch_counts else None
+
+    days_rest = None
+    most_recent = recent_logs[0]["date"] if recent_logs else None
+    if most_recent:
+        try:
+            last_start_date = date.fromisoformat(most_recent)
+            days_rest = (date.today() - last_start_date).days
+        except ValueError:
+            days_rest = None
 
     return {
         "starts_sampled": len(recent_logs),
@@ -1612,6 +1634,13 @@ def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
         "recent_hr9":     recent_hr9,
         "season_hr9":     season_hr9,
         "total_hr":       recent_hr,
+        "k_per_9_blended": blended_k9,
+        "recent_k9":      recent_k9,
+        "season_k9":      season_k9,
+        "total_k":        recent_so,
+        "avg_ip_last3":   avg_ip_last3,
+        "avg_pitches_last3": avg_pitches_last3,
+        "days_rest":      days_rest,
         "logs":           recent_logs,
     }
 
