@@ -1642,7 +1642,7 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
     <a class="nav-link" href="index.html">Today's Picks</a>
     <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
     <a class="nav-link active" href="#">Hit Rate 📅</a>
-<a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
+    <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
   </div>
   <div class="tg-join">
     <div class="tg-join-label">Get notified the moment today's picks are ready.</div>
