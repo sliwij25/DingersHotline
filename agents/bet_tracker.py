@@ -169,6 +169,7 @@ _MIGRATION_COLUMNS = [
     ("batter_xslg_vs_offspeed",     "REAL"),
     ("game_pk",               "TEXT"),  # doubleheader support
     ("is_best_bet",           "INTEGER"),  # 1 = top-7 EV pick, 0 = also watching
+    ("bpp_vs_grade",          "REAL"),  # BallparkPal 0-10 matchup grade (bpp_hr_pct is unobtainable — see predictor.py)
 ]
 
 
@@ -262,8 +263,9 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                team, blast_rate, altitude_ft, humidity_pct, pressure_mb, carry_ft, hr_luck,
                career_park_hr, pitcher_career_hr_vs_hand,
                batter_xslg_vs_fastball, batter_xslg_vs_breaking, batter_xslg_vs_offspeed,
-               game_pk, is_best_bet)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               game_pk, is_best_bet,
+               pitcher_fb_pct, pitcher_breaking_pct, pitcher_offspeed_pct, bpp_vs_grade)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(bet_date, player, game_pk) DO UPDATE SET
               rank=excluded.rank, score=excluded.score, stars=excluded.stars,
               algo_version=excluded.algo_version, confidence=excluded.confidence,
@@ -290,7 +292,11 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
               batter_xslg_vs_fastball=excluded.batter_xslg_vs_fastball,
               batter_xslg_vs_breaking=excluded.batter_xslg_vs_breaking,
               batter_xslg_vs_offspeed=excluded.batter_xslg_vs_offspeed,
-              game_pk=excluded.game_pk, is_best_bet=excluded.is_best_bet
+              game_pk=excluded.game_pk, is_best_bet=excluded.is_best_bet,
+              pitcher_fb_pct=excluded.pitcher_fb_pct,
+              pitcher_breaking_pct=excluded.pitcher_breaking_pct,
+              pitcher_offspeed_pct=excluded.pitcher_offspeed_pct,
+              bpp_vs_grade=excluded.bpp_vs_grade
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
@@ -338,6 +344,10 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             signals.get("batter_xslg_vs_offspeed"),
             game_pk or signals.get("game_pk"),
             is_best_bet,
+            signals.get("pitcher_fb_pct"),
+            signals.get("pitcher_breaking_pct"),
+            signals.get("pitcher_offspeed_pct"),
+            signals.get("bpp_vs_grade"),
         ))
         # Backfill stars on existing rows that were saved before stars column existed
         if stars is not None:

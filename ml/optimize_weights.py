@@ -44,7 +44,6 @@ FEATURES = [
     ("sweet_spot_pct",   None),    # r=0.42 predictive — 8-32° launch angle%
     ("xiso",             None),    # expected ISO — power composite
     ("xslg",             None),    # expected slugging
-    ("xhr_rate",         None),    # expected HR rate — populates mid-season
     # Batted ball profile
     ("fb_pct",           None),    # fly ball rate — per RotoGrinders: strong HR correlation
     ("launch_angle",     None),    # avg launch angle — r=0.42 predictive
@@ -52,7 +51,7 @@ FEATURES = [
     # Bat tracking
     ("blast_rate",       None),    # % of swings qualifying as a Blast — high HR correlation
     # Context
-    ("bpp_hr_pct",       None),
+    ("bpp_vs_grade",     None),    # BallparkPal 0-10 matchup grade (bpp_hr_pct is unobtainable, see predictor.py)
     ("park_hr_factor",   None),
     ("ev_10",            None),
     ("value_edge",       None),
@@ -269,7 +268,7 @@ def train_and_save(X: np.ndarray, y: np.ndarray,
         "cv_auc_mean":   float(auc_scores.mean()),
         "cv_auc_std":    float(auc_scores.std()),
         "feature_order": FEATURE_NAMES,
-        "algo_version":  "4.0",
+        "algo_version":  "4.2",
     }
 
     if save:

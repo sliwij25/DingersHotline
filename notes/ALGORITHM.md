@@ -17,7 +17,7 @@ The system is **100% deterministic Python** — no AI or language model is invol
 1. Pull confirmed lineups from MLB API
 2. Fetch Statcast metrics, park factors, weather, matchup grades, and odds
 3. Score every confirmed batter using a weighted formula
-4. Blend in a machine learning model (logistic regression trained on historical results)
+4. Blend in a machine learning model (LightGBM gradient-boosted trees trained on historical results)
 5. Rank and bucket players into confidence tiers
 6. Publish to the site
 
@@ -97,7 +97,7 @@ Each player gets a raw **score** built from individual signal bonuses and penalt
 
 ## ML Score Blend
 
-After the raw score is computed, it's blended with a **logistic regression model** trained on historical pick results.
+After the raw score is computed, it's blended with a **LightGBM model** trained on historical pick results.
 
 ```
 ml_weight = min(0.70, max(0.0, (AUC − 0.50) × 2.5))
@@ -133,8 +133,18 @@ that generalizes to a specific day. The new dataset breaks that duplication (fea
 now vary game-to-game via park/pitcher/home-away context), so 0.612 is a more honest
 day-level number, not a worse model.
 
-### ML Features (19 total)
-Barrel rate, exit velocity avg, hard hit %, sweet spot %, xISO, xSLG, xHR rate, fly ball %, launch angle, HR/FB ratio, BallparkPal HR%, park HR factor, EV on $10, value edge, recent form (14d), pitcher HR/9, is home, platoon, head-to-head HR
+### ML Features (26 total)
+Barrel rate, exit velocity avg, hard hit %, sweet spot %, xISO, xSLG, fly ball %, launch angle, HR/FB ratio, blast rate, BallparkPal matchup grade (0-10), park HR factor, EV on $10, value edge, recent form (14d), pitcher HR/9, pitcher HR vs batter's hand, pitcher barrel %, is home, platoon, head-to-head HR, career park HR, pitcher career HR/9 vs hand, pitcher FB/breaking/offspeed mix (3), batter xSLG vs fastball/breaking/offspeed (3)
+
+See `ml/optimize_weights.py`'s `FEATURES` list for the authoritative, current set.
+
+### 2026-08-18 dead feature pipeline fix
+Audited the full `FEATURES` list against real population rates in `pick_factors` and found ~20 of 30 features were >99% null — the model could only ever learn from the ~10 that were actually populated. Root causes, by bucket:
+- **Genuine bugs (fixed):** `pitcher_fb_pct`/`pitcher_breaking_pct`/`pitcher_offspeed_pct` were computed correctly in `predictor.py` but never included in `save_pick_factors()`'s INSERT columns — computed, then thrown away. The platoon signal was gated behind `status == "confirmed"` even though the pitcher's handedness (the only input it actually needs) is resolved regardless of batter lineup-confirmation status. `_fetch_batter_pitch_splits()` requested the Savant `leaderboard/custom` endpoint without `csv=true`, got an HTML page back, and `resp.json()` failed inside a bare `except` that silently returned `{}` every time — worse, even after fixing the request format, the column names it was requesting (`xslg_fastball` etc.) don't exist on that endpoint at all; the real data lives on a separate `leaderboard/pitch-arsenal-stats` endpoint keyed by individual pitch type (FF/SL/CH/...), which now gets PA-weighted and bucketed into fastball/breaking/offspeed client-side.
+- **Dead upstream field (removed):** `xhr_rate` and `bpp_hr_pct` are both 0% populated because the underlying Savant/BallparkPal fields they read from don't exist in the scraped data. `xhr_rate` was dropped from `FEATURES` entirely; `bpp_hr_pct` was replaced with `bpp_vs_grade` — a real, already-fetched BallparkPal 0–10 matchup grade that was never wired into the ML feature set.
+- **By-design sparsity (left alone):** `h2h_hr`, `ev_10`/`value_edge`, `recent_form_14d`, career splits — these are legitimately sparse (small-sample gates, 12-games/day odds cap) rather than broken.
+
+Added `tests/test_ml_features.py::test_all_features_have_a_save_pick_factors_write_path` — a regression check that greps `save_pick_factors()`'s source for `signals.get("<col>")` for every column in `FEATURES`, so a feature that's computed but never persisted can't silently reoccur. `algo_version` bumped to `4.2`. Success criteria here is the fields populating correctly going forward, not an immediate AUC jump — the retrain threshold needs ~2 weeks of newly-labeled rows with these fields non-null before it can move the needle.
 
 ---
 

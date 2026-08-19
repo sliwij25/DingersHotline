@@ -1818,42 +1818,54 @@ def _fetch_career_park_hrs_batch(player_venue_pairs: list[tuple[int, int]]) -> d
     return result
 
 
+# Pitch type code → bucket, per Statcast's standard pitch_type taxonomy.
+_PITCH_BUCKETS = {
+    "FF": "fastball", "SI": "fastball", "FC": "fastball",
+    "SL": "breaking", "CU": "breaking", "KC": "breaking", "ST": "breaking",
+    "SV": "breaking", "CS": "breaking",
+    "CH": "offspeed", "FS": "offspeed", "SC": "offspeed",
+    "FO": "offspeed", "KN": "offspeed",
+}
+
+
 def _fetch_batter_pitch_splits(player_ids: list[int]) -> dict[int, dict]:
     """
-    Fetch batter xSLG vs fastball/breaking_ball/offspeed from Baseball Savant leaderboard.
+    Fetch batter xSLG vs fastball/breaking_ball/offspeed pitch buckets from
+    Baseball Savant's pitch-arsenal-stats leaderboard (one row per player per
+    individual pitch type, e.g. FF/SL/CH — not pre-bucketed by Savant).
+    Buckets are aggregated here via _PITCH_BUCKETS and PA-weighted per bucket.
     Returns {player_id: {"xslg_fastball": float, "xslg_breaking": float, "xslg_offspeed": float}}.
-    Early-season (before ~June): Savant pitch-type columns may be empty — returns {} per player.
+    Early-season: individual pitch-type samples may be too small — returns {} per player.
     """
     if not player_ids:
         return {}
     year = date.today().year
     try:
         resp = requests.get(
-            "https://baseballsavant.mlb.com/leaderboard/custom",
-            params={
-                "year":       year,
-                "type":       "batter",
-                "filter":     "",
-                "selections": "xwoba,xslg,xwoba_fastball,xwoba_breaking_ball,xwoba_offspeed_pitch,"
-                              "xslg_fastball,xslg_breaking_ball,xslg_offspeed_pitch",
-                "min_results": 0,
-                "min_pa":     0,
-            },
-            timeout=20,
-            headers={"User-Agent": "Mozilla/5.0"},
+            f"{SAVANT_BASE}/leaderboard/pitch-arsenal-stats"
+            f"?type=batter&year={year}&team=&min=1&csv=true",
+            timeout=30,
+            headers=_HEADERS,
         )
         resp.raise_for_status()
-        rows = resp.json()
+        text = resp.text.lstrip('﻿')
+        rows = list(csv.DictReader(io.StringIO(text)))
     except Exception:
         return {}
 
-    if not isinstance(rows, list):
-        return {}
+    def _sf(val) -> float | None:
+        if val in (None, "", "null"):
+            return None
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return None
 
-    result: dict[int, dict] = {}
     player_id_set = {int(p) for p in player_ids}
+    # {pid: {bucket: [(est_slg, pa), ...]}}
+    accum: dict[int, dict[str, list[tuple[float, float]]]] = {}
     for row in rows:
-        pid_raw = row.get("player_id") or row.get("batter")
+        pid_raw = row.get("player_id")
         if pid_raw is None:
             continue
         try:
@@ -1863,19 +1875,27 @@ def _fetch_batter_pitch_splits(player_ids: list[int]) -> dict[int, dict]:
         if pid not in player_id_set:
             continue
 
-        def _sf(val) -> float | None:
-            if val in (None, "", "null"):
-                return None
-            try:
-                return float(val)
-            except (ValueError, TypeError):
-                return None
+        bucket = _PITCH_BUCKETS.get(row.get("pitch_type"))
+        if bucket is None:
+            continue
+        est_slg = _sf(row.get("est_slg"))
+        pa = _sf(row.get("pa"))
+        if est_slg is None or not pa:
+            continue
+        accum.setdefault(pid, {}).setdefault(bucket, []).append((est_slg, pa))
 
-        splits = {
-            "xslg_fastball":  _sf(row.get("xslg_fastball")),
-            "xslg_breaking":  _sf(row.get("xslg_breaking_ball")),
-            "xslg_offspeed":  _sf(row.get("xslg_offspeed_pitch")),
-        }
+    result: dict[int, dict] = {}
+    for pid, buckets in accum.items():
+        splits = {}
+        for key, bucket in (("xslg_fastball", "fastball"),
+                             ("xslg_breaking", "breaking"),
+                             ("xslg_offspeed", "offspeed")):
+            samples = buckets.get(bucket)
+            if not samples:
+                splits[key] = None
+                continue
+            total_pa = sum(pa for _, pa in samples)
+            splits[key] = sum(slg * pa for slg, pa in samples) / total_pa if total_pa else None
         if any(v is not None for v in splits.values()):
             result[pid] = splits
     return result
@@ -2244,9 +2264,10 @@ class Homer:
                                          if any(part in p.get("player","").lower()
                                                 for part in b_key.split() if len(part) > 3)), "—")
 
-                    # Platoon advantage (only for confirmed players with known bat_side)
+                    # Platoon advantage — only needs a resolved bat_side; the starting
+                    # pitcher's handedness is known regardless of the batter's lineup status
                     platoon = ""
-                    if status == "confirmed" and bat_side != "?":
+                    if bat_side != "?":
                         platoon = _platoon_edge(bat_side, sp_throws)
 
                     # Home/away splits — use actual game context (only for confirmed players)
