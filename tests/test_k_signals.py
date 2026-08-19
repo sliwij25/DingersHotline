@@ -119,3 +119,48 @@ class TestPitcherKStatcastFetch:
             result = _fetch_pitcher_k_statcast()
 
         assert result == {}
+
+
+class TestPitchArsenalWhiff:
+
+    def test_fetch_pitch_arsenal_whiff_buckets_and_weights_by_pa(self):
+        from agents.k_predictor import _fetch_pitch_arsenal_whiff
+
+        csv_text = (
+            "player_id,pitch_type,whiff_percent,pa\n"
+            "543037,FF,28.0,100\n"
+            "543037,SI,24.0,50\n"
+            "543037,SL,35.0,80\n"
+            "543037,CH,20.0,40\n"
+        )
+        fake_resp = MagicMock()
+        fake_resp.raise_for_status.return_value = None
+        fake_resp.text = csv_text
+
+        with patch("agents.k_predictor.requests.get", return_value=fake_resp):
+            result = _fetch_pitch_arsenal_whiff([543037], player_type="pitcher")
+
+        # fastball bucket = FF(28.0, pa=100) + SI(24.0, pa=50), PA-weighted:
+        expected_fastball = (28.0 * 100 + 24.0 * 50) / (100 + 50)
+        assert round(result[543037]["whiff_fastball"], 2) == round(expected_fastball, 2)
+        assert result[543037]["whiff_breaking"] == 35.0
+        assert result[543037]["whiff_offspeed"] == 20.0
+
+    def test_weighted_opp_whiff_combines_pitcher_mix_with_batter_splits(self):
+        from agents.k_predictor import _weighted_opp_whiff
+
+        pitcher_mix = {"fastball": 0.60, "breaking": 0.30, "offspeed": 0.10}
+        batter_splits = [
+            {"whiff_fastball": 20.0, "whiff_breaking": 30.0, "whiff_offspeed": 40.0},
+            {"whiff_fastball": 30.0, "whiff_breaking": 20.0, "whiff_offspeed": 10.0},
+        ]
+        result = _weighted_opp_whiff(pitcher_mix, batter_splits)
+
+        batter1 = 20.0 * 0.60 + 30.0 * 0.30 + 40.0 * 0.10
+        batter2 = 30.0 * 0.60 + 20.0 * 0.30 + 10.0 * 0.10
+        expected = round((batter1 + batter2) / 2, 2)
+        assert result == expected
+
+    def test_weighted_opp_whiff_returns_none_for_empty_lineup(self):
+        from agents.k_predictor import _weighted_opp_whiff
+        assert _weighted_opp_whiff({"fastball": 1.0, "breaking": 0.0, "offspeed": 0.0}, []) is None
