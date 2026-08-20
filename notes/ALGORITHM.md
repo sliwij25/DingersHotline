@@ -95,6 +95,62 @@ Each player gets a raw **score** built from individual signal bonuses and penalt
 
 ---
 
+## Strikeout Model (Ace)
+
+Parallel to Homer (HR batter model), Ace predicts **starting pitcher strikeout props** — Over/Under on the K line. Same philosophy: deterministic Python scoring, no LLM, fully auditable.
+
+### Pitcher Quality Score
+
+`_score_pitcher()` evaluates starting pitchers on strikeout rate, whiff rate, fastball/breaking/offspeed whiff splits, K per 9 innings, opposing lineup's strikeout susceptibility, recent workload, and rest. Score ranges 0–∞; higher = more explosive K potential. **Purpose: eligibility floor only.** The score does not determine ranking or confidence — that role belongs solely to the gap between projected and market K totals.
+
+| Signal | Thresholds | Points |
+|--------|-----------|--------|
+| **K Rate** | ≥30% / ≥27% / ≥24% / ≥21% / <18% | +4 / +3 / +2 / +1 / −1 |
+| **Whiff %** | ≥32% / ≥28% / ≥25% / <20% | +3 / +2 / +1 / −1 |
+| **CSW %** | ≥33% / ≥30% / <26% | +2 / +1 / −1 |
+| **Swinging Strike %** | ≥14% / ≥12% / <9% | +2 / +1 / −1 |
+| **K per 9 (blended)** | ≥11 / ≥9.5 / ≥8 / ≥6.5 / <5 | +4 / +3 / +2 / +1 / −1 |
+| **Pitcher whiff splits** (FB/BR/OS) | ≥35% / <20% | +1 / −0.5 |
+| **Opp lineup whiff vs pitch mix** | ≥27% / ≥24% / ≥21% / <17% | +3 / +2 / +1 / −1 |
+| **Avg IP last 3 starts** | ≥6.0 / ≥5.5 / <4.5 | +2 / +1 / −2 |
+| **Avg pitches last 3** | ≥95 / <80 | +1 / −1 |
+| **Rest (days between starts)** | 5–7 / 4 or 8–10 / ≤3 or >10 | 0 / ±0.5 / −1 to −2 |
+| **EV (K prop)** | >$3 / >$1 / >$0 / >−$1 / ≤−$1 | +5 / +3 / +1 / −1 / −3 |
+
+### Direction and Confidence
+
+After computing `_score_pitcher()`, only pitchers scoring **≥ 2.0 pass the eligibility gate.** For eligible pitchers, `_pick_direction()` projects the K total and compares it to the market line:
+
+**Projection Formula (`_project_k`):**
+```
+projected_K = k_per_9_blended × (avg_ip_last_3 / 9) × combined_factor
+
+combined_factor = avg(
+  opp_team_k_pct / LEAGUE_AVG_K_PCT,
+  opp_lineup_whiff_vs_mix / LEAGUE_AVG_WHIFF
+)
+```
+- `LEAGUE_AVG_K_PCT = 0.225` (MLB strikeout rate baseline)
+- `LEAGUE_AVG_WHIFF = 28.0` (MLB whiff rate baseline)
+
+**Gap-Based Confidence:**
+```
+gap = projected_K − market_line
+
+if |gap| < 0.25:     skip (no actionable edge)
+if |gap| >= 1.5:     confidence = HIGH
+if |gap| >= 0.75:    confidence = MEDIUM
+if |gap| >= 0.25:    confidence = LOW
+```
+
+Direction is **OVER** if `gap > 0` (projected K > line), **UNDER** if `gap < 0`.
+
+### Ranking and Display
+
+Pitchers are ranked by **absolute gap descending** (largest edge first). Confidence tier applies only to display — it does not affect ranking order. **Crucially: odds pricing, EV, Kelly, and value flags play no role in ranking or pick selection.** The recommendation is purely signal-driven: does the pitcher's K rate history project above or below today's line, and by how much?
+
+---
+
 ## ML Score Blend
 
 After the raw score is computed, it's blended with a **LightGBM model** trained on historical pick results.
