@@ -113,6 +113,7 @@ def test_write_k_season_to_db_inserts_rows_with_over_hit(monkeypatch, tmp_path):
 
     from ml import build_historical_k_dataset as bhkd
     monkeypatch.setattr(bhkd, "get_db_conn", lambda: sqlite3.connect(db_path))
+    monkeypatch.setattr(bhkd, "fetch_k_statcast_season", lambda year: {})
     monkeypatch.setattr(
         bhkd, "fetch_strikeouts_for_date",
         lambda game_date: {"Gerrit Cole": 8},
@@ -140,3 +141,95 @@ def test_write_k_season_to_db_inserts_rows_with_over_hit(monkeypatch, tmp_path):
     assert n_written == 1
     assert row[0] == "Gerrit Cole"
     assert row[1] == 8
+    # Pitcher's only/first start in the window — no prior data, so no
+    # synthetic line and over_hit stays NULL.
+    assert row[2] is None
+
+
+def test_write_k_season_to_db_synthetic_line_uses_trailing_average_only(monkeypatch, tmp_path):
+    """
+    Two starts for the same pitcher across two dates. The first start has
+    no prior data (k_line/over_hit NULL). The second start's synthetic
+    k_line must equal the FIRST start's actual K (rounded to nearest 0.5)
+    — never folding in the second start's own result — and over_hit must
+    reflect whether the second start's actual beat that line.
+    """
+    db_path = str(tmp_path / "test_bets.db")
+    monkeypatch.setattr("agents.base.DB_PATH", db_path)
+
+    from agents import bet_tracker
+    monkeypatch.setattr(bet_tracker, "get_db_conn", lambda: sqlite3.connect(db_path))
+
+    from ml import build_historical_k_dataset as bhkd
+    monkeypatch.setattr(bhkd, "get_db_conn", lambda: sqlite3.connect(db_path))
+    monkeypatch.setattr(bhkd, "fetch_k_statcast_season", lambda year: {})
+    monkeypatch.setattr(
+        bhkd, "_pitcher_name",
+        lambda pid: {543037: "Gerrit Cole"}.get(pid),
+    )
+
+    strikeouts_by_date = {
+        "2025-06-01": {"Gerrit Cole": 7},
+        "2025-06-08": {"Gerrit Cole": 10},
+    }
+    monkeypatch.setattr(
+        bhkd, "fetch_strikeouts_for_date",
+        lambda game_date: strikeouts_by_date.get(game_date, {}),
+    )
+
+    schedule = {
+        "2025-06-01": [{
+            "game_pk": "111", "venue": "Yankee Stadium",
+            "home_pitcher_id": 543037, "away_pitcher_id": None,
+        }],
+        "2025-06-08": [{
+            "game_pk": "222", "venue": "Fenway Park",
+            "home_pitcher_id": None, "away_pitcher_id": 543037,
+        }],
+    }
+    n_written, n_skipped = bhkd.write_k_season_to_db(2025, schedule)
+    assert n_written == 2
+
+    conn = sqlite3.connect(db_path)
+    rows = {
+        bet_date: conn.execute(
+            "SELECT actual_k, k_line, over_hit FROM pick_factors_k "
+            "WHERE bet_date=? AND pitcher='Gerrit Cole'", (bet_date,)
+        ).fetchone()
+        for bet_date in ("2025-06-01", "2025-06-08")
+    }
+    conn.close()
+
+    first_actual, first_line, first_over_hit = rows["2025-06-01"]
+    second_actual, second_line, second_over_hit = rows["2025-06-08"]
+
+    assert first_actual == 7
+    assert first_line is None
+    assert first_over_hit is None
+
+    assert second_actual == 10
+    assert second_line == 7.0  # trailing average of prior starts only (just the 7-K start)
+    assert second_over_hit == 1  # 10 > 7.0
+
+
+def test_fetch_k_statcast_season_keys_by_player_id_and_name(monkeypatch):
+    from unittest.mock import patch, MagicMock
+    from ml import build_historical_k_dataset as bhkd
+
+    csv_text = (
+        '"last_name, first_name",player_id,k_percent,whiff_percent,csw_percent,swinging_strike_percent\n'
+        '"Cole, Gerrit",543037,32.5,29.1,31.0,14.2\n'
+    )
+    fake_resp = MagicMock()
+    fake_resp.raise_for_status.return_value = None
+    fake_resp.text = csv_text
+
+    with patch("ml.build_historical_k_dataset.requests.get", return_value=fake_resp), \
+         patch("ml.build_historical_k_dataset._load_cache", return_value=None), \
+         patch("ml.build_historical_k_dataset._save_cache"):
+        result = bhkd.fetch_k_statcast_season(2025)
+
+    assert result[543037]["k_percent"] == 32.5
+    assert result["cole, gerrit"]["whiff_percent"] == 29.1
+    assert result[543037]["csw_percent"] == 31.0
+    assert result[543037]["swinging_strike_percent"] == 14.2

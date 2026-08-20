@@ -157,6 +157,75 @@ def _fetch_pitch_arsenal_whiff(player_ids: list[int], player_type: str) -> dict[
     return result
 
 
+def _fetch_pitcher_pitch_mix(pitcher_ids: list[int]) -> dict[int, dict]:
+    """
+    Fetch each pitcher's pitch-mix usage fractions (fastball/breaking/
+    offspeed, summing to ~1.0) from the same Savant pitch-arsenal-stats
+    leaderboard _fetch_pitch_arsenal_whiff reads, using the `pa` column as
+    a usage proxy instead of whiff%. Feeds _weighted_opp_whiff's
+    `pitcher_mix` argument.
+
+    Returns {player_id: {"fastball": float, "breaking": float, "offspeed": float}}.
+    Pitchers with zero total PA across the three buckets are omitted.
+    """
+    if not pitcher_ids:
+        return {}
+    year = date.today().year
+    try:
+        resp = requests.get(
+            f"{SAVANT_BASE}/leaderboard/pitch-arsenal-stats"
+            f"?type=pitcher&year={year}&team=&min=1&csv=true",
+            timeout=30,
+            headers=_HEADERS,
+        )
+        resp.raise_for_status()
+        text = resp.text.lstrip('﻿')
+        rows = list(csv.DictReader(io.StringIO(text)))
+    except Exception:
+        return {}
+
+    def _sf(val):
+        if val in (None, "", "null"):
+            return None
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return None
+
+    pitcher_id_set = {int(p) for p in pitcher_ids}
+    accum: dict[int, dict[str, float]] = {}
+    for row in rows:
+        pid_raw = row.get("player_id")
+        if pid_raw is None:
+            continue
+        try:
+            pid = int(pid_raw)
+        except (ValueError, TypeError):
+            continue
+        if pid not in pitcher_id_set:
+            continue
+        bucket = _PITCH_BUCKETS_K.get(row.get("pitch_type"))
+        if bucket is None:
+            continue
+        pa = _sf(row.get("pa"))
+        if not pa:
+            continue
+        accum.setdefault(pid, {}).setdefault(bucket, 0.0)
+        accum[pid][bucket] += pa
+
+    result: dict[int, dict] = {}
+    for pid, buckets in accum.items():
+        total = sum(buckets.values())
+        if not total:
+            continue
+        result[pid] = {
+            "fastball": buckets.get("fastball", 0.0) / total,
+            "breaking": buckets.get("breaking", 0.0) / total,
+            "offspeed": buckets.get("offspeed", 0.0) / total,
+        }
+    return result
+
+
 def _weighted_opp_whiff(pitcher_mix: dict, batter_splits: list[dict]) -> float | None:
     """
     Combine a pitcher's pitch-mix usage (fractions summing to ~1.0, keys
@@ -475,19 +544,23 @@ class Ace:
                 teams = game.get("teams", {})
                 away = teams.get("away", {})
                 home = teams.get("home", {})
+                lineup_data = game.get("lineups", {})
                 matchup = f"{away.get('team', {}).get('name', '')} @ {home.get('team', {}).get('name', '')}"
-                for side_key, opp_key in (("away", "home"), ("home", "away")):
+                for side_key, opp_lineup_key in (("away", "homePlayers"), ("home", "awayPlayers")):
                     side = teams.get(side_key, {})
                     pitcher = side.get("probablePitcher")
                     if not pitcher or not pitcher.get("id"):
                         continue
-                    opp_lineup = game.get(opp_key, {}).get("lineup", []) if isinstance(game.get(opp_key), dict) else []
-                    starters.append((pitcher["id"], pitcher.get("fullName", ""), matchup, opp_lineup))
+                    opp_lineup_ids = [p["id"] for p in lineup_data.get(opp_lineup_key, []) if p.get("id")]
+                    starters.append((pitcher["id"], pitcher.get("fullName", ""), matchup, opp_lineup_ids))
                     confirmed_names.add(pitcher.get("fullName", ""))
 
         pitcher_ids = [pid for pid, *_ in starters]
+        opp_batter_ids = sorted({bid for _pid, _name, _matchup, opp_ids in starters for bid in opp_ids})
         k_statcast = _fetch_pitcher_k_statcast()
         pitcher_whiff = _fetch_pitch_arsenal_whiff(pitcher_ids, player_type="pitcher")
+        pitcher_mix = _fetch_pitcher_pitch_mix(pitcher_ids)
+        batter_whiff = _fetch_pitch_arsenal_whiff(opp_batter_ids, player_type="batter")
         odds_raw = json.loads(fetch_k_odds_comparison(confirmed_names))
         odds_by_player = {c["player"]: c for c in odds_raw.get("comparisons", [])}
 
@@ -497,6 +570,8 @@ class Ace:
             form = _fetch_pitcher_recent_form(pid)
             whiff_splits = pitcher_whiff.get(pid, {})
             odds_entry = odds_by_player.get(name, {})
+            batter_splits = [batter_whiff[bid] for bid in opp_lineup_ids if bid in batter_whiff]
+            opp_whiff_vs_mix = _weighted_opp_whiff(pitcher_mix.get(pid, {}), batter_splits)
 
             sig = {
                 "k_percent": _tofloat(statcast_row.get("k_percent")),
@@ -510,7 +585,7 @@ class Ace:
                 "pitcher_whiff_fastball": whiff_splits.get("whiff_fastball"),
                 "pitcher_whiff_breaking": whiff_splits.get("whiff_breaking"),
                 "pitcher_whiff_offspeed": whiff_splits.get("whiff_offspeed"),
-                "opp_whiff_vs_mix": None,  # populated below once lineup IDs resolve
+                "opp_whiff_vs_mix": opp_whiff_vs_mix,
                 "ev_10": odds_entry.get("ev_10"),
                 "value_edge": odds_entry.get("value_edge"),
                 "kelly_size": odds_entry.get("kelly_size"),

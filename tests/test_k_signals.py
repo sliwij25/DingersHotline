@@ -361,3 +361,106 @@ class TestAceMlBlend:
         from agents.k_predictor import _score_pitcher
         pure_score = _score_pitcher(_base_k_sig())
         assert raw_score != pure_score
+
+
+class TestPitcherPitchMix:
+
+    def test_fetch_pitcher_pitch_mix_returns_usage_fractions(self):
+        from agents.k_predictor import _fetch_pitcher_pitch_mix
+
+        csv_text = (
+            "player_id,pitch_type,pa\n"
+            "543037,FF,100\n"
+            "543037,SI,50\n"
+            "543037,SL,80\n"
+            "543037,CH,20\n"
+        )
+        fake_resp = MagicMock()
+        fake_resp.raise_for_status.return_value = None
+        fake_resp.text = csv_text
+
+        with patch("agents.k_predictor.requests.get", return_value=fake_resp):
+            result = _fetch_pitcher_pitch_mix([543037])
+
+        total = 100 + 50 + 80 + 20
+        assert round(result[543037]["fastball"], 4) == round((100 + 50) / total, 4)
+        assert round(result[543037]["breaking"], 4) == round(80 / total, 4)
+        assert round(result[543037]["offspeed"], 4) == round(20 / total, 4)
+        assert round(sum(result[543037].values()), 4) == 1.0
+
+    def test_fetch_pitcher_pitch_mix_returns_empty_dict_on_request_failure(self):
+        from agents.k_predictor import _fetch_pitcher_pitch_mix
+
+        with patch("agents.k_predictor.requests.get", side_effect=Exception("network down")):
+            result = _fetch_pitcher_pitch_mix([543037])
+
+        assert result == {}
+
+    def test_fetch_pitcher_pitch_mix_returns_empty_dict_for_empty_input(self):
+        from agents.k_predictor import _fetch_pitcher_pitch_mix
+        assert _fetch_pitcher_pitch_mix([]) == {}
+
+
+class TestGatherDataOppWhiffWiring:
+
+    def test_opp_whiff_vs_mix_populated_from_confirmed_lineup(self):
+        """
+        _gather_data() must read confirmed opposing batting orders from
+        game.lineups.awayPlayers/homePlayers (Fix #2), fetch pitch-mix
+        usage + opposing batter whiff splits, and populate
+        opp_whiff_vs_mix as a real float (not the hardcoded None it used
+        to ship with) whenever both the lineup and whiff data resolve.
+        """
+        from agents.k_predictor import Ace, _weighted_opp_whiff
+
+        schedule_resp = {
+            "dates": [{
+                "games": [{
+                    "teams": {
+                        "away": {
+                            "team": {"name": "NYY"},
+                            "probablePitcher": {"id": 111, "fullName": "Away Ace"},
+                        },
+                        "home": {
+                            "team": {"name": "BOS"},
+                            "probablePitcher": {"id": 222, "fullName": "Home Ace"},
+                        },
+                    },
+                    "lineups": {
+                        "awayPlayers": [{"id": 901, "fullName": "Away Batter"}],
+                        "homePlayers": [{"id": 902, "fullName": "Home Batter"}],
+                    },
+                }],
+            }],
+        }
+        schedule_http_resp = MagicMock()
+        schedule_http_resp.raise_for_status.return_value = None
+        schedule_http_resp.json.return_value = schedule_resp
+
+        pitcher_mix = {
+            111: {"fastball": 0.60, "breaking": 0.30, "offspeed": 0.10},
+        }
+        # Away pitcher (111) faces the HOME lineup (player 902).
+        batter_whiff = {
+            902: {"whiff_fastball": 20.0, "whiff_breaking": 30.0, "whiff_offspeed": 40.0},
+        }
+
+        def fake_arsenal_whiff(player_ids, player_type):
+            if player_type == "batter":
+                return batter_whiff
+            return {}
+
+        ace = Ace()
+        with patch("agents.k_predictor.requests.get", return_value=schedule_http_resp), \
+             patch("agents.k_predictor._fetch_pitcher_k_statcast", return_value={}), \
+             patch("agents.k_predictor._fetch_pitch_arsenal_whiff", side_effect=fake_arsenal_whiff), \
+             patch("agents.k_predictor._fetch_pitcher_pitch_mix", return_value=pitcher_mix), \
+             patch("agents.k_predictor._fetch_pitcher_recent_form", return_value={}), \
+             patch("agents.k_predictor.fetch_k_odds_comparison", return_value='{"comparisons": []}'):
+            context = ace._gather_data()
+
+        sig = context["pitcher_signals"]["Away Ace"]
+        expected = _weighted_opp_whiff(pitcher_mix[111], [batter_whiff[902]])
+
+        assert sig["opp_whiff_vs_mix"] is not None
+        assert sig["opp_whiff_vs_mix"] == expected
