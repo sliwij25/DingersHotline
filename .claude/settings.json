@@ -1,14 +1,3 @@
 {
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/joesliwinski/AIProjects/DingersHotline/.claude/hooks/auto-push-site.sh"
-          }
-        ]
-      }
-    ]
-  }
+  "hooks": {}
 }

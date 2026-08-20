@@ -30,8 +30,8 @@ can pick up without re-deriving the architecture.
 
 ### Cache re-runs
 - After the first morning run, use `--use-cache` for any re-runs triggered by lineup updates.
-- The top-20 pool does NOT change on cache re-runs — only reordering or removal of scratched players.
-- Never add new players to the top-20 list mid-day.
+- The morning top-20 is locked — unsolicited swaps from ML weight changes or lineup confirmations cannot alter it.
+- Scratched players ARE removed and backfilled with the next-best ranked players not in the original top-20 — the list always stays at exactly 20.
 
 ### Scratched players
 - Update `cache/scratched.json` whenever a player is scratched. Never ask the user to clear it manually.

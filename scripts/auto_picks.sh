@@ -36,11 +36,12 @@ if [ ! -f "$PICKS_FILE" ]; then
     log "No picks yet. First game in ${MINS}min."
 
     if [ "$MINS" = "9999" ]; then
-        log "No games today — nothing to do."
+        log "No games today — scheduling check-in wake for tomorrow."
+        $PYTHON scripts/schedule_wake.py 2>&1 | tee -a "$LOG_FILE"
         exit 0
     fi
 
-    if [ "$MINS" -le 110 ] && [ "$MINS" -ge -60 ]; then
+    if [ "$MINS" -le 110 ] && [ "$MINS" -ge -120 ]; then
         # Within window: run fresh picks
         log "Within window (${MINS}min to first game) — running fresh picks."
         $PYTHON scripts/daily_picks.py 2>&1 | tee -a "$LOG_FILE"
