@@ -1849,46 +1849,330 @@ renderDetail();
 </html>"""
 
 
+def _build_k_card(rank: int, pick: dict) -> str:
+    pitcher   = pick.get("pitcher", "Unknown")
+    matchup   = pick.get("matchup", "")
+    conf      = pick.get("confidence", "LOW")
+    score     = pick.get("score", 0)
+    reasoning = pick.get("reasoning", "")
+    sig       = pick.get("signals", {})
+
+    k_line    = sig.get("k_line")
+    k_pct     = sig.get("k_percent")
+    whiff_pct = sig.get("whiff_percent")
+    csw_pct   = sig.get("csw_percent")
+    k9_l3     = sig.get("k_per_9_blended")
+    days_rest = sig.get("days_rest")
+    opp_whiff = sig.get("opp_whiff_vs_mix")
+
+    conf_class  = _confidence_class(conf)
+    score_class = "score-high" if score >= 12 else ("score-mid" if score >= 8 else "score-low")
+
+    line_html = f'<span class="tag tag-dim">O/U {_esc(k_line)}</span>' if k_line is not None else ""
+
+    rest_html = ""
+    if days_rest is not None:
+        cls = "tag-green" if days_rest >= 5 else ("tag-red" if days_rest <= 3 else "tag-dim")
+        rest_html = f'<span class="tag {cls}">{days_rest:.0f} days rest</span>'
+
+    opp_html = ""
+    if opp_whiff is not None:
+        cls = "tag-green" if opp_whiff >= 25 else ("tag-red" if opp_whiff <= 18 else "tag-dim")
+        opp_html = f'<span class="tag {cls}">Opp Whiff {opp_whiff:.1f}%</span>'
+
+    stats_row = ""
+    if k_pct is not None:
+        stats_row += _stat("K%", k_pct, suffix="%", fmt=".1f")
+    if whiff_pct is not None:
+        stats_row += _stat("Whiff%", whiff_pct, suffix="%", fmt=".1f")
+    if csw_pct is not None:
+        stats_row += _stat("CSW%", csw_pct, suffix="%", fmt=".1f")
+    if k9_l3 is not None:
+        stats_row += _stat("K/9 L3", k9_l3, fmt=".1f")
+
+    stats_html = f'<div class="stats-row">{stats_row}</div>' if stats_row else ""
+    tags_html  = line_html + rest_html + opp_html
+
+    return f"""
+        <div class="pick-card">
+            <div class="card-rank">
+                <span class="rank-num">#{rank}</span>
+            </div>
+            <div class="card-body">
+                <div class="player-row">
+                    <span class="player-name">{_esc(pitcher)}</span>
+                    <span class="conf-badge {conf_class}">{_esc(conf)}</span>
+                    <span class="score-badge {score_class}">{score:.1f}</span>
+                </div>
+                <div class="matchup-line">{_esc(matchup)}</div>
+                {stats_html}
+                <div class="tags-row">{tags_html}</div>
+                <div class="why-line"><span class="why-label">Why:</span> {_esc(reasoning)}</div>
+            </div>
+        </div>"""
+
+
 def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
     """
     Generate docs/strikeouts.html — the strikeout model's picks page.
-    Same site-header/model-chips/nav-link conventions as the HR pages
-    (see generate_picks_html), rendered as a standalone page.
+    Reuses the HR pages' design system (site-header/nav-link/pick-card/etc.)
+    so the page is styled consistently, self-contained (no external
+    stylesheet dependency), and rendered as a standalone page.
     """
-    rows = []
-    for i, p in enumerate(k_picks, 1):
-        sig = p.get("signals", {})
-        k_line = sig.get("k_line")
-        line_str = f"O/U {k_line}" if k_line is not None else "—"
-        rows.append(f"""
-      <div class="pick-card">
-        <div class="pick-rank">#{i}</div>
-        <div class="pick-body">
-          <div class="pick-name">{p['pitcher']}</div>
-          <div class="pick-matchup">{p['matchup']}</div>
-          <div class="pick-reasoning">{p['reasoning']}</div>
-          <div class="pick-meta">
-            <span class="confidence-{p['confidence'].lower()}">{p['confidence']}</span>
-            <span class="k-line">{line_str}</span>
-            <span class="score">score {p['score']:.1f}</span>
-          </div>
-        </div>
-      </div>""")
+    cards_html = "".join(_build_k_card(i, p) for i, p in enumerate(k_picks, 1))
 
-    return f"""<!doctype html>
+    return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Strikeout Picks — Dingers Hotline</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {{
+    --bg:         #FAFAF7;
+    --surface:    #FFFFFF;
+    --surface2:   #F3F2EE;
+    --border:     #E2DED6;
+    --border-dark:#C8C2B8;
+    --navy:       #1B2A4A;
+    --navy-mid:   #2D4070;
+    --red:        #C8102E;
+    --red-dim:    #F9E5E8;
+    --gold:       #D4A017;
+    --green:      #1A6B3C;
+    --green-dim:  #E4F2EB;
+    --amber:      #B45309;
+    --amber-dim:  #FEF3C7;
+    --text:       #1A1A1A;
+    --text-sub:   #6B6560;
+    --text-dim:   #A8A29E;
+  }}
+
+  *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+
+  body {{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }}
+
+  .site-header {{
+    background: var(--navy);
+    background-image: repeating-linear-gradient(
+      90deg, transparent, transparent 47px,
+      rgba(255,255,255,0.04) 47px, rgba(255,255,255,0.04) 48px
+    );
+    color: #fff;
+    padding: 28px 36px 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    border-bottom: 4px solid var(--red);
+  }}
+  .header-left {{ display: flex; flex-direction: column; gap: 6px; }}
+  .site-title {{
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(26px, 4.5vw, 44px);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #FFFFFF;
+    line-height: 1;
+  }}
+  .site-date {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }}
+  .model-note {{
+    font-size: 12px;
+    color: var(--text-sub);
+    padding: 16px 36px 0;
+    max-width: 720px;
+  }}
+  .model-chips {{ display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }}
+  .nav-link {{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.10);
+    color: #fff;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.18);
+    white-space: nowrap;
+    transition: background 0.15s;
+  }}
+  .nav-link:hover {{ background: rgba(255,255,255,0.18); }}
+
+  .picks-grid {{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr));
+    gap: 10px;
+    padding: 20px 36px 36px;
+  }}
+
+  .pick-card {{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    display: flex;
+    gap: 14px;
+  }}
+  .card-rank {{ display: flex; flex-direction: column; align-items: center; min-width: 40px; padding-top: 2px; }}
+  .rank-num {{
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 1;
+    color: var(--navy);
+  }}
+  .card-body {{ flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }}
+  .player-row {{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }}
+  .player-name {{
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+    color: var(--navy);
+    letter-spacing: 0.02em;
+    flex: 1;
+    min-width: 0;
+  }}
+  .conf-badge {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 2px 7px;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }}
+  .conf-high {{ background: var(--green-dim); color: var(--green); border: 1px solid #A7D7B8; }}
+  .conf-med  {{ background: var(--amber-dim); color: var(--amber); border: 1px solid #FCD34D; }}
+  .conf-low  {{ background: var(--surface2);  color: var(--text-dim); border: 1px solid var(--border); }}
+  .score-badge {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 2px;
+  }}
+  .score-high {{ color: var(--red);     background: var(--red-dim);   border: 1px solid #F9A8B4; }}
+  .score-mid  {{ color: var(--navy);    background: #EEF1F8;          border: 1px solid #C5CDE8; }}
+  .score-low  {{ color: var(--text-sub); background: var(--surface2); border: 1px solid var(--border); }}
+  .matchup-line {{
+    font-size: 12px;
+    color: var(--text-sub);
+    font-family: 'Source Serif 4', serif;
+  }}
+  .stats-row {{ display: flex; gap: 4px; flex-wrap: wrap; }}
+  .stat {{
+    display: flex;
+    flex-direction: column;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 9px;
+    min-width: 64px;
+  }}
+  .stat-label {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    line-height: 1;
+    margin-bottom: 2px;
+  }}
+  .stat-value {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+  }}
+  .tags-row {{ display: flex; flex-wrap: wrap; gap: 4px; }}
+  .tag {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    letter-spacing: 0.02em;
+  }}
+  .tag-green {{ color: var(--green); background: var(--green-dim); border-color: #A7D7B8; }}
+  .tag-red   {{ color: var(--red);   background: var(--red-dim);   border-color: #F9A8B4; }}
+  .tag-dim   {{ color: var(--text-sub); background: var(--surface2); border-color: var(--border); }}
+  .why-line {{
+    font-size: 12px;
+    color: var(--text-sub);
+    line-height: 1.4;
+    font-family: 'Source Serif 4', serif;
+    font-style: italic;
+  }}
+  .why-label {{
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-right: 4px;
+    font-style: normal;
+  }}
+  .site-footer {{
+    background: var(--navy);
+    border-top: 3px solid var(--red);
+    padding: 14px 36px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.06em;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }}
+  .disclaimer {{
+    width: 100%;
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.04em;
+    text-align: center;
+    margin-top: 4px;
+  }}
+  @media (max-width: 600px) {{
+    .site-header {{ padding: 18px; }}
+    .model-note  {{ padding: 12px 16px 0; }}
+    .picks-grid  {{ padding: 16px; gap: 8px; }}
+    .site-footer {{ padding: 12px 16px; }}
+  }}
+</style>
 </head>
 <body>
 
 <header class="site-header">
   <div class="header-left">
     <div class="site-title">Dingers Hotline — Strikeout Picks</div>
-    <div class="site-date">Latest Update: {today} &nbsp;·&nbsp; {len(k_picks)} Picks</div>
+    <div class="site-date">Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks</div>
   </div>
   <div class="model-chips">
     <a class="nav-link" href="index.html">← HR Picks</a>
@@ -1897,13 +2181,20 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
   </div>
 </header>
 
-<main class="picks-container">
-  <p class="model-note">
-    Hypothetical model P&amp;L only — $10 on every published K pick, tracked
-    separately from the HR model's portfolio.
-  </p>
-  {"".join(rows)}
+<p class="model-note">
+  Hypothetical model P&amp;L only — $10 on every published K pick, tracked
+  separately from the HR model's portfolio.
+</p>
+
+<main class="picks-grid">
+{cards_html}
 </main>
+
+<footer class="site-footer">
+  <span>Dingers Hotline — Strikeout Picks</span>
+  <span>Generated {_esc(today)}</span>
+  <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
+</footer>
 
 </body>
 </html>
