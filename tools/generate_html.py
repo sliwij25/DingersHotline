@@ -1994,12 +1994,6 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }}
-  .model-note {{
-    font-size: 12px;
-    color: var(--text-sub);
-    padding: 16px 36px 0;
-    max-width: 720px;
-  }}
   .model-chips {{ display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }}
   .nav-link {{
     display: inline-flex;
@@ -2161,7 +2155,6 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
   }}
   @media (max-width: 600px) {{
     .site-header {{ padding: 18px; }}
-    .model-note  {{ padding: 12px 16px 0; }}
     .picks-grid  {{ padding: 16px; gap: 8px; }}
     .site-footer {{ padding: 12px 16px; }}
   }}
@@ -2180,11 +2173,6 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
     <a class="nav-link" href="hit-rate.html">Hit Rate 📅</a>
   </div>
 </header>
-
-<p class="model-note">
-  Hypothetical model P&amp;L only — $10 on every published K pick, tracked
-  separately from the HR model's portfolio.
-</p>
 
 <main class="picks-grid">
 {cards_html}
