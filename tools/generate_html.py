@@ -1156,6 +1156,13 @@ def generate_picks_html(
 # Season HR Leaderboard page
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _k_per_9(strikeouts: int | None, ip: float | None) -> float | None:
+    """Strikeouts per 9 innings pitched. None if either input is missing or ip is 0."""
+    if strikeouts is None or ip is None or ip == 0:
+        return None
+    return strikeouts * 9 / ip
+
+
 def generate_leaderboard_html(today_str: str | None = None) -> str:
     """Fetch Statcast batter leaderboard, sort by HR, return leaderboard.html."""
     import csv
@@ -1445,6 +1452,302 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
 
 <footer class="site-footer">
   <span>Dingers Hotline &nbsp;·&nbsp; Season HR Leaders</span>
+  <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
+</footer>
+
+</body>
+</html>"""
+
+
+def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
+    """Fetch Statcast pitcher leaderboard, sort by season strikeouts, return k-leaderboard.html."""
+    import csv
+    import io
+    import requests
+    from datetime import date
+    from pathlib import Path
+
+    today_str = today_str or date.today().isoformat()
+    season    = date.today().year
+
+    # ── Load Statcast CSV (prefer today's cache) ──────────────────────────────
+    cache_path = Path(__file__).parent.parent / "cache" / f"statcast_pitcher_leaders_{today_str}.csv"
+    text = None
+    if cache_path.exists():
+        text = cache_path.read_text(encoding="utf-8").lstrip("﻿")
+    else:
+        url = (
+            f"https://baseballsavant.mlb.com/leaderboard/custom"
+            f"?year={season}&type=pitcher&filter=&sort=4&sortDir=desc&min=20"
+            f"&selections=strikeout,k_percent,whiff_percent,p_formatted_ip"
+            f"&chart=false&r=no&exactNameSearch=false&csv=true"
+        )
+        try:
+            resp = requests.get(url, timeout=20)
+            text = resp.text.lstrip("﻿")
+        except Exception:
+            text = ""
+
+    rows: list[dict] = []
+    if text:
+        try:
+            rows = list(csv.DictReader(io.StringIO(text)))
+        except Exception:
+            rows = []
+
+    # ── Sort by strikeouts, take top 50 ────────────────────────────────────────
+    def _so(r):
+        try:
+            return int(r.get("strikeout") or 0)
+        except ValueError:
+            return 0
+
+    rows_sorted = sorted(rows, key=_so, reverse=True)[:50]
+
+    # ── Batch-fetch current team from MLB Stats API ───────────────────────────
+    _TEAM_ABBREV = {
+        108: "LAA", 109: "AZ",  110: "BAL", 111: "BOS", 112: "CHC",
+        113: "CIN", 114: "CLE", 115: "COL", 116: "DET", 117: "HOU",
+        118: "KC",  119: "LAD", 120: "WSH", 121: "NYM", 133: "ATH",
+        134: "PIT", 135: "SD",  136: "SEA", 137: "SF",  138: "STL",
+        139: "TB",  140: "TEX", 141: "TOR", 142: "MIN", 143: "PHI",
+        144: "ATL", 145: "CWS", 146: "MIA", 147: "NYY", 158: "MIL",
+    }
+    pid_list = [r.get("player_id", "") for r in rows_sorted if r.get("player_id", "").strip()]
+    team_map: dict[str, str] = {}
+    if pid_list:
+        try:
+            mlb_url = (
+                "https://statsapi.mlb.com/api/v1/people"
+                f"?personIds={','.join(pid_list)}&hydrate=currentTeam"
+            )
+            resp = requests.get(mlb_url, timeout=15)
+            for p in resp.json().get("people", []):
+                tid = p.get("currentTeam", {}).get("id")
+                team_map[str(p["id"])] = _TEAM_ABBREV.get(tid, "") if tid else ""
+        except Exception:
+            pass
+
+    # ── Name formatter: "Last, First" → "First Last" ─────────────────────────
+    def _fmt_name(raw: str) -> str:
+        parts = raw.split(", ", 1)
+        return f"{parts[1]} {parts[0]}" if len(parts) == 2 else raw
+
+    # ── Compute percentile thresholds (p33 / p67) for conditional formatting ──
+    def _thresholds(vals: list[float]) -> tuple[float, float]:
+        s = sorted(v for v in vals if v is not None)
+        if not s:
+            return (0.0, 0.0)
+        n = len(s)
+        p33 = s[int(n * 0.33)]
+        p67 = s[int(n * 0.67)]
+        return (p33, p67)
+
+    def _safe_float(v) -> float | None:
+        try:
+            return float(v) if v not in (None, "", "null") else None
+        except (ValueError, TypeError):
+            return None
+
+    k_pcts  = [_safe_float(r.get("k_percent")) for r in rows_sorted]
+    whiffs  = [_safe_float(r.get("whiff_percent")) for r in rows_sorted]
+    k9s     = [_k_per_9(_so(r), _safe_float(r.get("p_formatted_ip"))) for r in rows_sorted]
+
+    k_p33, k_p67   = _thresholds(k_pcts)
+    w_p33, w_p67   = _thresholds(whiffs)
+    k9_p33, k9_p67 = _thresholds(k9s)
+
+    def _cell_class(val: float | None, p33: float, p67: float) -> str:
+        if val is None:
+            return ""
+        if val >= p67:
+            return " cell-g"
+        if val >= p33:
+            return " cell-y"
+        return " cell-r"
+
+    # ── Build table rows ──────────────────────────────────────────────────────
+    row_html_parts: list[str] = []
+    prev_so = None
+    display_rank = 0
+    actual_rank  = 0
+    for r in rows_sorted:
+        actual_rank += 1
+        so = _so(r)
+        if so != prev_so:
+            display_rank = actual_rank
+            prev_so = so
+
+        name   = _fmt_name(r.get("last_name, first_name", ""))
+        pid    = r.get("player_id", "")
+        team   = team_map.get(pid, "")
+        k_pct  = _safe_float(r.get("k_percent"))
+        whiff  = _safe_float(r.get("whiff_percent"))
+        k9     = _k_per_9(so, _safe_float(r.get("p_formatted_ip")))
+
+        k_cls  = _cell_class(k_pct, k_p33, k_p67)
+        w_cls  = _cell_class(whiff, w_p33, w_p67)
+        k9_cls = _cell_class(k9, k9_p33, k9_p67)
+
+        k_pct_str = f"{k_pct:.1f}%" if k_pct is not None else "—"
+        whiff_str = f"{whiff:.1f}%" if whiff is not None else "—"
+        k9_str    = f"{k9:.1f}"     if k9    is not None else "—"
+
+        row_html_parts.append(
+            f'<tr>'
+            f'<td class="td-rank">{display_rank}</td>'
+            f'<td class="td-player">{_esc(name)}</td>'
+            f'<td class="td-team">{_esc(team)}</td>'
+            f'<td class="td-hr">{so}</td>'
+            f'<td class="td-stat{k_cls} col-stat">{k_pct_str}</td>'
+            f'<td class="td-stat{w_cls} col-stat">{whiff_str}</td>'
+            f'<td class="td-stat{k9_cls} col-stat">{k9_str}</td>'
+            f'</tr>'
+        )
+
+    rows_html = "\n      ".join(row_html_parts)
+
+    # threshold labels for metric guide
+    k_top  = f"≥{k_p67:.1f}%"
+    w_top  = f"≥{w_p67:.1f}%"
+    k9_top = f"≥{k9_p67:.1f}"
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Season Strikeout Leaders — Dingers Hotline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {{
+    --bg:       #FAFAF7;
+    --surface:  #FFFFFF;
+    --border:   #E2DED6;
+    --navy:     #1B2A4A;
+    --red:      #C8102E;
+    --text:     #1A1A1A;
+    --text-sub: #6B6560;
+    --muted:    #A8A29E;
+  }}
+  *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{ background: var(--bg); color: var(--text); font-family: 'Source Serif 4', Georgia, serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }}
+
+  .site-header {{
+    background: var(--navy);
+    background-image: repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(255,255,255,0.04) 47px, rgba(255,255,255,0.04) 48px);
+    color: #fff; padding: 28px 36px 24px;
+    display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 20px;
+    border-bottom: 4px solid var(--red);
+  }}
+  .header-left {{ display: flex; flex-direction: column; gap: 6px; }}
+  .site-title {{ font-family: 'Oswald', sans-serif; font-weight: 700; font-size: clamp(30px, 5vw, 52px); letter-spacing: 0.04em; text-transform: uppercase; color: #fff; line-height: 1; display: flex; align-items: center; gap: 12px; }}
+  .title-ball {{ display: inline-block; width: 0.85em; height: 0.85em; flex-shrink: 0; opacity: 0.9; }}
+  .site-date {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.12em; text-transform: uppercase; }}
+  .nav-link {{ display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.10); color: #fff; font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; padding: 10px 18px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.18); transition: background 0.15s; white-space: nowrap; }}
+  .nav-link:hover {{ background: rgba(255,255,255,0.18); }}
+
+  .page-body {{ max-width: 820px; margin: 32px auto 48px; padding: 0 20px; }}
+  .page-title {{ font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--navy); margin-bottom: 4px; }}
+  .page-subtitle {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; }}
+
+  .lb-table {{ width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }}
+  .lb-table thead tr {{ background: var(--navy); color: rgba(255,255,255,0.75); }}
+  .lb-table thead th {{ font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 12px; text-align: left; }}
+  .lb-table thead th.num {{ text-align: right; }}
+  .lb-table tbody tr {{ border-bottom: 1px solid var(--border); }}
+  .lb-table tbody tr:last-child {{ border-bottom: none; }}
+  .lb-table tbody tr:hover {{ filter: brightness(0.97); }}
+  .lb-table td {{ padding: 9px 12px; font-size: 13px; }}
+  .td-rank {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); width: 36px; text-align: right; padding-right: 16px; }}
+  .td-player {{ font-weight: 600; color: var(--text); min-width: 160px; }}
+  .td-team {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-sub); width: 48px; }}
+  .td-hr {{ font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; color: var(--red); text-align: right; width: 52px; }}
+  .td-stat {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; text-align: right; width: 72px; }}
+
+  .cell-g {{ background: #DCF1E5; color: #155D33; }}
+  .cell-y {{ background: #FEF3C7; color: #92400E; }}
+  .cell-r {{ background: #FCE8EA; color: #9B1220; }}
+
+  .metric-defs {{ margin-top: 16px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; gap: 10px; }}
+  .metric-defs-title {{ font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }}
+  .color-legend {{ display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }}
+  .legend-item {{ display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-sub); }}
+  .legend-swatch {{ width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }}
+  .swatch-g {{ background: #DCF1E5; border: 1px solid #A8D9BC; }}
+  .swatch-y {{ background: #FEF3C7; border: 1px solid #F9D56E; }}
+  .swatch-r {{ background: #FCE8EA; border: 1px solid #F0A8B0; }}
+  .metric-rows {{ display: flex; flex-wrap: wrap; gap: 8px 32px; }}
+  .metric-def {{ display: flex; align-items: baseline; gap: 6px; font-size: 12px; color: var(--text-sub); }}
+  .metric-def-label {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--navy); white-space: nowrap; }}
+
+  .site-footer {{ text-align: center; padding: 16px 24px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 40px; }}
+  .disclaimer {{ margin-top: 6px; max-width: 540px; margin-left: auto; margin-right: auto; }}
+
+  @media (max-width: 600px) {{
+    .site-header {{ padding: 18px; }}
+    .col-stat {{ display: none; }}
+    .td-player {{ min-width: unset; }}
+  }}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-left">
+    <div class="site-title">
+      <svg class="title-ball" fill="#ffffff" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g><path d="M455.857,56.144c-74.86-74.859-196.662-74.859-271.521,0C17.087,223.392-9.275,272.783,2.398,298.264c8.318,18.153,32.898,19.077,63.015,17.249l-36.537,97.203c-6.838,18.194-2.549,38.035,11.195,51.778c13.744,13.743,33.583,18.035,51.778,11.195L197.2,436.089c-2.507,34.987-3.349,64.4,16.534,73.511c3.325,1.524,7.055,2.4,11.403,2.4c28.973-0.002,85.294-38.91,230.72-184.335C530.715,252.806,530.715,131.003,455.857,56.144z M441.431,313.239C369.446,385.224,316.37,433.95,279.174,462.2c-41.868,31.797-54.167,30.124-56.94,28.854c-2.851-1.307-4.901-7.374-5.626-16.646c-0.922-11.81,0.244-27.541,1.479-44.196c0.209-2.826,0.421-5.681,0.625-8.557c0.247-3.466-1.288-6.82-4.073-8.899c-1.788-1.335-3.934-2.026-6.102-2.026c-1.209,0-2.424,0.214-3.589,0.652l-120.277,45.21c-10.765,4.047-22.043,1.608-30.174-6.524c-8.131-8.131-10.57-19.411-6.524-30.174l42.126-112.072c1.224-3.258,0.703-6.915-1.382-9.702c-2.085-2.787-5.444-4.321-8.919-4.06c-14.536,1.076-31.012,2.295-42.857,1.278c-8.892-0.763-14.721-2.793-15.994-5.572c-1.27-2.772-2.944-15.072,28.855-56.941c28.25-37.196,76.975-90.271,148.96-162.255c66.904-66.905,175.764-66.905,242.669,0C508.335,137.474,508.335,246.335,441.431,313.239z"/></g><g><path d="M320.096,28.297c-90.213,0-163.608,73.394-163.608,163.608s73.395,163.608,163.608,163.608s163.608-73.395,163.608-163.608S410.31,28.297,320.096,28.297z M320.096,48.698c36.338,0,69.551,13.613,94.828,35.995c-26.187,23.225-59.477,35.903-94.828,35.903c-35.351,0-68.641-12.679-94.828-35.903C250.544,62.309,283.758,48.698,320.096,48.698z M320.096,335.111c-36.338,0.001-69.552-13.611-94.829-35.995c26.187-23.225,59.478-35.903,94.829-35.903c35.351,0,68.641,12.679,94.828,35.903C389.647,321.499,356.433,335.111,320.096,335.111z M429.215,284.535c-30.034-26.977-68.377-41.722-109.12-41.722c-40.743,0-79.086,14.745-109.12,41.722c-21.246-24.99-34.087-57.336-34.087-92.631c0.001-35.293,12.842-67.64,34.088-92.63c30.034,26.977,68.377,41.722,109.12,41.722s79.086-14.745,109.119-41.722c21.246,24.99,34.087,57.336,34.087,92.63C463.302,227.198,450.46,259.545,429.215,284.535z"/></g></svg>
+      Dingers Hotline
+    </div>
+    <div class="site-date">Season K Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="nav-link" href="index.html">← Today's Picks</a>
+    <a class="nav-link" href="pick-of-the-day.html">Pick of Day ★</a>
+    <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
+  </div>
+</header>
+
+<div class="page-body">
+  <div class="page-title">2026 Strikeout Leaders</div>
+  <div class="page-subtitle">Top 50 · Statcast data · Updated daily with morning picks</div>
+
+  <table class="lb-table">
+    <thead>
+      <tr>
+        <th style="width:36px">#</th>
+        <th>Player</th>
+        <th>Team</th>
+        <th class="num">K</th>
+        <th class="num col-stat">K%</th>
+        <th class="num col-stat">Whiff%</th>
+        <th class="num col-stat">K/9</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows_html}
+    </tbody>
+  </table>
+
+  <div class="metric-defs">
+    <div class="metric-defs-title">Metric Guide</div>
+    <div class="color-legend">
+      <div class="legend-item"><div class="legend-swatch swatch-g"></div> Top third of this leaderboard</div>
+      <div class="legend-item"><div class="legend-swatch swatch-y"></div> Middle third</div>
+      <div class="legend-item"><div class="legend-swatch swatch-r"></div> Bottom third</div>
+    </div>
+    <div class="metric-rows">
+      <div class="metric-def"><span class="metric-def-label">K%</span> Strikeouts as a share of batters faced. Elite swing-and-miss rate. Top third: {_esc(k_top)}.</div>
+      <div class="metric-def"><span class="metric-def-label">Whiff%</span> Empty swings per swing taken. Top third: {_esc(w_top)}.</div>
+      <div class="metric-def"><span class="metric-def-label">K/9</span> Strikeouts per 9 innings — traditional rate stat. Top third: {_esc(k9_top)}.</div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span>Dingers Hotline &nbsp;·&nbsp; Season Strikeout Leaders</span>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
