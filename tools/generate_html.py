@@ -1127,6 +1127,7 @@ def generate_picks_html(
     <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
     <a class="nav-link" href="hit-rate.html">Hit Rate 📅</a>
     <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
+    <a class="nav-link" href="k-leaderboard.html">K Leaders</a>
   </div>
   <div class="tg-join">
     <div class="tg-join-label">Get notified the moment today's picks are ready — join the free Telegram channel.</div>
@@ -1411,6 +1412,7 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
     <a class="nav-link" href="index.html">← Today's Picks</a>
     <a class="nav-link" href="pick-of-the-day.html">Pick of Day ★</a>
     <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
+    <a class="nav-link" href="k-leaderboard.html">K Leaders</a>
   </div>
 </header>
 
@@ -1707,6 +1709,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
     <a class="nav-link" href="index.html">← Today's Picks</a>
     <a class="nav-link" href="pick-of-the-day.html">Pick of Day ★</a>
     <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
+    <a class="nav-link active" href="#">K Leaders</a>
   </div>
 </header>
 
@@ -1937,6 +1940,7 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
     <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
     <a class="nav-link active" href="#">Hit Rate 📅</a>
     <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
+    <a class="nav-link" href="k-leaderboard.html">K Leaders</a>
   </div>
   <div class="tg-join">
     <div class="tg-join-label">Get notified the moment today's picks are ready.</div>
@@ -2556,6 +2560,7 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
   <div class="model-chips">
     <a class="nav-link" href="index.html">← HR Picks</a>
     <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
+    <a class="nav-link" href="k-leaderboard.html">K Leaders</a>
     <a class="nav-link" href="hit-rate.html">Hit Rate 📅</a>
   </div>
 </header>
