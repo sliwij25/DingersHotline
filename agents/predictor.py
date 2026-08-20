@@ -1663,9 +1663,15 @@ def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
                 ip = 0
             if ip < 3:
                 continue
+            game_date = split.get("date", "")
+            if game_date == date.today().isoformat():
+                # Today's game may already be in progress (or finished) when this
+                # runs — it's the outing being predicted, not a completed prior
+                # start, so it must not count as "recent form" or reset days_rest.
+                continue
             pitches = stat.get("numberOfPitches")
             all_logs.append({
-                "date":       split.get("date", ""),
+                "date":       game_date,
                 "hr_allowed": int(stat.get("homeRuns") or 0),
                 "so":         int(stat.get("strikeOuts") or 0),
                 "ip":         ip,
@@ -1676,6 +1682,9 @@ def _fetch_pitcher_recent_form(pitcher_id: int, n_starts: int = 3) -> dict:
     if not all_logs:
         return {}
 
+    # MLB Stats API returns gameLog splits oldest-first; sort newest-first
+    # so "recent" starts and days_rest reflect the pitcher's latest outing.
+    all_logs.sort(key=lambda g: g["date"], reverse=True)
     recent_logs = all_logs[:n_starts]
     recent_hr   = sum(g["hr_allowed"] for g in recent_logs)
     recent_so   = sum(g["so"] for g in recent_logs)

@@ -75,6 +75,32 @@ class TestPitcherRecentFormKFields:
 
         assert result["days_rest"] == 5
 
+    def test_todays_in_progress_start_excluded_from_recent_form(self):
+        """If today's game has already started, the MLB API may include a
+        partial line for it in the gameLog. That's the outing being
+        predicted, not a completed prior start, so it must not count as
+        the most recent start (days_rest) or be blended into recent HR/K
+        averages."""
+        from agents.predictor import _fetch_pitcher_recent_form
+        from datetime import date, timedelta
+
+        today = date.today().isoformat()
+        five_days_ago = (date.today() - timedelta(days=5)).isoformat()
+        rows = [
+            (today, 3, 2, 4, "4.0", 45),          # in-progress start for today's game (>=3 IP so it isn't dropped by the short-outing filter)
+            (five_days_ago, 7, 1, 2, "6.0", 95),  # actual most recent completed start
+        ]
+        fake_resp = MagicMock()
+        fake_resp.raise_for_status.return_value = None
+        fake_resp.json.return_value = _fake_gamelog_response(rows)
+
+        with patch("agents.predictor.requests.get", return_value=fake_resp):
+            result = _fetch_pitcher_recent_form(12345, n_starts=3)
+
+        assert result["days_rest"] == 5
+        assert result["total_hr"] == 1
+        assert result["total_k"] == 7
+
     def test_missing_pitch_count_falls_back_to_none(self):
         """numberOfPitches isn't always present in older/incomplete logs."""
         from agents.predictor import _fetch_pitcher_recent_form
