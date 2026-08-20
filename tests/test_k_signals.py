@@ -464,3 +464,86 @@ class TestGatherDataOppWhiffWiring:
 
         assert sig["opp_whiff_vs_mix"] is not None
         assert sig["opp_whiff_vs_mix"] == expected
+
+
+class TestFetchTeamKPct:
+
+    def test_computes_k_pct_from_season_hitting_stats(self):
+        from agents.k_predictor import _fetch_team_k_pct
+
+        fake_resp = MagicMock()
+        fake_resp.raise_for_status.return_value = None
+        fake_resp.json.return_value = {
+            "stats": [{
+                "splits": [{
+                    "stat": {"strikeOuts": 1200, "plateAppearances": 5500}
+                }]
+            }]
+        }
+
+        with patch("agents.k_predictor.requests.get", return_value=fake_resp):
+            result = _fetch_team_k_pct(147)
+
+        assert result == round(1200 / 5500, 4)
+
+    def test_returns_none_on_missing_fields(self):
+        from agents.k_predictor import _fetch_team_k_pct
+
+        fake_resp = MagicMock()
+        fake_resp.raise_for_status.return_value = None
+        fake_resp.json.return_value = {"stats": [{"splits": [{"stat": {}}]}]}
+
+        with patch("agents.k_predictor.requests.get", return_value=fake_resp):
+            assert _fetch_team_k_pct(147) is None
+
+    def test_returns_none_on_request_failure(self):
+        from agents.k_predictor import _fetch_team_k_pct
+
+        with patch("agents.k_predictor.requests.get", side_effect=Exception("boom")):
+            assert _fetch_team_k_pct(147) is None
+
+
+class TestGatherDataOppTeamKPct:
+
+    def test_attaches_opp_team_k_pct_to_signals(self):
+        from agents.k_predictor import Ace
+
+        schedule_json = {
+            "dates": [{
+                "games": [{
+                    "teams": {
+                        "away": {"team": {"id": 111, "name": "Away Team"},
+                                  "probablePitcher": {"id": 555, "fullName": "Away Pitcher"}},
+                        "home": {"team": {"id": 222, "name": "Home Team"},
+                                  "probablePitcher": {"id": 666, "fullName": "Home Pitcher"}},
+                    },
+                    "lineups": {"homePlayers": [], "awayPlayers": []},
+                }]
+            }]
+        }
+        schedule_resp = MagicMock()
+        schedule_resp.raise_for_status.return_value = None
+        schedule_resp.json.return_value = schedule_json
+
+        def fake_get(url, *args, **kwargs):
+            if url.endswith("/schedule"):
+                return schedule_resp
+            raise AssertionError(f"unexpected GET {url}")
+
+        with patch("agents.k_predictor.requests.get", side_effect=fake_get), \
+             patch("agents.k_predictor._fetch_pitcher_k_statcast", return_value={}), \
+             patch("agents.k_predictor._fetch_pitch_arsenal_whiff", return_value={}), \
+             patch("agents.k_predictor._fetch_pitcher_pitch_mix", return_value={}), \
+             patch("agents.k_predictor._fetch_pitcher_recent_form", return_value={}), \
+             patch("agents.k_predictor.fetch_k_odds_comparison", return_value='{"comparisons": []}'), \
+             patch("agents.k_predictor._fetch_team_k_pct", side_effect=lambda tid: 0.24 if tid == 222 else 0.26) as mock_team_k:
+
+            ace = Ace()
+            context = ace._gather_data()
+
+        # Away Pitcher faces the Home Team (id 222) -> opp_team_k_pct 0.24
+        assert context["pitcher_signals"]["Away Pitcher"]["opp_team_k_pct"] == 0.24
+        # Home Pitcher faces the Away Team (id 111) -> opp_team_k_pct 0.26
+        assert context["pitcher_signals"]["Home Pitcher"]["opp_team_k_pct"] == 0.26
+        # Each opposing team fetched exactly once (cached across the run)
+        assert mock_team_k.call_count == 2

@@ -70,6 +70,33 @@ def _fetch_pitcher_k_statcast() -> dict:
         return {}
 
 
+def _fetch_team_k_pct(team_id: int) -> float | None:
+    """
+    Fetch a team's season strikeOuts / plateAppearances from MLB Stats API
+    season hitting stats. Returns None on any missing field or request
+    failure. No caching here — Ace._gather_data caches per-call-site via
+    a local dict since this is only called once per unique opposing team
+    per run (~30 calls max on a full slate).
+    """
+    year = date.today().year
+    try:
+        resp = requests.get(
+            f"{MLB_API_BASE}/teams/{team_id}/stats",
+            params={"stats": "season", "group": "hitting", "season": year},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        stat = data["stats"][0]["splits"][0]["stat"]
+        strikeouts = stat.get("strikeOuts")
+        plate_appearances = stat.get("plateAppearances")
+        if not strikeouts or not plate_appearances:
+            return None
+        return round(strikeouts / plate_appearances, 4)
+    except Exception:
+        return None
+
+
 # Pitch type code → bucket, same taxonomy as predictor.py's _PITCH_BUCKETS.
 _PITCH_BUCKETS_K = {
     "FF": "fastball", "SI": "fastball", "FC": "fastball",
@@ -538,7 +565,7 @@ class Ace:
         schedule = resp.json()
 
         confirmed_names = set()
-        starters = []  # [(pitcher_id, name, matchup, opposing_lineup_ids)]
+        starters = []  # [(pitcher_id, name, matchup, opposing_lineup_ids, opp_team_id)]
         for date_block in schedule.get("dates", []):
             for game in date_block.get("games", []):
                 teams = game.get("teams", {})
@@ -546,17 +573,22 @@ class Ace:
                 home = teams.get("home", {})
                 lineup_data = game.get("lineups", {})
                 matchup = f"{away.get('team', {}).get('name', '')} @ {home.get('team', {}).get('name', '')}"
-                for side_key, opp_lineup_key in (("away", "homePlayers"), ("home", "awayPlayers")):
+                for side_key, opp_side_key, opp_lineup_key in (
+                    ("away", "home", "homePlayers"),
+                    ("home", "away", "awayPlayers"),
+                ):
                     side = teams.get(side_key, {})
+                    opp_side = teams.get(opp_side_key, {})
                     pitcher = side.get("probablePitcher")
                     if not pitcher or not pitcher.get("id"):
                         continue
                     opp_lineup_ids = [p["id"] for p in lineup_data.get(opp_lineup_key, []) if p.get("id")]
-                    starters.append((pitcher["id"], pitcher.get("fullName", ""), matchup, opp_lineup_ids))
+                    opp_team_id = opp_side.get("team", {}).get("id")
+                    starters.append((pitcher["id"], pitcher.get("fullName", ""), matchup, opp_lineup_ids, opp_team_id))
                     confirmed_names.add(pitcher.get("fullName", ""))
 
         pitcher_ids = [pid for pid, *_ in starters]
-        opp_batter_ids = sorted({bid for _pid, _name, _matchup, opp_ids in starters for bid in opp_ids})
+        opp_batter_ids = sorted({bid for _pid, _name, _matchup, opp_ids, _team_id in starters for bid in opp_ids})
         k_statcast = _fetch_pitcher_k_statcast()
         pitcher_whiff = _fetch_pitch_arsenal_whiff(pitcher_ids, player_type="pitcher")
         pitcher_mix = _fetch_pitcher_pitch_mix(pitcher_ids)
@@ -564,14 +596,22 @@ class Ace:
         odds_raw = json.loads(fetch_k_odds_comparison(confirmed_names))
         odds_by_player = {c["player"]: c for c in odds_raw.get("comparisons", [])}
 
+        team_k_pct_cache: dict[int, float | None] = {}
+
         pitcher_signals = {}
-        for pid, name, matchup, opp_lineup_ids in starters:
+        for pid, name, matchup, opp_lineup_ids, opp_team_id in starters:
             statcast_row = k_statcast.get(pid) or k_statcast.get(name.lower(), {})
             form = _fetch_pitcher_recent_form(pid)
             whiff_splits = pitcher_whiff.get(pid, {})
             odds_entry = odds_by_player.get(name, {})
             batter_splits = [batter_whiff[bid] for bid in opp_lineup_ids if bid in batter_whiff]
             opp_whiff_vs_mix = _weighted_opp_whiff(pitcher_mix.get(pid, {}), batter_splits)
+
+            opp_team_k_pct = None
+            if opp_team_id is not None:
+                if opp_team_id not in team_k_pct_cache:
+                    team_k_pct_cache[opp_team_id] = _fetch_team_k_pct(opp_team_id)
+                opp_team_k_pct = team_k_pct_cache[opp_team_id]
 
             sig = {
                 "k_percent": _tofloat(statcast_row.get("k_percent")),
@@ -586,6 +626,7 @@ class Ace:
                 "pitcher_whiff_breaking": whiff_splits.get("whiff_breaking"),
                 "pitcher_whiff_offspeed": whiff_splits.get("whiff_offspeed"),
                 "opp_whiff_vs_mix": opp_whiff_vs_mix,
+                "opp_team_k_pct": opp_team_k_pct,
                 "ev_10": odds_entry.get("ev_10"),
                 "value_edge": odds_entry.get("value_edge"),
                 "kelly_size": odds_entry.get("kelly_size"),
