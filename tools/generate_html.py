@@ -416,9 +416,6 @@ def generate_picks_html(
 
     sections_html = "\n".join(bucket_sections)
 
-    auc_str = f"{auc:.3f}" if auc else "—"
-    ml_str  = f"{ml_influence * 100:.0f}%" if ml_influence else "—"
-
     # Model stats tile (hit rate hero + sub-stats including streak)
     if win_rate and win_rate != "—":
         days_fmt = f"{model_days_tracked}" if model_days_tracked else "—"
@@ -458,11 +455,6 @@ def generate_picks_html(
       <div class="sti-label">Yesterday</div>
       <div class="sti-value">{_esc(yest_html)}</div>
       <div class="sti-sub">homers / picks (rate)</div>
-    </div>
-    <div class="stats-tile-item">
-      <div class="sti-label">Model AUC</div>
-      <div class="sti-value">{_esc(auc_str)}</div>
-      <div class="sti-sub">ML weight {_esc(ml_str)}</div>
     </div>
     <div class="stats-tile-item">
       <div class="sti-label">Days Tracked</div>
@@ -643,8 +635,7 @@ def generate_picks_html(
     color: rgba(255,255,255,0.7);
     white-space: nowrap;
   }}
-  .chip.chip-auc {{ color: #FBBF24; border-color: rgba(251,191,36,0.4); }}
-  .chip-since {{ font-size: 9px; opacity: 0.55; font-weight: 400; }}
+    .chip-since {{ font-size: 9px; opacity: 0.55; font-weight: 400; }}
 
   /* ─── Model stats tile ─── */
   .model-stats-tile {{
@@ -1153,7 +1144,7 @@ def generate_picks_html(
 
 <footer class="site-footer">
   <span>Dingers Hotline</span>
-  <span>Generated {_esc(today)} &nbsp;·&nbsp; Model AUC {_esc(auc_str)}</span>
+  <span>Generated {_esc(today)}</span>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
@@ -1919,7 +1910,46 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
     so the page is styled consistently, self-contained (no external
     stylesheet dependency), and rendered as a standalone page.
     """
-    cards_html = "".join(_build_k_card(i, p) for i, p in enumerate(k_picks, 1))
+    def _k_tier_header_html(label: str, subtitle: str, n: int) -> str:
+        return (
+            f'<div class="tier-header">'
+            f'<span class="tier-label">{_esc(label)}</span>'
+            f'<span class="tier-subtitle">{_esc(subtitle)}</span>'
+            f'<span class="tier-count">{n} pick{"s" if n != 1 else ""}</span>'
+            f'<div class="tier-rule"></div>'
+            f'</div>'
+        )
+
+    _K_TIER_LABELS = {
+        "HIGH":   ("High Confidence",   "Strongest strikeout signals"),
+        "MEDIUM": ("Medium Confidence", "Solid signals, moderate edge"),
+        "LOW":    ("Low Confidence",    "Speculative, longer shot"),
+    }
+    _K_TIER_ORDER = ["HIGH", "MEDIUM", "LOW"]
+
+    buckets: dict[str, list[tuple[int, dict]]] = {}
+    for rank_i, p in enumerate(k_picks, 1):
+        conf = (p.get("confidence") or "LOW").upper()
+        if conf not in _K_TIER_LABELS:
+            conf = "LOW"
+        buckets.setdefault(conf, []).append((rank_i, p))
+
+    bucket_sections = []
+    for conf in _K_TIER_ORDER:
+        items = buckets.get(conf)
+        if not items:
+            continue
+        label, subtitle = _K_TIER_LABELS[conf]
+        header = _k_tier_header_html(label, subtitle, len(items))
+        cards  = "".join(_build_k_card(rank_i, p) for rank_i, p in items)
+        bucket_sections.append(f"""
+    <section class="tier-section">
+        {header}
+        <div class="picks-grid">
+{cards}
+        </div>
+    </section>""")
+    sections_html = "".join(bucket_sections)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -2015,11 +2045,46 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
   }}
   .nav-link:hover {{ background: rgba(255,255,255,0.18); }}
 
+  .tier-section {{
+    padding: 28px 36px 8px;
+  }}
+  .tier-header {{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }}
+  .tier-label {{
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--navy);
+    white-space: nowrap;
+  }}
+  .tier-subtitle {{
+    font-size: 11px;
+    color: var(--text-sub);
+    white-space: nowrap;
+  }}
+  .tier-count {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }}
+  .tier-rule {{
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }}
+
   .picks-grid {{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr));
     gap: 10px;
-    padding: 20px 36px 36px;
+    margin-bottom: 20px;
   }}
 
   .pick-card {{
@@ -2154,9 +2219,10 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
     margin-top: 4px;
   }}
   @media (max-width: 600px) {{
-    .site-header {{ padding: 18px; }}
-    .picks-grid  {{ padding: 16px; gap: 8px; }}
-    .site-footer {{ padding: 12px 16px; }}
+    .site-header  {{ padding: 18px; }}
+    .tier-section {{ padding: 20px 16px 4px; }}
+    .picks-grid   {{ gap: 8px; }}
+    .site-footer  {{ padding: 12px 16px; }}
   }}
 </style>
 </head>
@@ -2174,9 +2240,7 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
   </div>
 </header>
 
-<main class="picks-grid">
-{cards_html}
-</main>
+{sections_html}
 
 <footer class="site-footer">
   <span>Dingers Hotline — Strikeout Picks</span>
