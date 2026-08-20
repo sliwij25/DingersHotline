@@ -72,7 +72,7 @@ print("=" * 60)
 from agents import Homer
 from agents.predictor import fetch_odds_comparison
 from agents.bet_tracker import save_pick_factors, backfill_pick_odds, model_performance_report, model_pnl_report, group_hit_rate, star_bucket_hit_rate, yesterday_results_snapshot, trending_picks
-from generate_html import generate_picks_html, generate_leaderboard_html, generate_player_data_json, generate_hit_rate_html
+from generate_html import generate_picks_html, generate_leaderboard_html, generate_strikeout_leaderboard_html, generate_player_data_json, generate_hit_rate_html
 
 # ── Auto-maintenance (runs every morning before picks) ─────────────────────────
 # Labels yesterday's pick_factors with actual HR results and refreshes 2026 training data.
@@ -665,6 +665,12 @@ try:
         with open(_lb_path, "w", encoding="utf-8") as _lf:
             _lf.write(_lb_html)
 
+        # Generate strikeout leaderboard page
+        _klb_html = generate_strikeout_leaderboard_html(today_str=TODAY)
+        _klb_path = Path(__file__).parent.parent / "docs" / "k-leaderboard.html"
+        with open(_klb_path, "w", encoding="utf-8") as _klf:
+            _klf.write(_klb_html)
+
         # Generate player-data.json for player-card.html deep-dive links
         _pd_json = generate_player_data_json(_ranked_for_html, today=TODAY)
         _pd_path = Path(__file__).parent.parent / "docs" / "player-data.json"
@@ -689,7 +695,7 @@ try:
         except Exception as e:
             print(f"  [Ace] Skipped K-picks HTML ({e})")
 
-        print(f"  [HTML] GitHub Pages updated → docs/index.html + docs/leaderboard.html + docs/player-data.json + docs/hit-rate.html")
+        print(f"  [HTML] GitHub Pages updated → docs/index.html + docs/leaderboard.html + docs/k-leaderboard.html + docs/player-data.json + docs/hit-rate.html")
 except Exception as _he:
     print(f"  [HTML] Skipped: {_he}")
 
@@ -706,6 +712,7 @@ try:
             "ml/optimize_weights.py", "ml/fetch_actual_results.py",
             "ml/build_historical_dataset.py", "README.md", "requirements.txt",
             "tools/generate_html.py", "docs/index.html", "docs/leaderboard.html",
+            "docs/k-leaderboard.html",
             "docs/player-data.json", "docs/hit-rate.html", "docs/strikeouts.html",
             "agents/k_predictor.py", "ml/optimize_weights_k.py",
             "ml/fetch_actual_k_results.py", "ml/build_historical_k_dataset.py",
@@ -714,7 +721,7 @@ try:
         _commit_msg = f"Auto-update {TODAY} — picks run"
     else:
         # Cache run: only commit HTML (picks changed, P&L/chips must stay correct)
-        _git_files = ["docs/index.html", "docs/leaderboard.html", "docs/player-data.json", "docs/hit-rate.html", "docs/strikeouts.html", f"picks/picks_{TODAY}.html", f"picks/k_picks_{TODAY}.html"]
+        _git_files = ["docs/index.html", "docs/leaderboard.html", "docs/k-leaderboard.html", "docs/player-data.json", "docs/hit-rate.html", "docs/strikeouts.html", f"picks/picks_{TODAY}.html", f"picks/k_picks_{TODAY}.html"]
         _commit_msg = f"picks({TODAY}): re-run from cache — lineup update"
 
     _sp.run(["/usr/bin/git", "-C", _repo, "add"] + _git_files, capture_output=True)
