@@ -7,6 +7,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+import pytest
 from unittest.mock import patch, MagicMock
 
 
@@ -173,7 +174,7 @@ def _base_k_sig():
         "pitcher_whiff_fastball": None, "pitcher_whiff_breaking": None,
         "pitcher_whiff_offspeed": None, "opp_whiff_vs_mix": None,
         "avg_ip_last3": 5.5, "avg_pitches_last3": 88.0, "days_rest": 5,
-        "ev_10": 0.0, "value_edge": 0.0,
+        "ev_10": 0.0, "value_edge": 0.0, "k_line": 4.0,
     }
 
 
@@ -296,19 +297,21 @@ class TestAceGetPicksJson:
                               "pitcher_whiff_fastball": None, "pitcher_whiff_breaking": None,
                               "pitcher_whiff_offspeed": None, "opp_whiff_vs_mix": None,
                               "avg_ip_last3": 6.0, "avg_pitches_last3": 95.0, "days_rest": 5,
-                              "ev_10": 2.0, "value_edge": 1.0, "matchup": "NYY @ BOS"},
-            "Some Rookie":   {"k_percent": 18.0, "whiff_percent": 19.0, "csw_percent": 24.0,
-                              "swinging_strike_percent": 8.0, "k_per_9_blended": 5.5,
+                              "ev_10": 2.0, "value_edge": 1.0, "matchup": "NYY @ BOS",
+                              "k_line": 5.0},  # projected 8.0 -> gap 3.0
+            "Some Rookie":   {"k_percent": 24.0, "whiff_percent": 26.0, "csw_percent": 29.0,
+                              "swinging_strike_percent": 11.0, "k_per_9_blended": 8.5,
                               "pitcher_whiff_fastball": None, "pitcher_whiff_breaking": None,
                               "pitcher_whiff_offspeed": None, "opp_whiff_vs_mix": None,
-                              "avg_ip_last3": 4.0, "avg_pitches_last3": 70.0, "days_rest": 5,
-                              "ev_10": -2.0, "value_edge": -1.0, "matchup": "SF @ LAD"},
+                              "avg_ip_last3": 5.5, "avg_pitches_last3": 85.0, "days_rest": 5,
+                              "ev_10": 0.5, "value_edge": 0.5, "matchup": "SF @ LAD",
+                              "k_line": 3.0},  # projected 5.19 -> gap 2.19 (< Cole's 3.0 gap)
         }
         with patch.object(Ace, "_gather_data", return_value={"pitcher_signals": fake_signals}):
             picks = ace.get_picks_json(top_n=10)
 
         assert len(picks) == 2
-        assert picks[0]["pitcher"] == "Gerrit Cole"  # higher score ranks first
+        assert picks[0]["pitcher"] == "Gerrit Cole"  # bigger abs(gap) ranks first
         assert picks[0]["score"] > picks[1]["score"]
         assert "signals" in picks[0]
 
@@ -322,7 +325,8 @@ class TestAceGetPicksJson:
                              "pitcher_whiff_fastball": None, "pitcher_whiff_breaking": None,
                              "pitcher_whiff_offspeed": None, "opp_whiff_vs_mix": None,
                              "avg_ip_last3": 5.5, "avg_pitches_last3": 88.0, "days_rest": 5,
-                             "ev_10": 0.0, "value_edge": 0.0, "matchup": "X @ Y"}
+                             "ev_10": 0.0, "value_edge": 0.0, "matchup": "X @ Y",
+                             "k_line": 4.0}
             for i in range(15)
         }
         with patch.object(Ace, "_gather_data", return_value={"pitcher_signals": fake_signals}):
@@ -612,3 +616,127 @@ class TestProjectK:
 
         sig = {"k_per_9_blended": 9.0, "avg_ip_last3": None}
         assert _project_k(sig) is None
+
+
+class TestPickDirection:
+
+    def _base_sig(self, k_line, k9=9.0, ip=6.0, team_k=None, whiff=None):
+        return {
+            "k_per_9_blended": k9,
+            "avg_ip_last3": ip,
+            "opp_team_k_pct": team_k,
+            "opp_whiff_vs_mix": whiff,
+            "k_line": k_line,
+        }
+
+    def test_over_high_confidence(self):
+        from agents.k_predictor import _pick_direction
+        # projected = 9.0 * (6/9) * 1.0 = 6.0, line 4.0 -> gap = 2.0 (HIGH)
+        sig = self._base_sig(k_line=4.0)
+        result = _pick_direction(sig, score=5.0)
+        assert result["direction"] == "OVER"
+        assert result["confidence"] == "HIGH"
+        assert result["projected_k"] == 6.0
+        assert result["gap"] == 2.0
+
+    def test_under_medium_confidence(self):
+        from agents.k_predictor import _pick_direction
+        # projected = 6.0, line 6.9 -> gap = -0.9 (MEDIUM, abs >= 0.75)
+        sig = self._base_sig(k_line=6.9)
+        result = _pick_direction(sig, score=5.0)
+        assert result["direction"] == "UNDER"
+        assert result["confidence"] == "MEDIUM"
+        assert result["gap"] == pytest.approx(-0.9)
+
+    def test_low_confidence_boundary(self):
+        from agents.k_predictor import _pick_direction
+        # projected = 6.0, line 5.75 -> gap = 0.25 exactly (LOW)
+        sig = self._base_sig(k_line=5.75)
+        result = _pick_direction(sig, score=5.0)
+        assert result["confidence"] == "LOW"
+
+    def test_gap_below_minimum_edge_excluded(self):
+        from agents.k_predictor import _pick_direction
+        # projected = 6.0, line 5.8 -> gap = 0.2 < 0.25 -> excluded
+        sig = self._base_sig(k_line=5.8)
+        assert _pick_direction(sig, score=5.0) is None
+
+    def test_missing_k_line_excluded(self):
+        from agents.k_predictor import _pick_direction
+        sig = self._base_sig(k_line=None)
+        assert _pick_direction(sig, score=5.0) is None
+
+    def test_missing_projection_excluded(self):
+        from agents.k_predictor import _pick_direction
+        sig = self._base_sig(k_line=4.0, k9=None)
+        assert _pick_direction(sig, score=5.0) is None
+
+    def test_score_below_floor_excluded(self):
+        from agents.k_predictor import _pick_direction
+        sig = self._base_sig(k_line=4.0)
+        assert _pick_direction(sig, score=1.9) is None
+
+    def test_score_at_floor_included(self):
+        from agents.k_predictor import _pick_direction
+        sig = self._base_sig(k_line=4.0)
+        assert _pick_direction(sig, score=2.0) is not None
+
+
+class TestBuildReasoning:
+
+    def test_over_reasoning_includes_projection_and_lean(self):
+        from agents.k_predictor import _build_reasoning
+
+        sig = {"k_line": 5.5, "k_per_9_blended": 9.4, "avg_ip_last3": 6.1}
+        text = _build_reasoning("Gerrit Cole", sig, "OVER", 7.8)
+
+        assert "Gerrit Cole" in text
+        assert "7.8 K" in text
+        assert "5.5 line" in text
+        assert "lean Over" in text
+        assert "9.4 K/9" in text
+
+    def test_under_reasoning_says_lean_under(self):
+        from agents.k_predictor import _build_reasoning
+
+        sig = {"k_line": 6.5, "k_per_9_blended": 7.0, "avg_ip_last3": 5.0}
+        text = _build_reasoning("Some Pitcher", sig, "UNDER", 5.2)
+
+        assert "lean Under" in text
+
+
+class TestRankPicksPython:
+
+    def test_ranks_by_abs_gap_and_mixes_directions(self):
+        from agents.k_predictor import Ace
+
+        pitcher_signals = {
+            "Big Over": {
+                "k_line": 4.0, "k_per_9_blended": 9.0, "avg_ip_last3": 6.0,
+                "opp_team_k_pct": None, "opp_whiff_vs_mix": None,
+                "k_percent": 30, "whiff_percent": 32, "csw_percent": 33,
+                "swinging_strike_percent": 14,
+            },
+            "Small Under": {
+                "k_line": 6.5, "k_per_9_blended": 9.0, "avg_ip_last3": 6.0,
+                "opp_team_k_pct": None, "opp_whiff_vs_mix": None,
+                "k_percent": 30, "whiff_percent": 32, "csw_percent": 33,
+                "swinging_strike_percent": 14,
+            },
+            "Below Floor": {
+                "k_line": 4.0, "k_per_9_blended": 5.0, "avg_ip_last3": 4.0,
+                "opp_team_k_pct": None, "opp_whiff_vs_mix": None,
+            },
+        }
+
+        with patch.object(Ace, "_ml_score", return_value=None):
+            ace = Ace()
+            ranked = ace._rank_picks_python(pitcher_signals, top_n=10)
+
+        names = [p["pitcher"] for p in ranked]
+        assert "Below Floor" not in names
+        assert names[0] == "Big Over"       # gap = 6.0-4.0 = 2.0, biggest abs gap
+        assert ranked[0]["direction"] == "OVER"
+        assert "Small Under" in names
+        under_pick = next(p for p in ranked if p["pitcher"] == "Small Under")
+        assert under_pick["direction"] == "UNDER"

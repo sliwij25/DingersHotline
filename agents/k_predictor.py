@@ -52,6 +52,44 @@ def _project_k(sig: dict) -> float | None:
     return k9 * (ip / 9) * combined_factor
 
 
+def _pick_direction(sig: dict, score: float) -> dict | None:
+    """
+    Decide Over/Under direction and confidence for a pitcher, purely from
+    the gap between the projected strikeout total and the market line.
+    `score` (from _score_pitcher) is used only as a quality/noise floor —
+    it does not affect direction, confidence, or ranking order.
+    Returns None if the pitcher is ineligible for a pick today.
+    """
+    if score < 2.0:
+        return None
+
+    projected_k = _project_k(sig)
+    k_line = sig.get("k_line")
+    if projected_k is None or k_line is None:
+        return None
+
+    gap = projected_k - k_line
+    if abs(gap) < 0.25:
+        return None
+
+    direction = "OVER" if gap > 0 else "UNDER"
+
+    abs_gap = abs(gap)
+    if abs_gap >= 1.5:
+        confidence = "HIGH"
+    elif abs_gap >= 0.75:
+        confidence = "MEDIUM"
+    else:
+        confidence = "LOW"
+
+    return {
+        "direction": direction,
+        "confidence": confidence,
+        "projected_k": projected_k,
+        "gap": gap,
+    }
+
+
 def _fetch_pitcher_k_statcast() -> dict:
     """
     Fetch the full Statcast pitcher K-rate leaderboard CSV, keyed by
@@ -678,15 +716,25 @@ class Ace:
                 score = (1.0 - ml_weight) * raw_score + ml_weight * ml
             else:
                 score = raw_score
+
+            direction_info = _pick_direction(sig, score)
+            if direction_info is None:
+                continue
+
             ranked.append({
                 "pitcher": name,
                 "matchup": sig.get("matchup", ""),
-                "confidence": _confidence_tier(score),
-                "reasoning": _build_reasoning(name, sig),
+                "direction": direction_info["direction"],
+                "confidence": direction_info["confidence"],
+                "projected_k": direction_info["projected_k"],
+                "gap": direction_info["gap"],
+                "reasoning": _build_reasoning(
+                    name, sig, direction_info["direction"], direction_info["projected_k"]
+                ),
                 "score": score,
                 "signals": sig,
             })
-        ranked.sort(key=lambda p: p["score"], reverse=True)
+        ranked.sort(key=lambda p: abs(p["gap"]), reverse=True)
         return ranked[:top_n]
 
     def get_picks_json(self, top_n: int = 10) -> list:
@@ -704,20 +752,12 @@ def _tofloat(val):
         return None
 
 
-def _confidence_tier(score: float) -> str:
-    if score >= 12:
-        return "HIGH"
-    if score >= 6:
-        return "MEDIUM"
-    return "LOW"
-
-
-def _build_reasoning(name: str, sig: dict) -> str:
-    parts = []
+def _build_reasoning(name: str, sig: dict, direction: str, projected_k: float) -> str:
+    k_line = sig.get("k_line")
+    lean = "Over" if direction == "OVER" else "Under"
+    parts = [f"Projects for {projected_k:.1f} K vs a {k_line:.1f} line — lean {lean}."]
     if sig.get("k_per_9_blended") is not None:
         parts.append(f"{sig['k_per_9_blended']:.1f} K/9 (blended)")
     if sig.get("avg_ip_last3") is not None:
         parts.append(f"{sig['avg_ip_last3']:.1f} IP/start last 3")
-    if sig.get("value_edge") is not None and sig["value_edge"] >= 3:
-        parts.append("VALUE line")
-    return f"{name}: " + ", ".join(parts) if parts else name
+    return f"{name}: " + " ".join(parts[:1]) + (", " + ", ".join(parts[1:]) if len(parts) > 1 else "")
