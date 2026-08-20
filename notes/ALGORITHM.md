@@ -1,6 +1,6 @@
 # Dingers Hotline — Algorithm & Scoring Guide
 
-*Last updated: 2026-04-19*
+*Last updated: 2026-08-20*
 
 ---
 
@@ -147,7 +147,7 @@ Direction is **OVER** if `gap > 0` (projected K > line), **UNDER** if `gap < 0`.
 
 ### Ranking and Display
 
-Pitchers are ranked by **absolute gap descending** (largest edge first). Confidence tier applies only to display — it does not affect ranking order. **Crucially: odds pricing, EV, Kelly, and value flags play no role in ranking or pick selection.** The recommendation is purely signal-driven: does the pitcher's K rate history project above or below today's line, and by how much?
+Pitchers are ranked by **absolute gap descending** (largest edge first). Confidence tier applies only to display — it does not affect ranking order. **Crucially: EV and odds signals contribute to the eligibility-floor score (via `_score_pitcher()`) but play no role in ranking order, direction, or confidence tier.** The recommendation is purely gap-driven: does the pitcher's projected K total exceed or fall short of today's line, and by how much?
 
 ---
 
