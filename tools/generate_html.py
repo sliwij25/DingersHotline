@@ -1841,12 +1841,14 @@ renderDetail();
 
 
 def _build_k_card(rank: int, pick: dict) -> str:
-    pitcher   = pick.get("pitcher", "Unknown")
-    matchup   = pick.get("matchup", "")
-    conf      = pick.get("confidence", "LOW")
-    score     = pick.get("score", 0)
-    reasoning = pick.get("reasoning", "")
-    sig       = pick.get("signals", {})
+    pitcher     = pick.get("pitcher", "Unknown")
+    matchup     = pick.get("matchup", "")
+    conf        = pick.get("confidence", "LOW")
+    direction   = pick.get("direction", "OVER")
+    score       = pick.get("score", 0)
+    projected_k = pick.get("projected_k")
+    reasoning   = pick.get("reasoning", "")
+    sig         = pick.get("signals", {})
 
     k_line    = sig.get("k_line")
     k_pct     = sig.get("k_percent")
@@ -1858,8 +1860,7 @@ def _build_k_card(rank: int, pick: dict) -> str:
 
     conf_class  = _confidence_class(conf)
     score_class = "score-high" if score >= 12 else ("score-mid" if score >= 8 else "score-low")
-
-    line_html = f'<span class="tag tag-dim">O/U {_esc(k_line)}</span>' if k_line is not None else ""
+    dir_class   = "dir-over" if direction == "OVER" else "dir-under"
 
     rest_html = ""
     if days_rest is not None:
@@ -1872,6 +1873,10 @@ def _build_k_card(rank: int, pick: dict) -> str:
         opp_html = f'<span class="tag {cls}">Opp Whiff {opp_whiff:.1f}%</span>'
 
     stats_row = ""
+    if projected_k is not None:
+        stats_row += _stat("Proj. K", projected_k, fmt=".1f")
+    if k_line is not None:
+        stats_row += _stat("Line", k_line, fmt=".1f")
     if k_pct is not None:
         stats_row += _stat("K%", k_pct, suffix="%", fmt=".1f")
     if whiff_pct is not None:
@@ -1882,7 +1887,7 @@ def _build_k_card(rank: int, pick: dict) -> str:
         stats_row += _stat("K/9 L3", k9_l3, fmt=".1f")
 
     stats_html = f'<div class="stats-row">{stats_row}</div>' if stats_row else ""
-    tags_html  = line_html + rest_html + opp_html
+    tags_html  = rest_html + opp_html
 
     return f"""
         <div class="pick-card">
@@ -1892,6 +1897,7 @@ def _build_k_card(rank: int, pick: dict) -> str:
             <div class="card-body">
                 <div class="player-row">
                     <span class="player-name">{_esc(pitcher)}</span>
+                    <span class="dir-badge {dir_class}">{_esc(direction)}</span>
                     <span class="conf-badge {conf_class}">{_esc(conf)}</span>
                     <span class="score-badge {score_class}">{score:.1f}</span>
                 </div>
@@ -2126,6 +2132,17 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
   .conf-high {{ background: var(--green-dim); color: var(--green); border: 1px solid #A7D7B8; }}
   .conf-med  {{ background: var(--amber-dim); color: var(--amber); border: 1px solid #FCD34D; }}
   .conf-low  {{ background: var(--surface2);  color: var(--text-dim); border: 1px solid var(--border); }}
+  .dir-badge {{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }}
+  .dir-over  {{ background: var(--green-dim); color: var(--green); border: 1px solid #A7D7B8; }}
+  .dir-under {{ background: var(--red-dim);   color: var(--red);   border: 1px solid #F9A8B4; }}
   .score-badge {{
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
