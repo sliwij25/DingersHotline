@@ -92,3 +92,21 @@ def test_ml_score_returns_numeric_for_lgbm():
     assert result is not None, "_ml_score returned None — LightGBM model not loading"
     assert isinstance(result, float), f"Expected float, got {type(result)}"
     assert 0.0 <= result <= 20.0, f"Score {result} out of expected 0–20 range"
+
+
+def test_k_features_have_a_save_pick_factors_k_write_path():
+    """
+    Same regression guard as the HR model's equivalent test — every column
+    in FEATURES_K must be written by save_pick_factors_k() via
+    signals.get("<col>"), or it's silently always-NULL in pick_factors_k.
+    """
+    from ml.optimize_weights_k import FEATURE_NAMES_K
+    from agents import bet_tracker
+    source = inspect.getsource(bet_tracker.save_pick_factors_k)
+    referenced = set(re.findall(r'signals\.get\("([^"]+)"\)', source))
+
+    missing = [name for name in FEATURE_NAMES_K if name not in referenced]
+    assert missing == [], (
+        f"FEATURES_K columns with no signals.get(...) write path in "
+        f"save_pick_factors_k(): {missing}"
+    )

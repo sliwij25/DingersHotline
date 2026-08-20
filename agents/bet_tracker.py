@@ -1145,3 +1145,109 @@ def factor_performance_report() -> str:
     finally:
         conn.close()
 
+
+# ── pick_factors_k table helpers ───────────────────────────────────────────────
+
+_CREATE_PICK_FACTORS_K = """
+CREATE TABLE IF NOT EXISTS pick_factors_k (
+    id                       INTEGER PRIMARY KEY AUTOINCREMENT,
+    bet_date                 TEXT NOT NULL,
+    pitcher                  TEXT NOT NULL,
+    game_pk                  TEXT,
+    matchup                  TEXT,
+    algo_version              TEXT,
+    confidence                TEXT,
+    score                     REAL,
+    rank                      INTEGER,
+    k_percent                 REAL,
+    whiff_percent             REAL,
+    csw_percent                REAL,
+    swinging_strike_percent    REAL,
+    k_per_9_blended            REAL,
+    pitcher_whiff_fastball      REAL,
+    pitcher_whiff_breaking      REAL,
+    pitcher_whiff_offspeed      REAL,
+    opp_whiff_vs_mix            REAL,
+    avg_ip_last3                 REAL,
+    avg_pitches_last3            REAL,
+    days_rest                    INTEGER,
+    ev_10                        REAL,
+    kelly_size                    REAL,
+    value_edge                    REAL,
+    pinnacle_odds                  TEXT,
+    k_line                          REAL,
+    actual_k                        INTEGER,
+    over_hit                        INTEGER,
+    UNIQUE(bet_date, pitcher, game_pk)
+)
+"""
+
+_K_MIGRATION_COLUMNS = [
+    ("actual_k", "INTEGER"),
+    ("over_hit", "INTEGER"),
+]
+
+
+def _ensure_pick_factors_k_table():
+    conn = get_db_conn()
+    try:
+        conn.execute(_CREATE_PICK_FACTORS_K)
+        existing = {row[1] for row in conn.execute("PRAGMA table_info(pick_factors_k)").fetchall()}
+        for col_name, col_type in _K_MIGRATION_COLUMNS:
+            if col_name not in existing:
+                conn.execute(f"ALTER TABLE pick_factors_k ADD COLUMN {col_name} {col_type}")
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def save_pick_factors_k(bet_date: str, pitcher: str, signals: dict,
+                        confidence: str = None, algo_version: str = "1.0",
+                        score: float = None, rank: int = None,
+                        game_pk: str = None) -> str:
+    """Save (or update, on conflict) a strikeout-pick signal snapshot."""
+    _ensure_pick_factors_k_table()
+    conn = get_db_conn()
+    try:
+        if game_pk is None:
+            conn.execute(
+                "DELETE FROM pick_factors_k WHERE bet_date=? AND pitcher=? AND game_pk IS NULL",
+                (bet_date, pitcher)
+            )
+        conn.execute("""
+            INSERT INTO pick_factors_k
+              (bet_date, pitcher, game_pk, matchup, algo_version, confidence, score, rank,
+               k_percent, whiff_percent, csw_percent, swinging_strike_percent, k_per_9_blended,
+               pitcher_whiff_fastball, pitcher_whiff_breaking, pitcher_whiff_offspeed,
+               opp_whiff_vs_mix, avg_ip_last3, avg_pitches_last3, days_rest,
+               ev_10, kelly_size, value_edge, pinnacle_odds, k_line)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ON CONFLICT(bet_date, pitcher, game_pk) DO UPDATE SET
+              matchup=excluded.matchup, algo_version=excluded.algo_version,
+              confidence=excluded.confidence, score=excluded.score, rank=excluded.rank,
+              k_percent=excluded.k_percent, whiff_percent=excluded.whiff_percent,
+              csw_percent=excluded.csw_percent, swinging_strike_percent=excluded.swinging_strike_percent,
+              k_per_9_blended=excluded.k_per_9_blended,
+              pitcher_whiff_fastball=excluded.pitcher_whiff_fastball,
+              pitcher_whiff_breaking=excluded.pitcher_whiff_breaking,
+              pitcher_whiff_offspeed=excluded.pitcher_whiff_offspeed,
+              opp_whiff_vs_mix=excluded.opp_whiff_vs_mix,
+              avg_ip_last3=excluded.avg_ip_last3, avg_pitches_last3=excluded.avg_pitches_last3,
+              days_rest=excluded.days_rest, ev_10=excluded.ev_10, kelly_size=excluded.kelly_size,
+              value_edge=excluded.value_edge, pinnacle_odds=excluded.pinnacle_odds, k_line=excluded.k_line
+        """, (
+            bet_date, pitcher, game_pk or signals.get("game_pk"), signals.get("matchup"),
+            algo_version, confidence or signals.get("confidence"), score, rank,
+            signals.get("k_percent"), signals.get("whiff_percent"), signals.get("csw_percent"),
+            signals.get("swinging_strike_percent"), signals.get("k_per_9_blended"),
+            signals.get("pitcher_whiff_fastball"), signals.get("pitcher_whiff_breaking"),
+            signals.get("pitcher_whiff_offspeed"), signals.get("opp_whiff_vs_mix"),
+            signals.get("avg_ip_last3"), signals.get("avg_pitches_last3"), signals.get("days_rest"),
+            signals.get("ev_10"), signals.get("kelly_size"), signals.get("value_edge"),
+            signals.get("pinnacle_odds"), signals.get("k_line"),
+        ))
+        conn.commit()
+    finally:
+        conn.close()
+    return "saved"
+

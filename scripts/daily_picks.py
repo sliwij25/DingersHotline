@@ -106,6 +106,19 @@ def _auto_maintain():
     except Exception as e:
         print(f"skipped ({e})")
 
+    # 1b. Label yesterday's strikeout results ───────────────────────────────────
+    print("  [Auto] Labeling yesterday's K results...", end=" ", flush=True)
+    try:
+        from fetch_actual_k_results import fetch_strikeouts_for_date, update_pick_factors_k
+        actual_ks = fetch_strikeouts_for_date(yesterday)
+        if actual_ks:
+            update_pick_factors_k(yesterday, actual_ks)
+            print(f"{len(actual_ks)} pitcher results")
+        else:
+            print("no completed games")
+    except Exception as e:
+        print(f"skipped ({e})")
+
     # 2. Refresh 2026 training data ────────────────────────────────────────────
     print("  [Auto] Refreshing 2026 Statcast + HR data...", end=" ", flush=True)
     try:
@@ -344,6 +357,34 @@ print("=" * 60)
 
 picks = homer.get_picks_json(top_n=15, scratched=SCRATCHED)
 _all_ranked: list[dict] = []  # filled below; used for HTML generation
+
+# ── Strikeout model (Ace) — independent pipeline, runs after HR picks ──────────
+print("\n[Ace] Fetching today's strikeout picks...")
+try:
+    from agents.k_predictor import Ace
+    from agents.bet_tracker import save_pick_factors_k
+    ace = Ace()
+    k_picks = ace.get_picks_json(top_n=10)
+
+    k_full_ranked = ace._rank_picks_python(
+        ace._gather_data().get("pitcher_signals", {}), top_n=10_000,
+    )
+    for rank_i, p in enumerate(k_full_ranked, 1):
+        save_pick_factors_k(
+            TODAY, p["pitcher"], p["signals"],
+            confidence=p["confidence"], algo_version="1.0",
+            score=p["score"], rank=rank_i,
+        )
+
+    k_txt_path = f"picks/k_picks_{TODAY}.txt"
+    with open(k_txt_path, "w") as f:
+        f.write(f"Strikeout Picks — {TODAY}\n{'=' * 40}\n\n")
+        for i, p in enumerate(k_picks, 1):
+            f.write(f"{i}. {p['pitcher']} ({p['matchup']}) — {p['confidence']} — score {p['score']:.1f}\n")
+            f.write(f"   {p['reasoning']}\n\n")
+    print(f"  [Ace] {len(k_picks)} K picks written to {k_txt_path}")
+except Exception as e:
+    print(f"  [Ace] Skipped strikeout picks ({e})")
 
 # Re-run if a notification was already sent today (survives failed first runs)
 _notify_flag = Path(__file__).parent.parent / "cache" / f"notified_{TODAY}.flag"
@@ -636,6 +677,18 @@ try:
         with open(_hr_path, "w", encoding="utf-8") as _hf:
             _hf.write(_hr_html)
 
+        # Generate strikeout (Ace) picks page
+        try:
+            from tools.generate_html import generate_k_picks_html
+            k_html = generate_k_picks_html(k_picks, TODAY)
+            with open("docs/strikeouts.html", "w") as f:
+                f.write(k_html)
+            with open(f"picks/k_picks_{TODAY}.html", "w") as f:
+                f.write(k_html)
+            print("  [Ace] docs/strikeouts.html written")
+        except Exception as e:
+            print(f"  [Ace] Skipped K-picks HTML ({e})")
+
         print(f"  [HTML] GitHub Pages updated → docs/index.html + docs/leaderboard.html + docs/player-data.json + docs/hit-rate.html")
 except Exception as _he:
     print(f"  [HTML] Skipped: {_he}")
@@ -653,12 +706,15 @@ try:
             "ml/optimize_weights.py", "ml/fetch_actual_results.py",
             "ml/build_historical_dataset.py", "README.md", "requirements.txt",
             "tools/generate_html.py", "docs/index.html", "docs/leaderboard.html",
-            "docs/player-data.json", "docs/hit-rate.html",
+            "docs/player-data.json", "docs/hit-rate.html", "docs/strikeouts.html",
+            "agents/k_predictor.py", "ml/optimize_weights_k.py",
+            "ml/fetch_actual_k_results.py", "ml/build_historical_k_dataset.py",
+            "ml_weights_k.json", f"picks/k_picks_{TODAY}.html",
         ]
         _commit_msg = f"Auto-update {TODAY} — picks run"
     else:
         # Cache run: only commit HTML (picks changed, P&L/chips must stay correct)
-        _git_files = ["docs/index.html", "docs/leaderboard.html", "docs/player-data.json", "docs/hit-rate.html", f"picks/picks_{TODAY}.html"]
+        _git_files = ["docs/index.html", "docs/leaderboard.html", "docs/player-data.json", "docs/hit-rate.html", "docs/strikeouts.html", f"picks/picks_{TODAY}.html", f"picks/k_picks_{TODAY}.html"]
         _commit_msg = f"picks({TODAY}): re-run from cache — lineup update"
 
     _sp.run(["/usr/bin/git", "-C", _repo, "add"] + _git_files, capture_output=True)

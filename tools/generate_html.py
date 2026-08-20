@@ -1135,6 +1135,7 @@ def generate_picks_html(
     <a class="nav-link" href="pick-of-the-day.html">Pick of Day ★</a>
     <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
     <a class="nav-link" href="hit-rate.html">Hit Rate 📅</a>
+    <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
   </div>
   <div class="tg-join">
     <div class="tg-join-label">Get notified the moment today's picks are ready — join the free Telegram channel.</div>
@@ -1411,6 +1412,7 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <a class="nav-link" href="index.html">← Today's Picks</a>
     <a class="nav-link" href="pick-of-the-day.html">Pick of Day ★</a>
+    <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
   </div>
 </header>
 
@@ -1640,6 +1642,7 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
     <a class="nav-link" href="index.html">Today's Picks</a>
     <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
     <a class="nav-link active" href="#">Hit Rate 📅</a>
+    <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
   </div>
   <div class="tg-join">
     <div class="tg-join-label">Get notified the moment today's picks are ready.</div>
@@ -1844,3 +1847,64 @@ renderDetail();
 </footer>
 </body>
 </html>"""
+
+
+def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
+    """
+    Generate docs/strikeouts.html — the strikeout model's picks page.
+    Same site-header/model-chips/nav-link conventions as the HR pages
+    (see generate_picks_html), rendered as a standalone page.
+    """
+    rows = []
+    for i, p in enumerate(k_picks, 1):
+        sig = p.get("signals", {})
+        k_line = sig.get("k_line")
+        line_str = f"O/U {k_line}" if k_line is not None else "—"
+        rows.append(f"""
+      <div class="pick-card">
+        <div class="pick-rank">#{i}</div>
+        <div class="pick-body">
+          <div class="pick-name">{p['pitcher']}</div>
+          <div class="pick-matchup">{p['matchup']}</div>
+          <div class="pick-reasoning">{p['reasoning']}</div>
+          <div class="pick-meta">
+            <span class="confidence-{p['confidence'].lower()}">{p['confidence']}</span>
+            <span class="k-line">{line_str}</span>
+            <span class="score">score {p['score']:.1f}</span>
+          </div>
+        </div>
+      </div>""")
+
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Strikeout Picks — Dingers Hotline</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-left">
+    <div class="site-title">Dingers Hotline — Strikeout Picks</div>
+    <div class="site-date">Latest Update: {today} &nbsp;·&nbsp; {len(k_picks)} Picks</div>
+  </div>
+  <div class="model-chips">
+    <a class="nav-link" href="index.html">← HR Picks</a>
+    <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
+    <a class="nav-link" href="hit-rate.html">Hit Rate 📅</a>
+  </div>
+</header>
+
+<main class="picks-container">
+  <p class="model-note">
+    Hypothetical model P&amp;L only — $10 on every published K pick, tracked
+    separately from the HR model's portfolio.
+  </p>
+  {"".join(rows)}
+</main>
+
+</body>
+</html>
+"""
