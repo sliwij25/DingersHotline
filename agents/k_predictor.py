@@ -23,6 +23,34 @@ from agents.predictor import (
     _fetch_pitcher_recent_form,
 )
 
+LEAGUE_AVG_K_PCT = 0.225   # approx. MLB league-average K% (batters), tunable
+LEAGUE_AVG_WHIFF = 28.0    # approx. league-average whiff% baseline, tunable
+
+
+def _project_k(sig: dict) -> float | None:
+    """
+    Project a starting pitcher's strikeout total for today's start:
+    base rate (k_per_9_blended) scaled to expected innings (avg_ip_last3),
+    adjusted by how strikeout-prone the opposing lineup is relative to
+    league average. Returns None if the base rate or expected innings are
+    missing (nothing to project from).
+    """
+    k9 = sig.get("k_per_9_blended")
+    ip = sig.get("avg_ip_last3")
+    if k9 is None or ip is None:
+        return None
+
+    factors = []
+    team_k_pct = sig.get("opp_team_k_pct")
+    if team_k_pct is not None:
+        factors.append(team_k_pct / LEAGUE_AVG_K_PCT)
+    opp_whiff = sig.get("opp_whiff_vs_mix")
+    if opp_whiff is not None:
+        factors.append(opp_whiff / LEAGUE_AVG_WHIFF)
+
+    combined_factor = sum(factors) / len(factors) if factors else 1.0
+    return k9 * (ip / 9) * combined_factor
+
 
 def _fetch_pitcher_k_statcast() -> dict:
     """

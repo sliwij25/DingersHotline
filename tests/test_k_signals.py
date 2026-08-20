@@ -547,3 +547,68 @@ class TestGatherDataOppTeamKPct:
         assert context["pitcher_signals"]["Home Pitcher"]["opp_team_k_pct"] == 0.26
         # Each opposing team fetched exactly once (cached across the run)
         assert mock_team_k.call_count == 2
+
+
+class TestProjectK:
+
+    def test_full_data_both_factors_present(self):
+        from agents.k_predictor import _project_k
+
+        sig = {
+            "k_per_9_blended": 9.0,
+            "avg_ip_last3": 6.0,
+            "opp_team_k_pct": 0.27,     # factor = 0.27/0.225 = 1.2
+            "opp_whiff_vs_mix": 30.8,   # factor = 30.8/28.0 = 1.1
+        }
+        # combined_factor = (1.2 + 1.1) / 2 = 1.15
+        # projected = 9.0 * (6.0/9) * 1.15 = 6.9
+        result = _project_k(sig)
+        assert result == 9.0 * (6.0 / 9) * 1.15
+
+    def test_missing_opp_team_k_pct_uses_only_whiff_factor(self):
+        from agents.k_predictor import _project_k
+
+        sig = {
+            "k_per_9_blended": 8.0,
+            "avg_ip_last3": 5.5,
+            "opp_team_k_pct": None,
+            "opp_whiff_vs_mix": 28.0,   # factor = 1.0
+        }
+        result = _project_k(sig)
+        assert result == 8.0 * (5.5 / 9) * 1.0
+
+    def test_missing_opp_whiff_uses_only_team_k_factor(self):
+        from agents.k_predictor import _project_k
+
+        sig = {
+            "k_per_9_blended": 7.0,
+            "avg_ip_last3": 6.0,
+            "opp_team_k_pct": 0.225,    # factor = 1.0
+            "opp_whiff_vs_mix": None,
+        }
+        result = _project_k(sig)
+        assert result == 7.0 * (6.0 / 9) * 1.0
+
+    def test_missing_both_factors_defaults_to_1(self):
+        from agents.k_predictor import _project_k
+
+        sig = {
+            "k_per_9_blended": 10.0,
+            "avg_ip_last3": 6.0,
+            "opp_team_k_pct": None,
+            "opp_whiff_vs_mix": None,
+        }
+        result = _project_k(sig)
+        assert result == 10.0 * (6.0 / 9) * 1.0
+
+    def test_missing_k9_returns_none(self):
+        from agents.k_predictor import _project_k
+
+        sig = {"k_per_9_blended": None, "avg_ip_last3": 6.0}
+        assert _project_k(sig) is None
+
+    def test_missing_ip_returns_none(self):
+        from agents.k_predictor import _project_k
+
+        sig = {"k_per_9_blended": 9.0, "avg_ip_last3": None}
+        assert _project_k(sig) is None
