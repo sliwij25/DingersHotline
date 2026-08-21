@@ -1708,6 +1708,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <a class="nav-link" href="index.html">← Today's Picks</a>
     <a class="nav-link" href="pick-of-the-day.html">Pick of Day ★</a>
+    <a class="nav-link" href="leaderboard.html">HR Leaders</a>
     <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
     <a class="nav-link active" href="#">K Leaders</a>
   </div>
