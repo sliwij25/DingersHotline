@@ -10,7 +10,7 @@
 <style>
 
 .app-shell { display: flex; min-height: 100vh; }
-.sidebar { width: 200px; flex-shrink: 0; background: var(--navy); border-right: 1px solid var(--border-dark); display: flex; flex-direction: column; padding: 20px 0; }
+.sidebar { width: 200px; flex-shrink: 0; background: var(--navy); border-right: 1px solid var(--border-dark); display: flex; flex-direction: column; padding: 20px 0; position: sticky; top: 0; align-self: flex-start; height: 100vh; overflow-y: auto; }
 .sb-brand { display: flex; align-items: center; gap: 8px; color: #fff; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; padding: 0 18px 20px; }
 .sb-brand svg { width: 22px; height: 22px; flex-shrink: 0; fill: #ffffff; }
 .sb-group { margin-bottom: 6px; }
@@ -22,7 +22,7 @@
 .sb-subitem.disabled:hover { background: none; color: rgba(255,255,255,0.30); }
 .sb-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.5); padding: 2px 6px; border-radius: 8px; }
 .main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.topbar { background: var(--navy); background-image: repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(255,255,255,0.04) 47px, rgba(255,255,255,0.04) 48px); color: #fff; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-bottom: 4px solid var(--red); }
+.topbar { background: var(--navy); background-image: repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(255,255,255,0.04) 47px, rgba(255,255,255,0.04) 48px); color: #fff; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-bottom: 4px solid var(--red); position: sticky; top: 0; z-index: 10; }
 .hamburger { display: none; background: none; border: none; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 8px; }
 .site-date { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.12em; text-transform: uppercase; }
 .tg-join { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; }

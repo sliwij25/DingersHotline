@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-version="1787345674">
+<html lang="en" data-version="1787346444">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,7 @@
 <style>
 
 .app-shell { display: flex; min-height: 100vh; }
-.sidebar { width: 200px; flex-shrink: 0; background: var(--navy); border-right: 1px solid var(--border-dark); display: flex; flex-direction: column; padding: 20px 0; }
+.sidebar { width: 200px; flex-shrink: 0; background: var(--navy); border-right: 1px solid var(--border-dark); display: flex; flex-direction: column; padding: 20px 0; position: sticky; top: 0; align-self: flex-start; height: 100vh; overflow-y: auto; }
 .sb-brand { display: flex; align-items: center; gap: 8px; color: #fff; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; padding: 0 18px 20px; }
 .sb-brand svg { width: 22px; height: 22px; flex-shrink: 0; fill: #ffffff; }
 .sb-group { margin-bottom: 6px; }
@@ -22,7 +22,7 @@
 .sb-subitem.disabled:hover { background: none; color: rgba(255,255,255,0.30); }
 .sb-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.5); padding: 2px 6px; border-radius: 8px; }
 .main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.topbar { background: var(--navy); background-image: repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(255,255,255,0.04) 47px, rgba(255,255,255,0.04) 48px); color: #fff; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-bottom: 4px solid var(--red); }
+.topbar { background: var(--navy); background-image: repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(255,255,255,0.04) 47px, rgba(255,255,255,0.04) 48px); color: #fff; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-bottom: 4px solid var(--red); position: sticky; top: 0; z-index: 10; }
 .hamburger { display: none; background: none; border: none; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 8px; }
 .site-date { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.12em; text-transform: uppercase; }
 .tg-join { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; }
@@ -569,7 +569,7 @@
 <div class="main-col">
 <div class="topbar">
   <button class="hamburger" id="hamburgerBtn" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
-  <div class="site-date">Latest Update: 2026-08-21 03:54 PM &nbsp;·&nbsp; 15 Picks</div>
+  <div class="site-date">Latest Update: 2026-08-21 04:07 PM &nbsp;·&nbsp; 15 Picks</div>
   <div class="tg-join">
     <div class="tg-join-label">Get notified the moment today's picks are ready — join the free Telegram channel.</div>
     <a class="tg-join-btn" href="https://t.me/+BHJ6UMUkhyoxNzEx" target="_blank" rel="noopener">
@@ -933,7 +933,7 @@
 
 <footer class="site-footer">
   <span>Dingers Hotline</span>
-  <span>Generated 2026-08-21 03:54 PM</span>
+  <span>Generated 2026-08-21 04:07 PM</span>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
