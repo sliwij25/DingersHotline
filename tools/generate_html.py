@@ -112,6 +112,7 @@ _SIDEBAR_CSS = """
 .tg-join-label { font-size: 0.78rem; color: rgba(255,255,255,0.70); line-height: 1.35; max-width: 220px; }
 .tg-join-btn { display: inline-flex; align-items: center; gap: 8px; background: #229ED9; color: #fff; font-weight: 700; font-size: 0.88rem; padding: 10px 18px; border-radius: 8px; text-decoration: none; white-space: nowrap; transition: background 0.15s; }
 .tg-join-btn:hover { background: #1a8bbf; }
+.tg-join-btn svg { flex-shrink: 0; }
 .sidebar-overlay { display: none; }
 @media (max-width: 600px) {
   .sidebar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; transform: translateX(-100%); transition: transform 0.2s ease; box-shadow: 2px 0 12px rgba(0,0,0,0.4); }
