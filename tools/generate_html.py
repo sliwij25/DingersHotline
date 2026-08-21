@@ -1749,8 +1749,6 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
 
     picks_json = _json.dumps(picks_data)
 
-    BALL_SVG = '<svg class="title-ball" fill="#ffffff" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g><path d="M455.857,56.144c-74.86-74.859-196.662-74.859-271.521,0C17.087,223.392-9.275,272.783,2.398,298.264c8.318,18.153,32.898,19.077,63.015,17.249l-36.537,97.203c-6.838,18.194-2.549,38.035,11.195,51.778c13.744,13.743,33.583,18.035,51.778,11.195L197.2,436.089c-2.507,34.987-3.349,64.4,16.534,73.511c3.325,1.524,7.055,2.4,11.403,2.4c28.973-0.002,85.294-38.91,230.72-184.335C530.715,252.806,530.715,131.003,455.857,56.144z"/></g><g><path d="M320.096,28.297c-90.213,0-163.608,73.394-163.608,163.608s73.395,163.608,163.608,163.608s163.608-73.395,163.608-163.608S410.31,28.297,320.096,28.297z M320.096,48.698c36.338,0,69.551,13.613,94.828,35.995c-26.187,23.225-59.477,35.903-94.828,35.903c-35.351,0-68.641-12.679-94.828-35.903C250.544,62.309,283.758,48.698,320.096,48.698z M320.096,335.111c-36.338,0.001-69.552-13.611-94.829-35.995c26.187-23.225,59.478-35.903,94.829-35.903c35.351,0,68.641,12.679,94.828,35.903C389.647,321.499,356.433,335.111,320.096,335.111z"/></g></svg>'
-
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1761,6 +1759,7 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+{_SIDEBAR_CSS}
   :root {{
     --bg:#FAFAF7;--surface:#FFFFFF;--surface2:#F3F2EE;--border:#E2DED6;
     --border-dark:#C8C2B8;--navy:#1B2A4A;--navy-mid:#2D4070;--red:#C8102E;
@@ -1770,19 +1769,6 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
   }}
   *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
   body{{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia,serif;font-size:14px;line-height:1.5;min-height:100vh}}
-  .site-header{{background:var(--navy);background-image:repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(255,255,255,0.04) 47px,rgba(255,255,255,0.04) 48px);color:#fff;padding:28px 36px 24px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:20px;border-bottom:4px solid var(--red)}}
-  .header-left{{display:flex;flex-direction:column;gap:6px}}
-  .site-title{{font-family:'Oswald',sans-serif;font-weight:700;font-size:clamp(30px,5vw,52px);letter-spacing:.04em;text-transform:uppercase;color:#fff;line-height:1;display:flex;align-items:center;gap:12px}}
-  .title-ball{{display:inline-block;width:.85em;height:.85em;flex-shrink:0;opacity:.9}}
-  .site-date{{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.55);letter-spacing:.12em;text-transform:uppercase}}
-  .model-chips{{display:flex;gap:8px;flex-wrap:wrap;align-items:center}}
-  .nav-link{{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.10);color:#fff;font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:8px 16px;border-radius:6px;border:1px solid rgba(255,255,255,.18);white-space:nowrap;transition:background .15s}}
-  .nav-link:hover{{background:rgba(255,255,255,.18)}}
-  .nav-link.active{{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.4)}}
-  .tg-join{{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right}}
-  .tg-join-label{{font-size:.78rem;color:rgba(255,255,255,.70);line-height:1.35;max-width:220px}}
-  .tg-join-btn{{display:inline-flex;align-items:center;gap:8px;background:#229ED9;color:#fff;font-weight:700;font-size:.88rem;padding:10px 18px;border-radius:8px;text-decoration:none;white-space:nowrap;transition:background .15s}}
-  .tg-join-btn:hover{{background:#1a8bbf}}
   .model-stats-tile{{margin:28px 36px 0;background:var(--surface);border:1px solid var(--border);border-radius:6px;display:flex;overflow:hidden}}
   .stats-tile-hero{{background:var(--navy);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 28px;min-width:120px;flex-shrink:0}}
   .hero-value{{font-family:'Oswald',sans-serif;font-size:2.2rem;font-weight:700;line-height:1;letter-spacing:-.5px}}
@@ -1855,7 +1841,6 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
   .ds-val.hit{{color:var(--green)}}
   .ds-val.rate{{color:var(--navy)}}
   @media(max-width:700px){{
-    .site-header{{padding:20px 16px 16px}}
     .page-body{{padding:0 12px 40px}}
     .model-stats-tile{{flex-direction:column;margin:0 12px 20px}}
     .stats-tile-items{{flex-direction:column;border-left:none;border-top:1px solid var(--border)}}
@@ -1871,26 +1856,10 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
 </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="header-left">
-    <div class="site-title">{BALL_SVG} Dingers Hotline</div>
-    <div class="site-date">Hit Rate Calendar — Season 2026</div>
-  </div>
-  <div class="model-chips">
-    <a class="nav-link" href="index.html">Today's Picks</a>
-    <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
-    <a class="nav-link active" href="#">Hit Rate 📅</a>
-    <a class="nav-link" href="strikeouts.html">K Picks ⚾</a>
-    <a class="nav-link" href="k-leaderboard.html">K Leaders</a>
-  </div>
-  <div class="tg-join">
-    <div class="tg-join-label">Get notified the moment today's picks are ready.</div>
-    <a class="tg-join-btn" href="https://t.me/+BHJ6UMUkhyoxNzEx" target="_blank" rel="noopener">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.26 13.835l-2.938-.916c-.638-.203-.651-.638.136-.944l11.438-4.41c.532-.194.997.131.998.656z"/></svg>
-      Join on Telegram
-    </a>
-  </div>
-</header>
+<div class="app-shell">
+{_render_sidebar("hitrate-hr")}
+<div class="main-col">
+{_render_topbar("Hit Rate Calendar — Season 2026", show_tg_join=True)}
 
 <div class="model-stats-tile">
   <div class="stats-tile-hero">
@@ -2084,6 +2053,9 @@ renderDetail();
   <span>Dingers Hotline &nbsp;·&nbsp; Updated {_esc(today)}</span>
   <div style="margin-top:6px">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
+</div>
+</div>
+{_SIDEBAR_SCRIPT}
 </body>
 </html>"""
 
