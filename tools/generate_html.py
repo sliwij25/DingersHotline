@@ -2187,6 +2187,7 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+{_SIDEBAR_CSS}
   :root {{
     --bg:         #FAFAF7;
     --surface:    #FFFFFF;
@@ -2217,59 +2218,6 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
     line-height: 1.5;
     min-height: 100vh;
   }}
-
-  .site-header {{
-    background: var(--navy);
-    background-image: repeating-linear-gradient(
-      90deg, transparent, transparent 47px,
-      rgba(255,255,255,0.04) 47px, rgba(255,255,255,0.04) 48px
-    );
-    color: #fff;
-    padding: 28px 36px 24px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 20px;
-    border-bottom: 4px solid var(--red);
-  }}
-  .header-left {{ display: flex; flex-direction: column; gap: 6px; }}
-  .site-title {{
-    font-family: 'Oswald', sans-serif;
-    font-weight: 700;
-    font-size: clamp(26px, 4.5vw, 44px);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #FFFFFF;
-    line-height: 1;
-  }}
-  .site-date {{
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: rgba(255,255,255,0.55);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }}
-  .model-chips {{ display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }}
-  .nav-link {{
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255,255,255,0.10);
-    color: #fff;
-    font-family: 'Oswald', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: 1px solid rgba(255,255,255,0.18);
-    white-space: nowrap;
-    transition: background 0.15s;
-  }}
-  .nav-link:hover {{ background: rgba(255,255,255,0.18); }}
 
   .tier-section {{
     padding: 28px 36px 8px;
@@ -2456,7 +2404,6 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
     margin-top: 4px;
   }}
   @media (max-width: 600px) {{
-    .site-header  {{ padding: 18px; }}
     .tier-section {{ padding: 20px 16px 4px; }}
     .picks-grid   {{ gap: 8px; }}
     .site-footer  {{ padding: 12px 16px; }}
@@ -2465,18 +2412,10 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
 </head>
 <body>
 
-<header class="site-header">
-  <div class="header-left">
-    <div class="site-title">Dingers Hotline — Strikeout Picks</div>
-    <div class="site-date">Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks</div>
-  </div>
-  <div class="model-chips">
-    <a class="nav-link" href="index.html">← HR Picks</a>
-    <a class="nav-link" href="leaderboard.html">HR Leaders →</a>
-    <a class="nav-link" href="k-leaderboard.html">K Leaders</a>
-    <a class="nav-link" href="hit-rate.html">Hit Rate 📅</a>
-  </div>
-</header>
+<div class="app-shell">
+{_render_sidebar("k-today")}
+<div class="main-col">
+{_render_topbar(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks", show_tg_join=False)}
 
 {sections_html}
 
@@ -2486,6 +2425,9 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
+</div>
+</div>
+{_SIDEBAR_SCRIPT}
 </body>
 </html>
 """
