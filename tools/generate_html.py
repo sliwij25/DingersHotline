@@ -27,13 +27,13 @@ BALL_SVG = '<svg class="title-ball" fill="#ffffff" viewBox="0 0 512 512" xmlns="
 
 _SIDEBAR_GROUPS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
     ("Home Runs", [
-        ("hr-potd", "Pick of the Day", "pick-of-the-day.html"),
         ("hr-today", "Today's Picks", "index.html"),
+        ("hr-potd", "Pick of the Day", "pick-of-the-day.html"),
         ("hr-leaders", "Leaders", "leaderboard.html"),
     ]),
     ("Strikeouts", [
-        ("k-potd", "Pick of the Day", None),
         ("k-today", "Today's Picks", "strikeouts.html"),
+        ("k-potd", "Pick of the Day", None),
         ("k-leaders", "Leaders", "k-leaderboard.html"),
     ]),
     ("Hit Rate", [
@@ -43,7 +43,7 @@ _SIDEBAR_GROUPS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
 ]
 
 
-def _render_sidebar(active_leaf: str) -> str:
+def _render_sidebar(active_leaf: str, date_html: str) -> str:
     groups_html = []
     for group_name, items in _SIDEBAR_GROUPS:
         rows = []
@@ -65,7 +65,11 @@ def _render_sidebar(active_leaf: str) -> str:
     return (
         f'<nav class="sidebar" id="sidebar">\n'
         f'  <div class="sb-brand">{BALL_SVG} Dingers Hotline</div>\n'
-        f'  {"".join(groups_html)}\n'
+        f'  <div class="sb-nav">{"".join(groups_html)}</div>\n'
+        f'  <div class="sb-footer">\n'
+        f'    <div class="sb-date">{date_html}</div>\n'
+        f'    {_TG_JOIN_HTML}\n'
+        f'  </div>\n'
         f'</nav>\n'
         f'<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>'
     )
@@ -80,22 +84,18 @@ _TG_JOIN_HTML = """<div class="tg-join">
   </div>"""
 
 
-def _render_topbar(date_html: str, show_tg_join: bool = True) -> str:
-    tg = _TG_JOIN_HTML if show_tg_join else ""
-    return (
-        f'<div class="topbar">\n'
-        f'  <button class="hamburger" id="hamburgerBtn" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>\n'
-        f'  <div class="site-date">{date_html}</div>\n'
-        f'  {tg}\n'
-        f'</div>'
-    )
+_MOBILE_MENU_BTN = (
+    '<button class="mobile-menu-btn" id="hamburgerBtn" onclick="openSidebar()" '
+    'aria-label="Open menu">&#9776;</button>'
+)
 
 
 _SIDEBAR_CSS = """
 .app-shell { display: flex; min-height: 100vh; }
-.sidebar { width: 200px; flex-shrink: 0; background: var(--navy); border-right: 1px solid var(--border-dark); display: flex; flex-direction: column; padding: 20px 0; position: sticky; top: 0; align-self: flex-start; height: 100vh; overflow-y: auto; }
+.sidebar { width: 200px; flex-shrink: 0; background: var(--navy); border-right: 1px solid var(--border-dark); display: flex; flex-direction: column; padding: 20px 0 0; position: sticky; top: 0; align-self: flex-start; height: 100vh; overflow-y: auto; }
 .sb-brand { display: flex; align-items: center; gap: 8px; color: #fff; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; padding: 0 18px 20px; }
 .sb-brand svg { width: 22px; height: 22px; flex-shrink: 0; fill: #ffffff; }
+.sb-nav { flex: 1; }
 .sb-group { margin-bottom: 6px; }
 .sb-grouphead { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); padding: 10px 18px 4px; }
 .sb-subitem { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 13px; color: rgba(255,255,255,0.75); text-decoration: none; padding: 8px 18px 8px 26px; border-left: 3px solid transparent; }
@@ -104,22 +104,21 @@ _SIDEBAR_CSS = """
 .sb-subitem.disabled { color: rgba(255,255,255,0.30); cursor: default; }
 .sb-subitem.disabled:hover { background: none; color: rgba(255,255,255,0.30); }
 .sb-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.5); padding: 2px 6px; border-radius: 8px; }
+.sb-footer { margin-top: auto; padding: 16px 18px 20px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 12px; }
+.sb-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.08em; text-transform: uppercase; }
 .main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.topbar { background: var(--navy); background-image: repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(255,255,255,0.04) 47px, rgba(255,255,255,0.04) 48px); color: #fff; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-bottom: 4px solid var(--red); position: sticky; top: 0; z-index: 10; }
-.hamburger { display: none; background: none; border: none; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 8px; }
-.site-date { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.12em; text-transform: uppercase; }
-.tg-join { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; }
-.tg-join-label { font-size: 0.78rem; color: rgba(255,255,255,0.70); line-height: 1.35; max-width: 220px; }
-.tg-join-btn { display: inline-flex; align-items: center; gap: 8px; background: #229ED9; color: #fff; font-weight: 700; font-size: 0.88rem; padding: 10px 18px; border-radius: 8px; text-decoration: none; white-space: nowrap; transition: background 0.15s; }
+.tg-join { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; }
+.tg-join-label { font-size: 0.74rem; color: rgba(255,255,255,0.65); line-height: 1.35; }
+.tg-join-btn { display: inline-flex; align-items: center; gap: 8px; background: #229ED9; color: #fff; font-weight: 700; font-size: 0.82rem; padding: 9px 14px; border-radius: 8px; text-decoration: none; white-space: nowrap; transition: background 0.15s; }
 .tg-join-btn:hover { background: #1a8bbf; }
 .tg-join-btn svg { flex-shrink: 0; }
+.mobile-menu-btn { display: none; }
 .sidebar-overlay { display: none; }
 @media (max-width: 600px) {
   .sidebar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; transform: translateX(-100%); transition: transform 0.2s ease; box-shadow: 2px 0 12px rgba(0,0,0,0.4); }
   .sidebar.open { transform: translateX(0); }
-  .hamburger { display: inline-flex; align-items: center; }
+  .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; position: fixed; top: 12px; left: 12px; z-index: 101; width: 40px; height: 40px; background: var(--navy); border: 1px solid var(--border-dark); border-radius: 8px; color: #fff; font-size: 20px; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
   .sidebar-overlay.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
-  .topbar { padding: 16px 18px; }
 }
 """
 
@@ -1116,9 +1115,9 @@ def generate_picks_html(
 <body>
 
 <div class="app-shell">
-{_render_sidebar("hr-today")}
+{_MOBILE_MENU_BTN}
+{_render_sidebar("hr-today", f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(picks)} Picks")}
 <div class="main-col">
-{_render_topbar(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(picks)} Picks", show_tg_join=True)}
 
 {model_stats_tile}
 {streak_tile}
@@ -1373,9 +1372,9 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
 <body>
 
 <div class="app-shell">
-{_render_sidebar("hr-leaders")}
+{_MOBILE_MENU_BTN}
+{_render_sidebar("hr-leaders", f"Season HR Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
 <div class="main-col">
-{_render_topbar(f"Season HR Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}", show_tg_join=False)}
 
 <div class="page-body">
   <div class="page-title">2026 Home Run Leaders</div>
@@ -1649,9 +1648,9 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
 <body>
 
 <div class="app-shell">
-{_render_sidebar("k-leaders")}
+{_MOBILE_MENU_BTN}
+{_render_sidebar("k-leaders", f"Season K Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
 <div class="main-col">
-{_render_topbar(f"Season K Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}", show_tg_join=False)}
 
 <div class="page-body">
   <div class="page-title">2026 Strikeout Leaders</div>
@@ -1859,9 +1858,9 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
 </head>
 <body>
 <div class="app-shell">
-{_render_sidebar("hitrate-hr")}
+{_MOBILE_MENU_BTN}
+{_render_sidebar("hitrate-hr", "Hit Rate Calendar — Season 2026")}
 <div class="main-col">
-{_render_topbar("Hit Rate Calendar — Season 2026", show_tg_join=True)}
 
 <div class="model-stats-tile">
   <div class="stats-tile-hero">
@@ -2415,9 +2414,9 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
 <body>
 
 <div class="app-shell">
-{_render_sidebar("k-today")}
+{_MOBILE_MENU_BTN}
+{_render_sidebar("k-today", f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks")}
 <div class="main-col">
-{_render_topbar(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks", show_tg_join=False)}
 
 {sections_html}
 

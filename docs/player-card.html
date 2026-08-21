@@ -18,12 +18,12 @@
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia,serif;font-size:14px;line-height:1.5;min-height:100vh}
-  .site-date{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.55);letter-spacing:.12em;text-transform:uppercase}
   .page-body{max-width:820px;margin:32px auto 60px;padding:0 20px}
   .app-shell{display:flex;min-height:100vh}
-  .sidebar{width:200px;flex-shrink:0;background:var(--navy);border-right:1px solid var(--border-dark);display:flex;flex-direction:column;padding:20px 0;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto}
+  .sidebar{width:200px;flex-shrink:0;background:var(--navy);border-right:1px solid var(--border-dark);display:flex;flex-direction:column;padding:20px 0 0;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto}
   .sb-brand{display:flex;align-items:center;gap:8px;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;letter-spacing:.04em;text-transform:uppercase;padding:0 18px 20px}
   .sb-brand svg{width:22px;height:22px;flex-shrink:0;fill:#ffffff}
+  .sb-nav{flex:1}
   .sb-group{margin-bottom:6px}
   .sb-grouphead{font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);padding:10px 18px 4px}
   .sb-subitem{display:flex;align-items:center;justify-content:space-between;gap:6px;font-family:'Oswald',sans-serif;font-weight:500;font-size:13px;color:rgba(255,255,255,.75);text-decoration:none;padding:8px 18px 8px 26px;border-left:3px solid transparent}
@@ -32,16 +32,21 @@
   .sb-subitem.disabled{color:rgba(255,255,255,.30);cursor:default}
   .sb-subitem.disabled:hover{background:none;color:rgba(255,255,255,.30)}
   .sb-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.10);color:rgba(255,255,255,.5);padding:2px 6px;border-radius:8px}
+  .sb-footer{margin-top:auto;padding:16px 18px 20px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:12px}
+  .sb-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase}
   .main-col{flex:1;min-width:0;display:flex;flex-direction:column}
-  .topbar{background:var(--navy);background-image:repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(255,255,255,.04) 47px,rgba(255,255,255,.04) 48px);color:#fff;padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;border-bottom:4px solid var(--red);position:sticky;top:0;z-index:10}
-  .hamburger{display:none;background:none;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:4px 8px}
+  .tg-join{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left}
+  .tg-join-label{font-size:.74rem;color:rgba(255,255,255,.65);line-height:1.35}
+  .tg-join-btn{display:inline-flex;align-items:center;gap:8px;background:#229ED9;color:#fff;font-weight:700;font-size:.82rem;padding:9px 14px;border-radius:8px;text-decoration:none;white-space:nowrap;transition:background .15s}
+  .tg-join-btn:hover{background:#1a8bbf}
+  .tg-join-btn svg{flex-shrink:0}
+  .mobile-menu-btn{display:none}
   .sidebar-overlay{display:none}
   @media(max-width:600px){
   .sidebar{position:fixed;top:0;left:0;bottom:0;z-index:100;transform:translateX(-100%);transition:transform .2s ease;box-shadow:2px 0 12px rgba(0,0,0,.4)}
   .sidebar.open{transform:translateX(0)}
-  .hamburger{display:inline-flex;align-items:center}
+  .mobile-menu-btn{display:inline-flex;align-items:center;justify-content:center;position:fixed;top:12px;left:12px;z-index:101;width:40px;height:40px;background:var(--navy);border:1px solid var(--border-dark);border-radius:8px;color:#fff;font-size:20px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
   .sidebar-overlay.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
-  .topbar{padding:16px 18px}
   }
   .page-title{font-family:'Oswald',sans-serif;font-size:22px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
   .page-subtitle{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}
@@ -121,18 +126,20 @@
 </head>
 <body>
 <div class="app-shell">
+<button class="mobile-menu-btn" id="hamburgerBtn" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
 <nav class="sidebar" id="sidebar">
   <div class="sb-brand"><svg fill="#ffffff" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g><path d="M455.857,56.144c-74.86-74.859-196.662-74.859-271.521,0C17.087,223.392-9.275,272.783,2.398,298.264c8.318,18.153,32.898,19.077,63.015,17.249l-36.537,97.203c-6.838,18.194-2.549,38.035,11.195,51.778c13.744,13.743,33.583,18.035,51.778,11.195L197.2,436.089c-2.507,34.987-3.349,64.4,16.534,73.511c3.325,1.524,7.055,2.4,11.403,2.4c28.973-0.002,85.294-38.91,230.72-184.335C530.715,252.806,530.715,131.003,455.857,56.144z"/></g><g><path d="M320.096,28.297c-90.213,0-163.608,73.394-163.608,163.608s73.395,163.608,163.608,163.608s163.608-73.395,163.608-163.608S410.31,28.297,320.096,28.297z M320.096,48.698c36.338,0,69.551,13.613,94.828,35.995c-26.187,23.225-59.477,35.903-94.828,35.903c-35.351,0-68.641-12.679-94.828-35.903C250.544,62.309,283.758,48.698,320.096,48.698z M320.096,335.111c-36.338,0.001-69.552-13.611-94.829-35.995c26.187-23.225,59.478-35.903,94.829-35.903c35.351,0,68.641,12.679,94.828,35.903C389.647,321.499,356.433,335.111,320.096,335.111z"/></g></svg> Dingers Hotline</div>
+  <div class="sb-nav">
   <div class="sb-group">
     <div class="sb-grouphead">Home Runs</div>
-    <a class="sb-subitem" href="pick-of-the-day.html">Pick of the Day</a>
     <a class="sb-subitem" href="index.html">Today's Picks</a>
+    <a class="sb-subitem" href="pick-of-the-day.html">Pick of the Day</a>
     <a class="sb-subitem" href="leaderboard.html">Leaders</a>
   </div>
   <div class="sb-group">
     <div class="sb-grouphead">Strikeouts</div>
-    <span class="sb-subitem disabled" aria-disabled="true">Pick of the Day<span class="sb-tag">soon</span></span>
     <a class="sb-subitem" href="strikeouts.html">Today's Picks</a>
+    <span class="sb-subitem disabled" aria-disabled="true">Pick of the Day<span class="sb-tag">soon</span></span>
     <a class="sb-subitem" href="k-leaderboard.html">Leaders</a>
   </div>
   <div class="sb-group">
@@ -140,14 +147,20 @@
     <a class="sb-subitem" href="hit-rate.html">Home Runs</a>
     <span class="sb-subitem disabled" aria-disabled="true">Strikeouts<span class="sb-tag">soon</span></span>
   </div>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-date" id="hdr-date">Player Deep Dive</div>
+    <div class="tg-join">
+    <div class="tg-join-label">Get notified the moment today's picks are ready — join the free Telegram channel.</div>
+    <a class="tg-join-btn" href="https://t.me/+BHJ6UMUkhyoxNzEx" target="_blank" rel="noopener">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.26 13.835l-2.938-.916c-.638-.203-.651-.638.136-.944l11.438-4.41c.532-.194.997.131.998.656z"/></svg>
+      Join Dingers Hotline on Telegram
+    </a>
+  </div>
+  </div>
 </nav>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <div class="main-col">
-<div class="topbar">
-  <button class="hamburger" id="hamburgerBtn" onclick="openSidebar()" aria-label="Open menu">&#9776;</button>
-  <div class="site-date" id="hdr-date">Player Deep Dive</div>
-</div>
-
 <div class="page-body">
   <div class="page-title" id="pg-title">Player Deep Dive</div>
   <div class="page-subtitle" id="pg-sub">Full signal breakdown &middot; All data sources &middot; Today's game context</div>
