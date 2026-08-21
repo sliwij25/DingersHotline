@@ -1317,6 +1317,7 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
     --bg:       #FAFAF7;
     --surface:  #FFFFFF;
     --border:   #E2DED6;
+    --border-dark:#C8C2B8;
     --navy:     #1B2A4A;
     --red:      #C8102E;
     --text:     #1A1A1A;
@@ -1592,6 +1593,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
     --bg:       #FAFAF7;
     --surface:  #FFFFFF;
     --border:   #E2DED6;
+    --border-dark:#C8C2B8;
     --navy:     #1B2A4A;
     --red:      #C8102E;
     --text:     #1A1A1A;
