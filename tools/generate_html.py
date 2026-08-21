@@ -107,14 +107,14 @@ _SIDEBAR_CSS = """
 .sb-footer { margin-top: auto; padding: 16px 18px 20px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 12px; }
 .sb-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.08em; text-transform: uppercase; }
 .main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.tg-join { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; }
-.tg-join-label { font-size: 0.74rem; color: rgba(255,255,255,0.65); line-height: 1.35; }
-.tg-join-btn { display: inline-flex; align-items: center; gap: 8px; background: #229ED9; color: #fff; font-weight: 700; font-size: 0.82rem; padding: 9px 14px; border-radius: 8px; text-decoration: none; white-space: nowrap; transition: background 0.15s; }
+.tg-join { display: flex; flex-direction: column; align-items: stretch; gap: 6px; text-align: left; width: 100%; }
+.tg-join-label { font-size: 0.68rem; color: rgba(255,255,255,0.65); line-height: 1.35; }
+.tg-join-btn { display: flex; align-items: center; gap: 6px; background: #229ED9; color: #fff; font-weight: 700; font-size: 0.7rem; line-height: 1.25; padding: 8px 10px; border-radius: 8px; text-decoration: none; white-space: normal; transition: background 0.15s; }
 .tg-join-btn:hover { background: #1a8bbf; }
 .tg-join-btn svg { flex-shrink: 0; }
 .mobile-menu-btn { display: none; }
 .sidebar-overlay { display: none; }
-@media (max-width: 600px) {
+@media (max-width: 860px) {
   .sidebar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; transform: translateX(-100%); transition: transform 0.2s ease; box-shadow: 2px 0 12px rgba(0,0,0,0.4); }
   .sidebar.open { transform: translateX(0); }
   .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; position: fixed; top: 12px; left: 12px; z-index: 101; width: 40px; height: 40px; background: var(--navy); border: 1px solid var(--border-dark); border-radius: 8px; color: #fff; font-size: 20px; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
@@ -704,7 +704,7 @@ def generate_picks_html(
     color: var(--text-sub);
     margin-top: 2px;
   }}
-  @media (max-width: 600px) {{
+  @media (max-width: 860px) {{
     .model-stats-tile {{ flex-direction: column; margin: 0 16px 20px; }}
     .stats-tile-items {{ flex-direction: column; border-left: none; border-top: 1px solid var(--border); }}
     .stats-tile-item {{ border-right: none; border-bottom: 1px solid var(--border); }}
@@ -748,7 +748,7 @@ def generate_picks_html(
     font-size: 0.75rem;
     color: var(--text-sub);
   }}
-  @media (max-width: 600px) {{
+  @media (max-width: 860px) {{
     .streak-tile {{ margin: 0 16px 20px; padding: 16px 20px; }}
   }}
 
@@ -1102,7 +1102,7 @@ def generate_picks_html(
 
 
   /* ─── Responsive ─── */
-  @media (max-width: 600px) {{
+  @media (max-width: 860px) {{
     .tier-section          {{ padding: 20px 16px 4px; }}
     .tier-section-accent   {{ padding-left: 13px; margin-left: 4px; }}
     .picks-grid    {{ gap: 8px; }}
@@ -1363,7 +1363,7 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
   .site-footer {{ text-align: center; padding: 16px 24px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 40px; }}
   .disclaimer {{ margin-top: 6px; max-width: 540px; margin-left: auto; margin-right: auto; }}
 
-  @media (max-width: 600px) {{
+  @media (max-width: 860px) {{
     .col-stat {{ display: none; }}
     .td-player {{ min-width: unset; }}
   }}
@@ -1639,7 +1639,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
   .site-footer {{ text-align: center; padding: 16px 24px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 40px; }}
   .disclaimer {{ margin-top: 6px; max-width: 540px; margin-left: auto; margin-right: auto; }}
 
-  @media (max-width: 600px) {{
+  @media (max-width: 860px) {{
     .col-stat {{ display: none; }}
     .td-player {{ min-width: unset; }}
   }}
@@ -2404,7 +2404,7 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
     text-align: center;
     margin-top: 4px;
   }}
-  @media (max-width: 600px) {{
+  @media (max-width: 860px) {{
     .tier-section {{ padding: 20px 16px 4px; }}
     .picks-grid   {{ gap: 8px; }}
     .site-footer  {{ padding: 12px 16px; }}

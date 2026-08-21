@@ -93,7 +93,7 @@ class TestMobileMenuButton:
 
 class TestSidebarCssAndScript:
     def test_css_has_mobile_breakpoint(self):
-        assert "@media (max-width: 600px)" in _SIDEBAR_CSS
+        assert "@media (max-width: 860px)" in _SIDEBAR_CSS
 
     def test_css_defines_sidebar_and_footer_classes(self):
         assert ".sidebar {" in _SIDEBAR_CSS
