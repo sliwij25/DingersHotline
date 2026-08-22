@@ -1092,12 +1092,6 @@ def generate_picks_html(
     gap: 14px;
     margin-top: 24px;
   }}
-  .site-footer-meta {{
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 8px 16px;
-  }}
   .disclaimer {{
     width: 100%;
     font-size: 9px;
@@ -1130,10 +1124,6 @@ def generate_picks_html(
 
 <footer class="site-footer">
   {_render_nav_footer(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(picks)} Picks")}
-  <div class="site-footer-meta">
-    <span>Dingers Hotline</span>
-    <span>Generated {_esc(today)}</span>
-  </div>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
@@ -2391,12 +2381,6 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
     align-items: center;
     gap: 14px;
   }}
-  .site-footer-meta {{
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 8px 16px;
-  }}
   .disclaimer {{
     width: 100%;
     font-size: 9px;
@@ -2420,10 +2404,6 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
 
 <footer class="site-footer">
   {_render_nav_footer(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks")}
-  <div class="site-footer-meta">
-    <span>Dingers Hotline — Strikeout Picks</span>
-    <span>Generated {_esc(today)}</span>
-  </div>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
