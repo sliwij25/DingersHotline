@@ -73,6 +73,8 @@ def _render_topnav(active_leaf: str) -> str:
 
 
 def _render_nav_footer(date_html: str) -> str:
+    """Inner content for a page's <footer>. Nest inside <footer class="site-footer">
+    (not as a sibling before it) so both share one navy background with no gap."""
     return (
         f'<div class="tn-footer">\n'
         f'  <div class="tn-date">{date_html}</div>\n'
@@ -108,9 +110,9 @@ _TOPNAV_CSS = """
 .tn-subitem.disabled { color: rgba(255,255,255,0.30); cursor: default; }
 .tn-subitem.disabled:hover { background: none; color: rgba(255,255,255,0.30); }
 .tn-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.5); padding: 2px 6px; border-radius: 8px; }
-.tn-footer { background: var(--navy); padding: 20px 36px; display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
-.tn-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.08em; text-transform: uppercase; }
-.tg-join { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; max-width: 420px; }
+.tn-footer { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.tn-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.08em; text-transform: uppercase; text-align: center; }
+.tg-join { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; max-width: 420px; }
 .tg-join-label { font-size: 0.72rem; color: rgba(255,255,255,0.65); line-height: 1.35; }
 .tg-join-btn { display: inline-flex; align-items: center; gap: 8px; background: #229ED9; color: #fff; font-weight: 700; font-size: 0.78rem; line-height: 1.25; padding: 9px 14px; border-radius: 8px; text-decoration: none; white-space: normal; transition: background 0.15s; }
 .tg-join-btn:hover { background: #1a8bbf; }
@@ -119,7 +121,6 @@ _TOPNAV_CSS = """
   .tn-groups { flex-direction: column; }
   .tn-group { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
   .tn-group:last-child { border-bottom: none; }
-  .tn-footer { padding: 20px 20px; }
   .tg-join { max-width: none; }
   .tg-join-btn { width: 100%; justify-content: center; }
 }
@@ -1080,16 +1081,22 @@ def generate_picks_html(
   .site-footer {{
     background: var(--navy);
     border-top: 3px solid var(--red);
-    padding: 14px 36px;
+    padding: 20px 36px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     color: rgba(255,255,255,0.4);
     letter-spacing: 0.06em;
     display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
     margin-top: 24px;
+  }}
+  .site-footer-meta {{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
   }}
   .disclaimer {{
     width: 100%;
@@ -1121,10 +1128,12 @@ def generate_picks_html(
 
 {sections_html}
 
-{_render_nav_footer(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(picks)} Picks")}
 <footer class="site-footer">
-  <span>Dingers Hotline</span>
-  <span>Generated {_esc(today)}</span>
+  {_render_nav_footer(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(picks)} Picks")}
+  <div class="site-footer-meta">
+    <span>Dingers Hotline</span>
+    <span>Generated {_esc(today)}</span>
+  </div>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
@@ -1356,8 +1365,9 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
   .metric-def {{ display: flex; align-items: baseline; gap: 6px; font-size: 12px; color: var(--text-sub); }}
   .metric-def-label {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--navy); white-space: nowrap; }}
 
-  .site-footer {{ text-align: center; padding: 16px 24px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 40px; }}
-  .disclaimer {{ margin-top: 6px; max-width: 540px; margin-left: auto; margin-right: auto; }}
+  .site-footer {{ background: var(--navy); text-align: center; padding: 20px 24px; font-size: 11px; color: rgba(255,255,255,0.4); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em; display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 40px; }}
+  .site-footer-meta {{ display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 16px; }}
+  .disclaimer {{ max-width: 540px; margin-left: auto; margin-right: auto; color: rgba(255,255,255,0.25); font-size: 9px; }}
 
   @media (max-width: 860px) {{
     .col-stat {{ display: none; }}
@@ -1405,9 +1415,9 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
   </div>
 </div>
 
-{_render_nav_footer(f"Season HR Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
 <footer class="site-footer">
-  <span>Dingers Hotline &nbsp;·&nbsp; Season HR Leaders</span>
+  {_render_nav_footer(f"Season HR Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
+  <div class="site-footer-meta"><span>Dingers Hotline &nbsp;·&nbsp; Season HR Leaders</span></div>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
@@ -1628,8 +1638,9 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
   .metric-def {{ display: flex; align-items: baseline; gap: 6px; font-size: 12px; color: var(--text-sub); }}
   .metric-def-label {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--navy); white-space: nowrap; }}
 
-  .site-footer {{ text-align: center; padding: 16px 24px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 40px; }}
-  .disclaimer {{ margin-top: 6px; max-width: 540px; margin-left: auto; margin-right: auto; }}
+  .site-footer {{ background: var(--navy); text-align: center; padding: 20px 24px; font-size: 11px; color: rgba(255,255,255,0.4); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em; display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 40px; }}
+  .site-footer-meta {{ display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 16px; }}
+  .disclaimer {{ max-width: 540px; margin-left: auto; margin-right: auto; color: rgba(255,255,255,0.25); font-size: 9px; }}
 
   @media (max-width: 860px) {{
     .col-stat {{ display: none; }}
@@ -1677,9 +1688,9 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
   </div>
 </div>
 
-{_render_nav_footer(f"Season K Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
 <footer class="site-footer">
-  <span>Dingers Hotline &nbsp;·&nbsp; Season Strikeout Leaders</span>
+  {_render_nav_footer(f"Season K Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
+  <div class="site-footer-meta"><span>Dingers Hotline &nbsp;·&nbsp; Season Strikeout Leaders</span></div>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
@@ -2035,10 +2046,10 @@ function renderDetail() {{
 renderCalendar();
 renderDetail();
 </script>
-{_render_nav_footer("Hit Rate Calendar — Season 2026")}
-<footer style="background:var(--navy);color:rgba(255,255,255,.45);padding:20px 36px;font-size:.7rem;text-align:center;margin-top:40px">
+<footer style="background:var(--navy);color:rgba(255,255,255,.45);padding:20px 36px;font-size:.7rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:40px">
+  {_render_nav_footer("Hit Rate Calendar — Season 2026")}
   <span>Dingers Hotline &nbsp;·&nbsp; Updated {_esc(today)}</span>
-  <div style="margin-top:6px">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
+  <div>Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 {_TOPNAV_SCRIPT}
 </body>
@@ -2370,15 +2381,21 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
   .site-footer {{
     background: var(--navy);
     border-top: 3px solid var(--red);
-    padding: 14px 36px;
+    padding: 20px 36px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     color: rgba(255,255,255,0.4);
     letter-spacing: 0.06em;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }}
+  .site-footer-meta {{
+    display: flex;
+    justify-content: center;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 8px 16px;
   }}
   .disclaimer {{
     width: 100%;
@@ -2401,10 +2418,12 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
 
 {sections_html}
 
-{_render_nav_footer(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks")}
 <footer class="site-footer">
-  <span>Dingers Hotline — Strikeout Picks</span>
-  <span>Generated {_esc(today)}</span>
+  {_render_nav_footer(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks")}
+  <div class="site-footer-meta">
+    <span>Dingers Hotline — Strikeout Picks</span>
+    <span>Generated {_esc(today)}</span>
+  </div>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
