@@ -28,16 +28,16 @@ def _minimal_pnl_data():
 
 
 class TestHitRatePageSidebarWiring:
-    def test_renders_app_shell(self):
+    def test_renders_top_nav(self):
         html = generate_hit_rate_html(_minimal_pnl_data(), "2026-08-21")
-        assert '<div class="app-shell">' in html
-        assert '<div class="main-col">' in html
+        assert '<header class="top-nav">' in html
+        assert '<div class="app-shell">' not in html
 
-    def test_sidebar_marks_hitrate_hr_active(self):
+    def test_topnav_marks_hitrate_hr_active(self):
         html = generate_hit_rate_html(_minimal_pnl_data(), "2026-08-21")
-        assert 'class="sb-subitem active" href="hit-rate.html"' in html
+        assert 'class="tn-subitem active" href="hit-rate.html"' in html
 
-    def test_topbar_includes_tg_join(self):
+    def test_topnav_includes_tg_join(self):
         html = generate_hit_rate_html(_minimal_pnl_data(), "2026-08-21")
         assert "tg-join-btn" in html
 
@@ -46,9 +46,9 @@ class TestHitRatePageSidebarWiring:
         assert 'class="model-chips"' not in html
         assert '<header class="site-header">' not in html
 
-    def test_sidebar_script_present(self):
+    def test_topnav_script_present(self):
         html = generate_hit_rate_html(_minimal_pnl_data(), "2026-08-21")
-        assert "function openSidebar()" in html
+        assert "function toggleTnGroup(btn)" in html
 
     def test_page_body_margin_top_preserved(self):
         html = generate_hit_rate_html(_minimal_pnl_data(), "2026-08-21")

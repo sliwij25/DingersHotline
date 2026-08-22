@@ -18,24 +18,24 @@ def _minimal_k_pick():
 
 
 class TestKPicksPageSidebarWiring:
-    def test_renders_app_shell(self):
+    def test_renders_top_nav(self):
         html = generate_k_picks_html([_minimal_k_pick()], "2026-08-21")
-        assert '<div class="app-shell">' in html
-        assert '<div class="main-col">' in html
+        assert '<header class="top-nav">' in html
+        assert '<div class="app-shell">' not in html
 
-    def test_sidebar_marks_k_today_active(self):
+    def test_topnav_marks_k_today_active(self):
         html = generate_k_picks_html([_minimal_k_pick()], "2026-08-21")
-        assert 'class="sb-subitem active" href="strikeouts.html"' in html
+        assert 'class="tn-subitem active" href="strikeouts.html"' in html
 
-    def test_no_tg_join_on_this_page(self):
+    def test_tg_join_included_in_topnav_footer(self):
         html = generate_k_picks_html([_minimal_k_pick()], "2026-08-21")
-        assert '<a class="tg-join-btn"' not in html
+        assert '<a class="tg-join-btn"' in html
 
     def test_old_flat_nav_removed(self):
         html = generate_k_picks_html([_minimal_k_pick()], "2026-08-21")
         assert 'class="model-chips"' not in html
         assert '<header class="site-header">' not in html
 
-    def test_sidebar_script_present(self):
+    def test_topnav_script_present(self):
         html = generate_k_picks_html([_minimal_k_pick()], "2026-08-21")
-        assert "function openSidebar()" in html
+        assert "function toggleTnGroup(btn)" in html

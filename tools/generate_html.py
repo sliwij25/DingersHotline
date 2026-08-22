@@ -25,7 +25,7 @@ def _player_slug(name: str) -> str:
 BALL_SVG = '<svg class="title-ball" fill="#ffffff" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g><path d="M455.857,56.144c-74.86-74.859-196.662-74.859-271.521,0C17.087,223.392-9.275,272.783,2.398,298.264c8.318,18.153,32.898,19.077,63.015,17.249l-36.537,97.203c-6.838,18.194-2.549,38.035,11.195,51.778c13.744,13.743,33.583,18.035,51.778,11.195L197.2,436.089c-2.507,34.987-3.349,64.4,16.534,73.511c3.325,1.524,7.055,2.4,11.403,2.4c28.973-0.002,85.294-38.91,230.72-184.335C530.715,252.806,530.715,131.003,455.857,56.144z M441.431,313.239C369.446,385.224,316.37,433.95,279.174,462.2c-41.868,31.797-54.167,30.124-56.94,28.854c-2.851-1.307-4.901-7.374-5.626-16.646c-0.922-11.81,0.244-27.541,1.479-44.196c0.209-2.826,0.421-5.681,0.625-8.557c0.247-3.466-1.288-6.82-4.073-8.899c-1.788-1.335-3.934-2.026-6.102-2.026c-1.209,0-2.424,0.214-3.589,0.652l-120.277,45.21c-10.765,4.047-22.043,1.608-30.174-6.524c-8.131-8.131-10.57-19.411-6.524-30.174l42.126-112.072c1.224-3.258,0.703-6.915-1.382-9.702c-2.085-2.787-5.444-4.321-8.919-4.06c-14.536,1.076-31.012,2.295-42.857,1.278c-8.892-0.763-14.721-2.793-15.994-5.572c-1.27-2.772-2.944-15.072,28.855-56.941c28.25-37.196,76.975-90.271,148.96-162.255c66.904-66.905,175.764-66.905,242.669,0C508.335,137.474,508.335,246.335,441.431,313.239z"/></g><g><path d="M320.096,28.297c-90.213,0-163.608,73.394-163.608,163.608s73.395,163.608,163.608,163.608s163.608-73.395,163.608-163.608S410.31,28.297,320.096,28.297z M320.096,48.698c36.338,0,69.551,13.613,94.828,35.995c-26.187,23.225-59.477,35.903-94.828,35.903c-35.351,0-68.641-12.679-94.828-35.903C250.544,62.309,283.758,48.698,320.096,48.698z M320.096,335.111c-36.338,0.001-69.552-13.611-94.829-35.995c26.187-23.225,59.478-35.903,94.829-35.903c35.351,0,68.641,12.679,94.828,35.903C389.647,321.499,356.433,335.111,320.096,335.111z M429.215,284.535c-30.034-26.977-68.377-41.722-109.12-41.722c-40.743,0-79.086,14.745-109.12,41.722c-21.246-24.99-34.087-57.336-34.087-92.631c0.001-35.293,12.842-67.64,34.088-92.63c30.034,26.977,68.377,41.722,109.12,41.722s79.086-14.745,109.119-41.722c21.246,24.99,34.087,57.336,34.087,92.63C463.302,227.198,450.46,259.545,429.215,284.535z"/></g></svg>'
 
 
-_SIDEBAR_GROUPS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
+_NAV_GROUPS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
     ("Home Runs", [
         ("hr-today", "Today's Picks", "index.html"),
         ("hr-potd", "Pick of the Day", "pick-of-the-day.html"),
@@ -43,35 +43,39 @@ _SIDEBAR_GROUPS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
 ]
 
 
-def _render_sidebar(active_leaf: str, date_html: str) -> str:
+def _render_topnav(active_leaf: str, date_html: str) -> str:
     groups_html = []
-    for group_name, items in _SIDEBAR_GROUPS:
+    for group_name, items in _NAV_GROUPS:
+        is_active_group = any(leaf_id == active_leaf for leaf_id, _label, _href in items)
         rows = []
         for leaf_id, label, href in items:
             if href is None:
                 rows.append(
-                    f'<span class="sb-subitem disabled" aria-disabled="true">'
-                    f'{_esc(label)}<span class="sb-tag">soon</span></span>'
+                    f'<span class="tn-subitem disabled" aria-disabled="true">'
+                    f'{_esc(label)}<span class="tn-tag">soon</span></span>'
                 )
             else:
-                cls = "sb-subitem active" if leaf_id == active_leaf else "sb-subitem"
+                cls = "tn-subitem active" if leaf_id == active_leaf else "tn-subitem"
                 rows.append(f'<a class="{cls}" href="{href}">{_esc(label)}</a>')
+        group_cls = "tn-group open" if is_active_group else "tn-group"
+        expanded = "true" if is_active_group else "false"
         groups_html.append(
-            f'<div class="sb-group">'
-            f'<div class="sb-grouphead">{_esc(group_name)}</div>'
-            f'{"".join(rows)}'
+            f'<div class="{group_cls}">'
+            f'<button class="tn-grouphead" type="button" onclick="toggleTnGroup(this)" aria-expanded="{expanded}">'
+            f'{_esc(group_name)}<span class="tn-chevron">&#9662;</span>'
+            f'</button>'
+            f'<div class="tn-sublist">{"".join(rows)}</div>'
             f'</div>'
         )
     return (
-        f'<nav class="sidebar" id="sidebar">\n'
-        f'  <div class="sb-brand">{BALL_SVG} Dingers Hotline</div>\n'
-        f'  <div class="sb-nav">{"".join(groups_html)}</div>\n'
-        f'  <div class="sb-footer">\n'
-        f'    <div class="sb-date">{date_html}</div>\n'
+        f'<header class="top-nav">\n'
+        f'  <div class="tn-brand">{BALL_SVG} Dingers Hotline</div>\n'
+        f'  <div class="tn-groups">{"".join(groups_html)}</div>\n'
+        f'  <div class="tn-footer">\n'
+        f'    <div class="tn-date">{date_html}</div>\n'
         f'    {_TG_JOIN_HTML}\n'
         f'  </div>\n'
-        f'</nav>\n'
-        f'<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>'
+        f'</header>'
     )
 
 
@@ -84,53 +88,47 @@ _TG_JOIN_HTML = """<div class="tg-join">
   </div>"""
 
 
-_MOBILE_MENU_BTN = (
-    '<button class="mobile-menu-btn" id="hamburgerBtn" onclick="openSidebar()" '
-    'aria-label="Open menu">&#9776;</button>'
-)
-
-
-_SIDEBAR_CSS = """
-.app-shell { display: flex; min-height: 100vh; }
-.sidebar { width: 200px; flex-shrink: 0; background: var(--navy); border-right: 1px solid var(--border-dark); display: flex; flex-direction: column; padding: 20px 0 0; position: sticky; top: 0; align-self: flex-start; height: 100vh; overflow-y: auto; }
-.sb-brand { display: flex; align-items: center; gap: 8px; color: #fff; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; padding: 0 18px 20px; }
-.sb-brand svg { width: 22px; height: 22px; flex-shrink: 0; fill: #ffffff; }
-.sb-nav { flex: 1; }
-.sb-group { margin-bottom: 6px; }
-.sb-grouphead { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); padding: 10px 18px 4px; }
-.sb-subitem { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 13px; color: rgba(255,255,255,0.75); text-decoration: none; padding: 8px 18px 8px 26px; border-left: 3px solid transparent; }
-.sb-subitem:hover { background: rgba(255,255,255,0.06); color: #fff; }
-.sb-subitem.active { background: rgba(255,255,255,0.10); color: #fff; border-left-color: var(--red); font-weight: 700; }
-.sb-subitem.disabled { color: rgba(255,255,255,0.30); cursor: default; }
-.sb-subitem.disabled:hover { background: none; color: rgba(255,255,255,0.30); }
-.sb-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.5); padding: 2px 6px; border-radius: 8px; }
-.sb-footer { margin-top: auto; padding: 16px 18px 20px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 12px; }
-.sb-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.08em; text-transform: uppercase; }
-.main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.tg-join { display: flex; flex-direction: column; align-items: stretch; gap: 6px; text-align: left; width: 100%; }
-.tg-join-label { font-size: 0.68rem; color: rgba(255,255,255,0.65); line-height: 1.35; }
-.tg-join-btn { display: flex; align-items: center; gap: 6px; background: #229ED9; color: #fff; font-weight: 700; font-size: 0.7rem; line-height: 1.25; padding: 8px 10px; border-radius: 8px; text-decoration: none; white-space: normal; transition: background 0.15s; }
+_TOPNAV_CSS = """
+.top-nav { background: var(--navy); border-bottom: 1px solid var(--border-dark); }
+.tn-brand { display: flex; align-items: center; gap: 8px; color: #fff; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.04em; text-transform: uppercase; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.tn-brand svg { width: 22px; height: 22px; flex-shrink: 0; fill: #ffffff; }
+.tn-groups { display: flex; }
+.tn-group { flex: 1; min-width: 0; border-right: 1px solid rgba(255,255,255,0.08); }
+.tn-group:last-child { border-right: none; }
+.tn-grouphead { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; background: none; border: none; cursor: pointer; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: #fff; padding: 14px 18px 10px; text-align: left; }
+.tn-chevron { display: none; font-size: 11px; color: rgba(255,255,255,0.5); transition: transform 0.15s; }
+.tn-sublist { display: block; padding-bottom: 8px; }
+.tn-subitem { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 13px; color: rgba(255,255,255,0.75); text-decoration: none; padding: 8px 18px; border-left: 3px solid transparent; }
+.tn-subitem:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.tn-subitem.active { background: rgba(255,255,255,0.10); color: #fff; border-left-color: var(--red); font-weight: 700; }
+.tn-subitem.disabled { color: rgba(255,255,255,0.30); cursor: default; }
+.tn-subitem.disabled:hover { background: none; color: rgba(255,255,255,0.30); }
+.tn-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.5); padding: 2px 6px; border-radius: 8px; }
+.tn-footer { padding: 14px 20px 18px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 12px; }
+.tn-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.08em; text-transform: uppercase; }
+.tg-join { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; max-width: 420px; }
+.tg-join-label { font-size: 0.72rem; color: rgba(255,255,255,0.65); line-height: 1.35; }
+.tg-join-btn { display: inline-flex; align-items: center; gap: 8px; background: #229ED9; color: #fff; font-weight: 700; font-size: 0.78rem; line-height: 1.25; padding: 9px 14px; border-radius: 8px; text-decoration: none; white-space: normal; transition: background 0.15s; }
 .tg-join-btn:hover { background: #1a8bbf; }
 .tg-join-btn svg { flex-shrink: 0; }
-.mobile-menu-btn { display: none; }
-.sidebar-overlay { display: none; }
 @media (max-width: 860px) {
-  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; transform: translateX(-100%); transition: transform 0.2s ease; box-shadow: 2px 0 12px rgba(0,0,0,0.4); }
-  .sidebar.open { transform: translateX(0); }
-  .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; position: fixed; top: 12px; left: 12px; z-index: 101; width: 40px; height: 40px; background: var(--navy); border: 1px solid var(--border-dark); border-radius: 8px; color: #fff; font-size: 20px; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-  .sidebar-overlay.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+  .tn-groups { flex-direction: column; }
+  .tn-group { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .tn-group:last-child { border-bottom: none; }
+  .tn-chevron { display: inline-block; }
+  .tn-group:not(.open) .tn-sublist { display: none; }
+  .tn-group.open .tn-chevron { transform: rotate(180deg); }
+  .tg-join { max-width: none; }
+  .tg-join-btn { width: 100%; justify-content: center; }
 }
 """
 
 
-_SIDEBAR_SCRIPT = """<script>
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('sidebarOverlay').classList.add('open');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
+_TOPNAV_SCRIPT = """<script>
+function toggleTnGroup(btn) {
+  var group = btn.closest('.tn-group');
+  var isOpen = group.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
 </script>"""
 
@@ -592,7 +590,7 @@ def generate_picks_html(
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-{_SIDEBAR_CSS}
+{_TOPNAV_CSS}
   :root {{
     --bg:         #FAFAF7;
     --surface:    #FFFFFF;
@@ -1114,10 +1112,7 @@ def generate_picks_html(
 </head>
 <body>
 
-<div class="app-shell">
-{_MOBILE_MENU_BTN}
-{_render_sidebar("hr-today", f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(picks)} Picks")}
-<div class="main-col">
+{_render_topnav("hr-today", f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(picks)} Picks")}
 
 {model_stats_tile}
 {streak_tile}
@@ -1130,9 +1125,7 @@ def generate_picks_html(
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
-</div>
-</div>
-{_SIDEBAR_SCRIPT}
+{_TOPNAV_SCRIPT}
 </body>
 </html>"""
 
@@ -1311,7 +1304,7 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-{_SIDEBAR_CSS}
+{_TOPNAV_CSS}
   :root {{
     --bg:       #FAFAF7;
     --surface:  #FFFFFF;
@@ -1371,10 +1364,7 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
 </head>
 <body>
 
-<div class="app-shell">
-{_MOBILE_MENU_BTN}
-{_render_sidebar("hr-leaders", f"Season HR Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
-<div class="main-col">
+{_render_topnav("hr-leaders", f"Season HR Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
 
 <div class="page-body">
   <div class="page-title">2026 Home Run Leaders</div>
@@ -1417,9 +1407,7 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
-</div>
-</div>
-{_SIDEBAR_SCRIPT}
+{_TOPNAV_SCRIPT}
 </body>
 </html>"""
 
@@ -1587,7 +1575,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-{_SIDEBAR_CSS}
+{_TOPNAV_CSS}
   :root {{
     --bg:       #FAFAF7;
     --surface:  #FFFFFF;
@@ -1647,10 +1635,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
 </head>
 <body>
 
-<div class="app-shell">
-{_MOBILE_MENU_BTN}
-{_render_sidebar("k-leaders", f"Season K Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
-<div class="main-col">
+{_render_topnav("k-leaders", f"Season K Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
 
 <div class="page-body">
   <div class="page-title">2026 Strikeout Leaders</div>
@@ -1693,9 +1678,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
-</div>
-</div>
-{_SIDEBAR_SCRIPT}
+{_TOPNAV_SCRIPT}
 </body>
 </html>"""
 
@@ -1760,7 +1743,7 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-{_SIDEBAR_CSS}
+{_TOPNAV_CSS}
   :root {{
     --bg:#FAFAF7;--surface:#FFFFFF;--surface2:#F3F2EE;--border:#E2DED6;
     --border-dark:#C8C2B8;--navy:#1B2A4A;--navy-mid:#2D4070;--red:#C8102E;
@@ -1857,10 +1840,7 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
 </style>
 </head>
 <body>
-<div class="app-shell">
-{_MOBILE_MENU_BTN}
-{_render_sidebar("hitrate-hr", "Hit Rate Calendar — Season 2026")}
-<div class="main-col">
+{_render_topnav("hitrate-hr", "Hit Rate Calendar — Season 2026")}
 
 <div class="model-stats-tile">
   <div class="stats-tile-hero">
@@ -2054,9 +2034,7 @@ renderDetail();
   <span>Dingers Hotline &nbsp;·&nbsp; Updated {_esc(today)}</span>
   <div style="margin-top:6px">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
-</div>
-</div>
-{_SIDEBAR_SCRIPT}
+{_TOPNAV_SCRIPT}
 </body>
 </html>"""
 
@@ -2188,7 +2166,7 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-{_SIDEBAR_CSS}
+{_TOPNAV_CSS}
   :root {{
     --bg:         #FAFAF7;
     --surface:    #FFFFFF;
@@ -2413,10 +2391,7 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
 </head>
 <body>
 
-<div class="app-shell">
-{_MOBILE_MENU_BTN}
-{_render_sidebar("k-today", f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks")}
-<div class="main-col">
+{_render_topnav("k-today", f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks")}
 
 {sections_html}
 
@@ -2426,9 +2401,7 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
 </footer>
 
-</div>
-</div>
-{_SIDEBAR_SCRIPT}
+{_TOPNAV_SCRIPT}
 </body>
 </html>
 """

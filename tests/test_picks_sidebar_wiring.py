@@ -18,16 +18,16 @@ def _minimal_pick():
 
 
 class TestPicksPageSidebarWiring:
-    def test_renders_app_shell(self):
+    def test_renders_top_nav(self):
         html = generate_picks_html([_minimal_pick()], "2026-08-21")
-        assert '<div class="app-shell">' in html
-        assert '<div class="main-col">' in html
+        assert '<header class="top-nav">' in html
+        assert '<div class="app-shell">' not in html
 
-    def test_sidebar_marks_today_active(self):
+    def test_topnav_marks_today_active(self):
         html = generate_picks_html([_minimal_pick()], "2026-08-21")
-        assert 'class="sb-subitem active" href="index.html"' in html
+        assert 'class="tn-subitem active" href="index.html"' in html
 
-    def test_topbar_includes_date_and_tg_join(self):
+    def test_topnav_includes_date_and_tg_join(self):
         html = generate_picks_html([_minimal_pick()], "2026-08-21")
         assert "Latest Update: 2026-08-21" in html
         assert "tg-join-btn" in html
@@ -41,6 +41,6 @@ class TestPicksPageSidebarWiring:
         html = generate_picks_html([_minimal_pick()], "2026-08-21")
         assert '<header class="site-header">' not in html
 
-    def test_sidebar_script_present(self):
+    def test_topnav_script_present(self):
         html = generate_picks_html([_minimal_pick()], "2026-08-21")
-        assert "function openSidebar()" in html
+        assert "function toggleTnGroup(btn)" in html
