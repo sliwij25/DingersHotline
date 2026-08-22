@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from tools.generate_html import (
     _render_topnav,
+    _render_nav_footer,
     _NAV_GROUPS,
     _TOPNAV_CSS,
     _TOPNAV_SCRIPT,
@@ -41,69 +42,72 @@ class TestNavGroups:
 
 class TestRenderTopnav:
     def test_active_leaf_marked_active(self):
-        html = _render_topnav("hr-today", "date")
+        html = _render_topnav("hr-today")
         assert 'class="tn-subitem active" href="index.html"' in html
 
     def test_inactive_leaf_not_marked_active(self):
-        html = _render_topnav("hr-today", "date")
+        html = _render_topnav("hr-today")
         assert 'class="tn-subitem" href="leaderboard.html"' in html
 
     def test_stub_leaf_renders_disabled_no_link(self):
-        html = _render_topnav("hr-today", "date")
+        html = _render_topnav("hr-today")
         assert 'aria-disabled="true"' in html
         assert 'tn-tag">soon</span>' in html
 
     def test_all_group_headers_present(self):
-        html = _render_topnav("hr-today", "date")
+        html = _render_topnav("hr-today")
         assert "Home Runs" in html
         assert "Strikeouts" in html
         assert "Hit Rate" in html
 
     def test_brand_includes_ball_svg_and_title(self):
-        html = _render_topnav("hr-today", "date")
+        html = _render_topnav("hr-today")
         assert BALL_SVG in html
         assert "Dingers Hotline" in html
 
     def test_no_active_leaf_renders_no_active_class(self):
-        html = _render_topnav("", "date")
+        html = _render_topnav("")
         assert "tn-subitem active" not in html
 
-    def test_includes_date_html_in_footer(self):
-        html = _render_topnav("hr-today", "Latest Update: 2026-08-21")
-        assert "Latest Update: 2026-08-21" in html
-        assert 'class="tn-footer"' in html
-
-    def test_always_includes_telegram_cta(self):
-        html = _render_topnav("hr-today", "date")
-        assert "tg-join-btn" in html
-        assert "t.me/+BHJ6UMUkhyoxNzEx" in html
-
     def test_no_sidebar_element(self):
-        html = _render_topnav("hr-today", "date")
+        html = _render_topnav("hr-today")
         assert 'class="sidebar"' not in html
         assert 'class="app-shell"' not in html
 
     def test_header_top_nav_wrapper(self):
-        html = _render_topnav("hr-today", "date")
+        html = _render_topnav("hr-today")
         assert '<header class="top-nav">' in html
 
-    def test_active_group_marked_open(self):
-        html = _render_topnav("hr-today", "date")
+    def test_no_group_marked_open(self):
+        html = _render_topnav("hr-today")
         groups = html.split('<div class="tn-group')
         home_runs_group = next(g for g in groups if "Home Runs" in g)
-        assert home_runs_group.startswith(' open">')
-        assert 'aria-expanded="true"' in home_runs_group
-
-    def test_inactive_group_not_marked_open(self):
-        html = _render_topnav("hr-today", "date")
-        groups = html.split('<div class="tn-group')
         strikeouts_group = next(g for g in groups if "Strikeouts" in g)
+        assert home_runs_group.startswith('">')
         assert strikeouts_group.startswith('">')
-        assert 'aria-expanded="false"' in strikeouts_group
+        assert 'aria-expanded="true"' not in html
+        assert html.count('aria-expanded="false"') == 3
 
     def test_chevron_present_per_group(self):
-        html = _render_topnav("hr-today", "date")
+        html = _render_topnav("hr-today")
         assert html.count("tn-chevron") == 3
+
+    def test_no_footer_content_in_header(self):
+        html = _render_topnav("hr-today")
+        assert 'class="tn-footer"' not in html
+        assert "tg-join-btn" not in html
+
+
+class TestRenderNavFooter:
+    def test_includes_date_html(self):
+        html = _render_nav_footer("Latest Update: 2026-08-21")
+        assert "Latest Update: 2026-08-21" in html
+        assert 'class="tn-footer"' in html
+
+    def test_includes_telegram_cta(self):
+        html = _render_nav_footer("date")
+        assert "tg-join-btn" in html
+        assert "t.me/+BHJ6UMUkhyoxNzEx" in html
 
 
 class TestTopnavCssAndScript:

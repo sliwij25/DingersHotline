@@ -43,10 +43,9 @@ _NAV_GROUPS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
 ]
 
 
-def _render_topnav(active_leaf: str, date_html: str) -> str:
+def _render_topnav(active_leaf: str) -> str:
     groups_html = []
     for group_name, items in _NAV_GROUPS:
-        is_active_group = any(leaf_id == active_leaf for leaf_id, _label, _href in items)
         rows = []
         for leaf_id, label, href in items:
             if href is None:
@@ -57,11 +56,9 @@ def _render_topnav(active_leaf: str, date_html: str) -> str:
             else:
                 cls = "tn-subitem active" if leaf_id == active_leaf else "tn-subitem"
                 rows.append(f'<a class="{cls}" href="{href}">{_esc(label)}</a>')
-        group_cls = "tn-group open" if is_active_group else "tn-group"
-        expanded = "true" if is_active_group else "false"
         groups_html.append(
-            f'<div class="{group_cls}">'
-            f'<button class="tn-grouphead" type="button" onclick="toggleTnGroup(this)" aria-expanded="{expanded}">'
+            f'<div class="tn-group">'
+            f'<button class="tn-grouphead" type="button" onclick="toggleTnGroup(this)" aria-expanded="false">'
             f'{_esc(group_name)}<span class="tn-chevron">&#9662;</span>'
             f'</button>'
             f'<div class="tn-sublist">{"".join(rows)}</div>'
@@ -71,11 +68,16 @@ def _render_topnav(active_leaf: str, date_html: str) -> str:
         f'<header class="top-nav">\n'
         f'  <div class="tn-brand">{BALL_SVG} Dingers Hotline</div>\n'
         f'  <div class="tn-groups">{"".join(groups_html)}</div>\n'
-        f'  <div class="tn-footer">\n'
-        f'    <div class="tn-date">{date_html}</div>\n'
-        f'    {_TG_JOIN_HTML}\n'
-        f'  </div>\n'
         f'</header>'
+    )
+
+
+def _render_nav_footer(date_html: str) -> str:
+    return (
+        f'<div class="tn-footer">\n'
+        f'  <div class="tn-date">{date_html}</div>\n'
+        f'  {_TG_JOIN_HTML}\n'
+        f'</div>'
     )
 
 
@@ -90,21 +92,23 @@ _TG_JOIN_HTML = """<div class="tg-join">
 
 _TOPNAV_CSS = """
 .top-nav { background: var(--navy); border-bottom: 1px solid var(--border-dark); }
-.tn-brand { display: flex; align-items: center; gap: 8px; color: #fff; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.04em; text-transform: uppercase; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.tn-brand { display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.04em; text-transform: uppercase; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
 .tn-brand svg { width: 22px; height: 22px; flex-shrink: 0; fill: #ffffff; }
 .tn-groups { display: flex; }
 .tn-group { flex: 1; min-width: 0; border-right: 1px solid rgba(255,255,255,0.08); }
 .tn-group:last-child { border-right: none; }
-.tn-grouphead { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; background: none; border: none; cursor: pointer; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: #fff; padding: 14px 18px 10px; text-align: left; }
-.tn-chevron { display: none; font-size: 11px; color: rgba(255,255,255,0.5); transition: transform 0.15s; }
-.tn-sublist { display: block; padding-bottom: 8px; }
+.tn-grouphead { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; background: none; border: none; cursor: pointer; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: #fff; padding: 14px 18px; text-align: left; }
+.tn-chevron { display: inline-block; font-size: 11px; color: rgba(255,255,255,0.5); transition: transform 0.15s; }
+.tn-group.open .tn-chevron { transform: rotate(180deg); }
+.tn-sublist { display: none; padding-bottom: 8px; }
+.tn-group.open .tn-sublist { display: block; }
 .tn-subitem { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 13px; color: rgba(255,255,255,0.75); text-decoration: none; padding: 8px 18px; border-left: 3px solid transparent; }
 .tn-subitem:hover { background: rgba(255,255,255,0.06); color: #fff; }
 .tn-subitem.active { background: rgba(255,255,255,0.10); color: #fff; border-left-color: var(--red); font-weight: 700; }
 .tn-subitem.disabled { color: rgba(255,255,255,0.30); cursor: default; }
 .tn-subitem.disabled:hover { background: none; color: rgba(255,255,255,0.30); }
 .tn-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.5); padding: 2px 6px; border-radius: 8px; }
-.tn-footer { padding: 14px 20px 18px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 12px; }
+.tn-footer { background: var(--navy); padding: 20px 36px; display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
 .tn-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.08em; text-transform: uppercase; }
 .tg-join { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; max-width: 420px; }
 .tg-join-label { font-size: 0.72rem; color: rgba(255,255,255,0.65); line-height: 1.35; }
@@ -115,9 +119,7 @@ _TOPNAV_CSS = """
   .tn-groups { flex-direction: column; }
   .tn-group { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
   .tn-group:last-child { border-bottom: none; }
-  .tn-chevron { display: inline-block; }
-  .tn-group:not(.open) .tn-sublist { display: none; }
-  .tn-group.open .tn-chevron { transform: rotate(180deg); }
+  .tn-footer { padding: 20px 20px; }
   .tg-join { max-width: none; }
   .tg-join-btn { width: 100%; justify-content: center; }
 }
@@ -1112,13 +1114,14 @@ def generate_picks_html(
 </head>
 <body>
 
-{_render_topnav("hr-today", f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(picks)} Picks")}
+{_render_topnav("hr-today")}
 
 {model_stats_tile}
 {streak_tile}
 
 {sections_html}
 
+{_render_nav_footer(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(picks)} Picks")}
 <footer class="site-footer">
   <span>Dingers Hotline</span>
   <span>Generated {_esc(today)}</span>
@@ -1364,7 +1367,7 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
 </head>
 <body>
 
-{_render_topnav("hr-leaders", f"Season HR Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
+{_render_topnav("hr-leaders")}
 
 <div class="page-body">
   <div class="page-title">2026 Home Run Leaders</div>
@@ -1402,6 +1405,7 @@ def generate_leaderboard_html(today_str: str | None = None) -> str:
   </div>
 </div>
 
+{_render_nav_footer(f"Season HR Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
 <footer class="site-footer">
   <span>Dingers Hotline &nbsp;·&nbsp; Season HR Leaders</span>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
@@ -1635,7 +1639,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
 </head>
 <body>
 
-{_render_topnav("k-leaders", f"Season K Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
+{_render_topnav("k-leaders")}
 
 <div class="page-body">
   <div class="page-title">2026 Strikeout Leaders</div>
@@ -1673,6 +1677,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
   </div>
 </div>
 
+{_render_nav_footer(f"Season K Leaders &nbsp;·&nbsp; Updated {_esc(today_str)}")}
 <footer class="site-footer">
   <span>Dingers Hotline &nbsp;·&nbsp; Season Strikeout Leaders</span>
   <div class="disclaimer">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
@@ -1840,7 +1845,7 @@ def generate_hit_rate_html(pnl_data: dict, today: str) -> str:
 </style>
 </head>
 <body>
-{_render_topnav("hitrate-hr", "Hit Rate Calendar — Season 2026")}
+{_render_topnav("hitrate-hr")}
 
 <div class="model-stats-tile">
   <div class="stats-tile-hero">
@@ -2030,6 +2035,7 @@ function renderDetail() {{
 renderCalendar();
 renderDetail();
 </script>
+{_render_nav_footer("Hit Rate Calendar — Season 2026")}
 <footer style="background:var(--navy);color:rgba(255,255,255,.45);padding:20px 36px;font-size:.7rem;text-align:center;margin-top:40px">
   <span>Dingers Hotline &nbsp;·&nbsp; Updated {_esc(today)}</span>
   <div style="margin-top:6px">Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
@@ -2391,10 +2397,11 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
 </head>
 <body>
 
-{_render_topnav("k-today", f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks")}
+{_render_topnav("k-today")}
 
 {sections_html}
 
+{_render_nav_footer(f"Latest Update: {_esc(today)} &nbsp;·&nbsp; {len(k_picks)} Picks")}
 <footer class="site-footer">
   <span>Dingers Hotline — Strikeout Picks</span>
   <span>Generated {_esc(today)}</span>
