@@ -2,6 +2,7 @@
 api/.env
 api/*.rtf
 *.rtf
+.git-credentials
 
 # Local database — personal betting data
 data/bets.db

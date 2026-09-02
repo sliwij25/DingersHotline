@@ -702,8 +702,7 @@ except Exception as _he:
 # ── Auto-commit + push to GitHub ───────────────────────────────────────────────
 
 try:
-    import subprocess as _sp
-    _repo = str(Path(__file__).parent.parent)
+    from agents.base import git_commit_and_push
     if not args.use_cache:
         # Full run: commit all generated files
         _git_files = [
@@ -724,16 +723,13 @@ try:
         _git_files = ["docs/index.html", "docs/leaderboard.html", "docs/k-leaderboard.html", "docs/player-data.json", "docs/hit-rate.html", "docs/strikeouts.html", f"picks/picks_{TODAY}.html", f"picks/k_picks_{TODAY}.html"]
         _commit_msg = f"picks({TODAY}): re-run from cache — lineup update"
 
-    _sp.run(["/usr/bin/git", "-C", _repo, "add"] + _git_files, capture_output=True)
-    _result = _sp.run(
-        ["/usr/bin/git", "-C", _repo, "commit", "-m", _commit_msg],
-        capture_output=True, text=True
-    )
-    if "nothing to commit" in _result.stdout:
+    _status = git_commit_and_push(_git_files, _commit_msg)
+    if _status == "nothing_to_commit":
         print("  [GitHub] No changes to commit.")
-    else:
-        _sp.run(["/usr/bin/git", "-C", _repo, "push"], capture_output=True)
+    elif _status == "pushed":
         print("  [GitHub] Changes pushed to github.com/sliwij25/DingersHotline")
+    else:
+        print(f"  [GitHub] FAILED — {_status}")
 except Exception as e:
     print(f"  [GitHub] Push skipped: {e}")
 
