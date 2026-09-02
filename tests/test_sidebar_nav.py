@@ -22,15 +22,10 @@ class TestNavGroups:
         total = sum(len(items) for _, items in _NAV_GROUPS)
         assert total == 8
 
-    def test_stub_leaves_have_no_href(self):
-        stub_ids = {"k-potd", "hitrate-k"}
-        found = set()
+    def test_no_stub_leaves_remain(self):
         for _, items in _NAV_GROUPS:
             for leaf_id, _label, href in items:
-                if leaf_id in stub_ids:
-                    assert href is None
-                    found.add(leaf_id)
-        assert found == stub_ids
+                assert href is not None, f"{leaf_id} still has href=None"
 
     def test_todays_picks_before_pick_of_the_day(self):
         for group_name in ("Home Runs", "Strikeouts"):
@@ -49,8 +44,13 @@ class TestRenderTopnav:
         html = _render_topnav("hr-today")
         assert 'class="tn-subitem" href="leaderboard.html"' in html
 
-    def test_stub_leaf_renders_disabled_no_link(self):
-        html = _render_topnav("hr-today")
+    def test_stub_leaf_renders_disabled_no_link(self, monkeypatch):
+        import tools.generate_html as gh
+        synthetic_groups = [
+            ("Test Group", [("test-stub", "Coming Soon", None)]),
+        ]
+        monkeypatch.setattr(gh, "_NAV_GROUPS", synthetic_groups)
+        html = gh._render_topnav("hr-today")
         assert 'aria-disabled="true"' in html
         assert 'tn-tag">soon</span>' in html
 

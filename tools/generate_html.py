@@ -33,12 +33,12 @@ _NAV_GROUPS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
     ]),
     ("Strikeouts", [
         ("k-today", "Today's Picks", "strikeouts.html"),
-        ("k-potd", "Pick of the Day", None),
+        ("k-potd", "Pick of the Day", "strikeout-pick-of-the-day.html"),
         ("k-leaders", "Leaders", "k-leaderboard.html"),
     ]),
     ("Hit Rate", [
         ("hitrate-hr", "Home Runs", "hit-rate.html"),
-        ("hitrate-k", "Strikeouts", None),
+        ("hitrate-k", "Strikeouts", "k-hit-rate.html"),
     ]),
 ]
 
@@ -2147,8 +2147,9 @@ def _build_k_card(rank: int, pick: dict) -> str:
     stats_html = f'<div class="stats-row">{stats_row}</div>' if stats_row else ""
     tags_html  = rest_html + opp_html
 
+    slug = _player_slug(pitcher)
     return f"""
-        <div class="pick-card">
+        <a class="pick-card" href="k-player-card.html?player={slug}">
             <div class="card-rank">
                 <span class="rank-num">#{rank}</span>
             </div>
@@ -2164,7 +2165,7 @@ def _build_k_card(rank: int, pick: dict) -> str:
                 <div class="tags-row">{tags_html}</div>
                 <div class="why-line"><span class="why-label">Why:</span> {_esc(reasoning)}</div>
             </div>
-        </div>"""
+        </a>"""
 
 
 def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
@@ -2306,6 +2307,14 @@ def generate_k_picks_html(k_picks: list[dict], today: str) -> str:
     padding: 16px;
     display: flex;
     gap: 14px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }}
+  .pick-card:hover {{
+    border-color: var(--navy);
+    box-shadow: 0 2px 12px rgba(27,42,74,0.10);
   }}
   .card-rank {{ display: flex; flex-direction: column; align-items: center; min-width: 40px; padding-top: 2px; }}
   .rank-num {{
