@@ -1176,6 +1176,7 @@ CREATE TABLE IF NOT EXISTS pick_factors_k (
     value_edge                    REAL,
     pinnacle_odds                  TEXT,
     k_line                          REAL,
+    direction                       TEXT,
     actual_k                        INTEGER,
     over_hit                        INTEGER,
     UNIQUE(bet_date, pitcher, game_pk)
@@ -1185,6 +1186,7 @@ CREATE TABLE IF NOT EXISTS pick_factors_k (
 _K_MIGRATION_COLUMNS = [
     ("actual_k", "INTEGER"),
     ("over_hit", "INTEGER"),
+    ("direction", "TEXT"),
 ]
 
 
@@ -1204,7 +1206,7 @@ def _ensure_pick_factors_k_table():
 def save_pick_factors_k(bet_date: str, pitcher: str, signals: dict,
                         confidence: str = None, algo_version: str = "1.0",
                         score: float = None, rank: int = None,
-                        game_pk: str = None) -> str:
+                        game_pk: str = None, direction: str = None) -> str:
     """Save (or update, on conflict) a strikeout-pick signal snapshot."""
     _ensure_pick_factors_k_table()
     conn = get_db_conn()
@@ -1220,8 +1222,8 @@ def save_pick_factors_k(bet_date: str, pitcher: str, signals: dict,
                k_percent, whiff_percent, csw_percent, swinging_strike_percent, k_per_9_blended,
                pitcher_whiff_fastball, pitcher_whiff_breaking, pitcher_whiff_offspeed,
                opp_whiff_vs_mix, avg_ip_last3, avg_pitches_last3, days_rest,
-               ev_10, kelly_size, value_edge, pinnacle_odds, k_line)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               ev_10, kelly_size, value_edge, pinnacle_odds, k_line, direction)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(bet_date, pitcher, game_pk) DO UPDATE SET
               matchup=excluded.matchup, algo_version=excluded.algo_version,
               confidence=excluded.confidence, score=excluded.score, rank=excluded.rank,
@@ -1234,7 +1236,8 @@ def save_pick_factors_k(bet_date: str, pitcher: str, signals: dict,
               opp_whiff_vs_mix=excluded.opp_whiff_vs_mix,
               avg_ip_last3=excluded.avg_ip_last3, avg_pitches_last3=excluded.avg_pitches_last3,
               days_rest=excluded.days_rest, ev_10=excluded.ev_10, kelly_size=excluded.kelly_size,
-              value_edge=excluded.value_edge, pinnacle_odds=excluded.pinnacle_odds, k_line=excluded.k_line
+              value_edge=excluded.value_edge, pinnacle_odds=excluded.pinnacle_odds, k_line=excluded.k_line,
+              direction=excluded.direction
         """, (
             bet_date, pitcher, game_pk or signals.get("game_pk"), signals.get("matchup"),
             algo_version, confidence or signals.get("confidence"), score, rank,
@@ -1245,6 +1248,7 @@ def save_pick_factors_k(bet_date: str, pitcher: str, signals: dict,
             signals.get("avg_ip_last3"), signals.get("avg_pitches_last3"), signals.get("days_rest"),
             signals.get("ev_10"), signals.get("kelly_size"), signals.get("value_edge"),
             signals.get("pinnacle_odds"), signals.get("k_line"),
+            direction or signals.get("direction"),
         ))
         conn.commit()
     finally:

@@ -61,11 +61,11 @@ def update_pick_factors_k(game_date: str, actual_ks: dict[str, int], dry_run: bo
     conn = get_db_conn()
     try:
         rows = conn.execute(
-            "SELECT id, pitcher, k_line FROM pick_factors_k WHERE bet_date=? AND actual_k IS NULL",
+            "SELECT id, pitcher, k_line, direction FROM pick_factors_k WHERE bet_date=? AND actual_k IS NULL",
             (game_date,),
         ).fetchall()
         names = list(actual_ks.keys())
-        for row_id, pitcher, k_line in rows:
+        for row_id, pitcher, k_line, direction in rows:
             best_name, best_score = None, 0.0
             for name in names:
                 score = _similarity(pitcher, name)
@@ -74,7 +74,10 @@ def update_pick_factors_k(game_date: str, actual_ks: dict[str, int], dry_run: bo
             if best_score < 0.85 or best_name is None:
                 continue
             actual = actual_ks[best_name]
-            over_hit = 1 if (k_line is not None and actual > k_line) else 0
+            if direction == "UNDER":
+                over_hit = 1 if (k_line is not None and actual < k_line) else 0
+            else:
+                over_hit = 1 if (k_line is not None and actual > k_line) else 0
             if not dry_run:
                 conn.execute(
                     "UPDATE pick_factors_k SET actual_k=?, over_hit=? WHERE id=?",

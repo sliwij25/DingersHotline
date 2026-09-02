@@ -373,7 +373,7 @@ try:
         save_pick_factors_k(
             TODAY, p["pitcher"], p["signals"],
             confidence=p["confidence"], algo_version="1.0",
-            score=p["score"], rank=rank_i,
+            score=p["score"], rank=rank_i, direction=p["direction"],
         )
 
     k_txt_path = f"picks/k_picks_{TODAY}.txt"
