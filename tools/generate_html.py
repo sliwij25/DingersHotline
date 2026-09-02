@@ -213,6 +213,58 @@ def generate_player_data_json(picks: list[dict], today: str) -> str:
     return _json.dumps({"date": today, "players": players}, default=str)
 
 
+def generate_k_player_data_json(picks: list[dict], today: str) -> str:
+    players = []
+    for rank, pick in enumerate(picks, 1):
+        pitcher = pick.get("pitcher", "")
+        sig = pick.get("signals") or {}
+        game_time_et = ""
+        gt = sig.get("game_time") or ""
+        if gt:
+            try:
+                from datetime import datetime as _dt
+                from zoneinfo import ZoneInfo
+                utc = _dt.fromisoformat(gt.replace("Z", "+00:00"))
+                et = utc.astimezone(ZoneInfo("America/New_York"))
+                game_time_et = et.strftime("%-I:%M %p ET")
+            except Exception:
+                game_time_et = gt[11:16]
+        entry = {
+            "slug": _player_slug(pitcher),
+            "pitcher": pitcher,
+            "rank": rank,
+            "score": pick.get("score", 0),
+            "confidence": pick.get("confidence", "LOW"),
+            "matchup": pick.get("matchup", ""),
+            "direction": pick.get("direction", "OVER"),
+            "projected_k": pick.get("projected_k"),
+            "gap": pick.get("gap"),
+            "game_time_et": game_time_et,
+            "reasoning": pick.get("reasoning", ""),
+            "signals": {
+                "venue": sig.get("venue"),
+                "pitcher_throws": sig.get("pitcher_throws"),
+                "k_line": sig.get("k_line"),
+                "k_percent": sig.get("k_percent"),
+                "whiff_percent": sig.get("whiff_percent"),
+                "csw_percent": sig.get("csw_percent"),
+                "swinging_strike_percent": sig.get("swinging_strike_percent"),
+                "k_per_9_blended": sig.get("k_per_9_blended"),
+                "avg_ip_last3": sig.get("avg_ip_last3"),
+                "avg_pitches_last3": sig.get("avg_pitches_last3"),
+                "days_rest": sig.get("days_rest"),
+                "pitcher_whiff_fastball": sig.get("pitcher_whiff_fastball"),
+                "pitcher_whiff_breaking": sig.get("pitcher_whiff_breaking"),
+                "pitcher_whiff_offspeed": sig.get("pitcher_whiff_offspeed"),
+                "opp_whiff_vs_mix": sig.get("opp_whiff_vs_mix"),
+                "opp_team_k_pct": sig.get("opp_team_k_pct"),
+                "pinnacle_odds": sig.get("pinnacle_odds"),
+            },
+        }
+        players.append(entry)
+    return _json.dumps({"date": today, "players": players}, default=str)
+
+
 def _stat(label: str, value, suffix: str = "", fmt: str = "") -> str:
     if value is None:
         return ""
