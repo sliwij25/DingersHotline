@@ -624,7 +624,7 @@ class Ace:
         today = date.today().isoformat()
         resp = requests.get(
             f"{MLB_API_BASE}/schedule",
-            params={"sportId": 1, "date": today, "hydrate": "probablePitcher,lineups(person),team"},
+            params={"sportId": 1, "date": today, "hydrate": "probablePitcher,lineups(person),team,venue"},
             timeout=15,
         )
         resp.raise_for_status()
@@ -639,6 +639,8 @@ class Ace:
                 home = teams.get("home", {})
                 lineup_data = game.get("lineups", {})
                 matchup = f"{away.get('team', {}).get('name', '')} @ {home.get('team', {}).get('name', '')}"
+                venue = (game.get("venue") or {}).get("name")
+                game_time = game.get("gameDate")
                 for side_key, opp_side_key, opp_lineup_key in (
                     ("away", "home", "homePlayers"),
                     ("home", "away", "awayPlayers"),
@@ -650,11 +652,29 @@ class Ace:
                         continue
                     opp_lineup_ids = [p["id"] for p in lineup_data.get(opp_lineup_key, []) if p.get("id")]
                     opp_team_id = opp_side.get("team", {}).get("id")
-                    starters.append((pitcher["id"], pitcher.get("fullName", ""), matchup, opp_lineup_ids, opp_team_id))
+                    starters.append((pitcher["id"], pitcher.get("fullName", ""), matchup, opp_lineup_ids, opp_team_id, venue, game_time))
                     confirmed_names.add(pitcher.get("fullName", ""))
 
         pitcher_ids = [pid for pid, *_ in starters]
-        opp_batter_ids = sorted({bid for _pid, _name, _matchup, opp_ids, _team_id in starters for bid in opp_ids})
+
+        pitcher_throws_map: dict[int, str] = {}
+        if pitcher_ids:
+            try:
+                p_resp = requests.get(
+                    f"{MLB_API_BASE}/people",
+                    params={"personIds": ",".join(str(i) for i in pitcher_ids),
+                            "hydrate": "currentTeam"},
+                    timeout=10,
+                )
+                for person in p_resp.json().get("people", []):
+                    pid_ = person.get("id")
+                    hand = (person.get("pitchHand") or {}).get("code", "?")
+                    if pid_:
+                        pitcher_throws_map[pid_] = hand
+            except Exception:
+                pass
+
+        opp_batter_ids = sorted({bid for _pid, _name, _matchup, opp_ids, _team_id, *_rest in starters for bid in opp_ids})
         k_statcast = _fetch_pitcher_k_statcast()
         pitcher_whiff = _fetch_pitch_arsenal_whiff(pitcher_ids, player_type="pitcher")
         pitcher_mix = _fetch_pitcher_pitch_mix(pitcher_ids)
@@ -665,7 +685,7 @@ class Ace:
         team_k_pct_cache: dict[int, float | None] = {}
 
         pitcher_signals = {}
-        for pid, name, matchup, opp_lineup_ids, opp_team_id in starters:
+        for pid, name, matchup, opp_lineup_ids, opp_team_id, venue, game_time in starters:
             statcast_row = k_statcast.get(pid) or k_statcast.get(name.lower(), {})
             form = _fetch_pitcher_recent_form(pid)
             whiff_splits = pitcher_whiff.get(pid, {})
@@ -699,6 +719,9 @@ class Ace:
                 "pinnacle_odds": odds_entry.get("pinnacle"),
                 "k_line": odds_entry.get("k_line"),
                 "matchup": matchup,
+                "venue": venue,
+                "game_time": game_time,
+                "pitcher_throws": pitcher_throws_map.get(pid),
             }
             pitcher_signals[name] = sig
 
