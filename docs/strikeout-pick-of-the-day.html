@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strikeout Pick of the Day — Dingers Hotline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#FAFAF7; --surface:#FFFFFF; --surface2:#F3F2EE;
+    --border:#E2DED6; --navy:#1B2A4A; --navy-mid:#2D4070;
+    --red:#C8102E; --red-dim:#F9E5E8; --gold:#D4A017; --gold-dim:#FDF5DC;
+    --green:#1A6B3C; --green-dim:#E4F2EB; --amber:#B45309; --amber-dim:#FEF3C7;
+    --text:#1A1A1A; --text-sub:#6B6560; --text-dim:#A8A29E;
+    --border-dark:#C8C2B8;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia,serif;font-size:14px;line-height:1.5;min-height:100vh}
+  .page-body{max-width:820px;margin:32px auto 60px;padding:0 20px}
+  .top-nav{background:var(--navy);border-bottom:1px solid var(--border-dark)}
+  .tn-brand{display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;font-size:16px;letter-spacing:.04em;text-transform:uppercase;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .tn-brand svg{width:22px;height:22px;flex-shrink:0;fill:#ffffff}
+  .tn-groups{display:flex}
+  .tn-group{flex:1;min-width:0;border-right:1px solid rgba(255,255,255,.08)}
+  .tn-group:last-child{border-right:none}
+  .tn-grouphead{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;background:none;border:none;cursor:pointer;font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;color:#fff;padding:14px 18px;text-align:left}
+  .tn-chevron{display:inline-block;font-size:11px;color:rgba(255,255,255,.5);transition:transform .15s}
+  .tn-group.open .tn-chevron{transform:rotate(180deg)}
+  .tn-sublist{display:none;padding-bottom:8px}
+  .tn-group.open .tn-sublist{display:block}
+  .tn-subitem{display:flex;align-items:center;justify-content:space-between;gap:6px;font-family:'Oswald',sans-serif;font-weight:500;font-size:13px;color:rgba(255,255,255,.75);text-decoration:none;padding:8px 18px;border-left:3px solid transparent}
+  .tn-subitem:hover{background:rgba(255,255,255,.06);color:#fff}
+  .tn-subitem.active{background:rgba(255,255,255,.10);color:#fff;border-left-color:var(--red);font-weight:700}
+  .tn-subitem.disabled{color:rgba(255,255,255,.30);cursor:default}
+  .tn-subitem.disabled:hover{background:none;color:rgba(255,255,255,.30)}
+  .tn-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.10);color:rgba(255,255,255,.5);padding:2px 6px;border-radius:8px}
+  .tn-footer{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .tn-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;text-align:center}
+  .tg-join{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;max-width:420px}
+  .tg-join-label{font-size:.72rem;color:rgba(255,255,255,.65);line-height:1.35}
+  .tg-join-btn{display:inline-flex;align-items:center;gap:8px;background:#229ED9;color:#fff;font-weight:700;font-size:.78rem;line-height:1.25;padding:9px 14px;border-radius:8px;text-decoration:none;white-space:normal;transition:background .15s}
+  .tg-join-btn:hover{background:#1a8bbf}
+  .tg-join-btn svg{flex-shrink:0}
+  @media(max-width:860px){
+  .tn-groups{flex-direction:column}
+  .tn-group{border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
+  .tn-group:last-child{border-bottom:none}
+  .tg-join{max-width:none}
+  .tg-join-btn{width:100%;justify-content:center}
+  }
+  .page-title{font-family:'Oswald',sans-serif;font-size:22px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .page-subtitle{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}
+  /* POTD card */
+  .potd-card{background:var(--surface);border:2px solid var(--gold);border-radius:8px;overflow:hidden;box-shadow:0 4px 24px rgba(212,160,23,.15),0 1px 4px rgba(0,0,0,.06);margin-bottom:28px}
+  .potd-banner{background:var(--gold);background-image:repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(255,255,255,.10) 47px,rgba(255,255,255,.10) 48px);display:flex;align-items:center;justify-content:space-between;padding:10px 22px;gap:12px}
+  .potd-banner-left{display:flex;align-items:center;gap:10px}
+  .potd-banner-title{font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:#fff}
+  .potd-banner-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.70)}
+  .potd-odds-pill{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;background:rgba(255,255,255,.20);border:1px solid rgba(255,255,255,.35);color:#fff;padding:6px 16px;border-radius:20px;white-space:nowrap}
+  .potd-body{display:flex;padding:22px 24px;gap:22px;align-items:flex-start}
+  .potd-rank-col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:52px;padding-top:3px}
+  .potd-rank-num{font-family:'Oswald',sans-serif;font-weight:700;font-size:36px;line-height:1;color:var(--gold)}
+  .star-filled{color:var(--gold)} .star-empty{color:var(--border-dark)}
+  .potd-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
+  .potd-player-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .potd-player-name{font-family:'Oswald',sans-serif;font-weight:700;font-size:32px;color:var(--navy);letter-spacing:.02em;line-height:1}
+  .potd-score-badge{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:3px 11px;border-radius:3px;color:var(--red);background:var(--red-dim);border:1px solid #F9A8B4}
+  .conf-badge{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:2px;text-transform:uppercase}
+  .conf-high{background:var(--green-dim);color:var(--green);border:1px solid #A7D7B8}
+  .conf-med {background:var(--amber-dim);color:var(--amber);border:1px solid #FCD34D}
+  .conf-low {background:var(--surface2);color:var(--text-sub);border:1px solid var(--border)}
+  .potd-matchup{font-size:14px;color:var(--text)}
+  .potd-venue{font-size:12px;color:var(--text-sub);margin-top:1px}
+  .potd-pitcher{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-sub)}
+  /* Stats chips */
+  .stats-row{display:flex;gap:4px;flex-wrap:wrap}
+  .stat{display:flex;flex-direction:column;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:4px 9px;min-width:64px}
+  .stat-label{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);line-height:1;margin-bottom:2px}
+  .stat-value{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--navy);line-height:1}
+  .stat-value.hot{color:var(--red)}
+  /* Tags */
+  .tags-row{display:flex;flex-wrap:wrap;gap:4px}
+  .tag{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;border:1px solid transparent;letter-spacing:.02em}
+  .tag-green{color:var(--green);background:var(--green-dim);border-color:#A7D7B8}
+  .tag-amber{color:var(--amber);background:var(--amber-dim);border-color:#FCD34D}
+  .tag-dim{color:var(--text-sub);background:var(--surface2);border-color:var(--border)}
+  .tag-gold{color:#92400E;background:var(--gold-dim);border-color:rgba(212,160,23,.5)}
+  .tag-red{color:var(--red);background:var(--red-dim);border-color:#F9A8B4}
+  /* Why */
+  .why-line{font-size:13px;color:var(--text-sub);line-height:1.4;font-style:italic}
+  .why-label{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-right:4px;font-style:normal}
+  /* EV strip */
+  .potd-ev-strip{background:var(--green-dim);border-top:1px solid #A7D7B8;padding:12px 24px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+  .potd-ev-item{display:flex;align-items:baseline;gap:7px}
+  .ev-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim)}
+  .ev-value{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--green)}
+  .ev-value.neutral{color:var(--text-sub)}
+  /* Detail sections */
+  .detail-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
+  .detail-card-header{background:var(--navy);color:rgba(255,255,255,.80);padding:9px 16px;font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+  .detail-card-body{padding:16px;display:flex;flex-direction:column;gap:10px}
+  /* Signal grid */
+  .signal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:5px}
+  .sig-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:4px;border:1px solid var(--border)}
+  .sig-row.g{background:#F0FAF4;border-color:#A7D7B8}
+  .sig-row.a{background:#FFFBEB;border-color:#FCD34D}
+  .sig-name{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-sub);min-width:80px;flex-shrink:0}
+  .bar-wrap{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+  .bar{height:100%;border-radius:3px;background:var(--navy-mid);transition:width .4s}
+  .bar.g{background:var(--green)} .bar.a{background:var(--amber)} .bar.r{background:var(--red)}
+  .sig-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--navy);min-width:54px;text-align:right;flex-shrink:0}
+  .sig-val.g{color:var(--green)} .sig-val.a{color:var(--amber)} .sig-val.r{color:var(--red)}
+  /* Splits */
+  .splits-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .split-card{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:12px 14px}
+  .split-title{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
+  .split-stats{display:flex;gap:16px;flex-wrap:wrap}
+  .split-stat{display:flex;flex-direction:column;gap:1px}
+  .split-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim)}
+  .split-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--navy)}
+  .split-val.hi{color:var(--red)}
+  /* Odds */
+  .odds-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:12px}
+  .odds-table th{text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);padding:5px 10px;font-weight:500}
+  .odds-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--navy);font-weight:700;vertical-align:middle}
+  .odds-table tr:last-child td{border-bottom:none}
+  .best-book td{background:var(--green-dim)}
+  .odds-book{font-size:11px;font-weight:500;color:var(--text-sub)}
+  .ev-pos{color:var(--green)} .ev-neg{color:var(--red)}
+  /* Deep-dive link */
+  .deep-dive-btn{display:inline-flex;align-items:center;gap:6px;font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--navy);background:var(--surface2);border:1px solid var(--border);padding:9px 16px;border-radius:6px;transition:background .15s;margin-bottom:4px}
+  .deep-dive-btn:hover{background:var(--border)}
+  /* States */
+  .state-box{max-width:500px;margin:60px auto;padding:32px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+  .state-title{font-family:'Oswald',sans-serif;font-size:20px;color:var(--navy);margin-bottom:8px}
+  .state-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim)}
+  .site-footer{background:var(--navy);text-align:center;padding:20px 24px;font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.06em;margin-top:20px;font-family:'JetBrains Mono',monospace;display:flex;flex-direction:column;align-items:center;gap:14px}
+  @media(max-width:860px){
+    .potd-body{flex-direction:column} .potd-rank-col{flex-direction:row}
+    .splits-grid{grid-template-columns:1fr} .signal-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<header class="top-nav">
+  <div class="tn-brand"><svg fill="#ffffff" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g><path d="M455.857,56.144c-74.86-74.859-196.662-74.859-271.521,0C17.087,223.392-9.275,272.783,2.398,298.264c8.318,18.153,32.898,19.077,63.015,17.249l-36.537,97.203c-6.838,18.194-2.549,38.035,11.195,51.778c13.744,13.743,33.583,18.035,51.778,11.195L197.2,436.089c-2.507,34.987-3.349,64.4,16.534,73.511c3.325,1.524,7.055,2.4,11.403,2.4c28.973-0.002,85.294-38.91,230.72-184.335C530.715,252.806,530.715,131.003,455.857,56.144z"/></g><g><path d="M320.096,28.297c-90.213,0-163.608,73.394-163.608,163.608s73.395,163.608,163.608,163.608s163.608-73.395,163.608-163.608S410.31,28.297,320.096,28.297z M320.096,48.698c36.338,0,69.551,13.613,94.828,35.995c-26.187,23.225-59.477,35.903-94.828,35.903c-35.351,0-68.641-12.679-94.828-35.903C250.544,62.309,283.758,48.698,320.096,48.698z M320.096,335.111c-36.338,0.001-69.552-13.611-94.829-35.995c26.187-23.225,59.478-35.903,94.829-35.903c35.351,0,68.641,12.679,94.828,35.903C389.647,321.499,356.433,335.111,320.096,335.111z"/></g></svg> Dingers Hotline</div>
+  <div class="tn-groups">
+  <div class="tn-group">
+    <button class="tn-grouphead" type="button" onclick="toggleTnGroup(this)" aria-expanded="false">Home Runs<span class="tn-chevron">&#9662;</span></button>
+    <div class="tn-sublist">
+    <a class="tn-subitem" href="index.html">Today's Picks</a>
+    <a class="tn-subitem" href="pick-of-the-day.html">Pick of the Day</a>
+    <a class="tn-subitem" href="leaderboard.html">Leaders</a>
+    </div>
+  </div>
+  <div class="tn-group">
+    <button class="tn-grouphead" type="button" onclick="toggleTnGroup(this)" aria-expanded="false">Strikeouts<span class="tn-chevron">&#9662;</span></button>
+    <div class="tn-sublist">
+    <a class="tn-subitem" href="strikeouts.html">Today's Picks</a>
+    <a class="tn-subitem active" href="strikeout-pick-of-the-day.html">Pick of the Day</a>
+    <a class="tn-subitem" href="k-leaderboard.html">Leaders</a>
+    </div>
+  </div>
+  <div class="tn-group">
+    <button class="tn-grouphead" type="button" onclick="toggleTnGroup(this)" aria-expanded="false">Hit Rate<span class="tn-chevron">&#9662;</span></button>
+    <div class="tn-sublist">
+    <a class="tn-subitem" href="hit-rate.html">Home Runs</a>
+    <a class="tn-subitem" href="k-hit-rate.html">Strikeouts</a>
+    </div>
+  </div>
+  </div>
+</header>
+<div class="page-body">
+  <div class="page-title">Strikeout Pick of the Day</div>
+  <div class="page-subtitle">Highest model score &middot; Full strikeout signal breakdown &middot; Updated daily</div>
+  <div id="main-content">
+    <div class="state-box">
+      <div class="state-title">Loading…</div>
+      <div class="state-sub">Fetching today's top pick</div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="tn-footer">
+    <div class="tn-date" id="hdr-date">Pick of the Day</div>
+    <div class="tg-join">
+    <div class="tg-join-label">Get notified the moment today's picks are ready — join the free Telegram channel.</div>
+    <a class="tg-join-btn" href="https://t.me/+BHJ6UMUkhyoxNzEx" target="_blank" rel="noopener">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.26 13.835l-2.938-.916c-.638-.203-.651-.638.136-.944l11.438-4.41c.532-.194.997.131.998.656z"/></svg>
+      Join Dingers Hotline on Telegram
+    </a>
+    </div>
+  </div>
+  <div>Dingers Hotline &nbsp;&middot;&nbsp; Model picks for entertainment &nbsp;&middot;&nbsp; Bet responsibly</div>
+</footer>
+<script>
+function toggleTnGroup(btn) {
+  var group = btn.closest('.tn-group');
+  var isOpen = group.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+</script>
+
+<script>
+(function () {
+  /* ── DOM helpers (no innerHTML) ─────────────────────────────────────── */
+  function mk(tag, cls) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    return e;
+  }
+  function ap(parent) {
+    for (var i = 1; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c == null) continue;
+      parent.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c);
+    }
+    return parent;
+  }
+
+  function chip(label, val, hot) {
+    if (val == null) return null;
+    var d = mk('div', 'stat');
+    var l = mk('span', 'stat-label'); l.textContent = label;
+    var v = mk('span', 'stat-value' + (hot ? ' hot' : '')); v.textContent = val;
+    return ap(d, l, v);
+  }
+
+  function tagEl(text, cls) {
+    var e = mk('span', 'tag ' + cls); e.textContent = text; return e;
+  }
+
+  function starsNode(starsStr) {
+    var span = mk('span', 'stars');
+    var f = (starsStr || '').split('').filter(function(c){return c==='★';}).length;
+    var e2 = (starsStr || '').split('').filter(function(c){return c==='☆';}).length;
+    var sf = mk('span', 'star-filled'); sf.textContent = '★'.repeat(f);
+    var se = mk('span', 'star-empty');  se.textContent = '☆'.repeat(e2);
+    return ap(span, sf, se);
+  }
+
+  function confClass(c) {
+    return {HIGH:'conf-high',MEDIUM:'conf-med',LOW:'conf-low'}[c] || 'conf-low';
+  }
+
+  function sigRow(label, valueText, barPct, barColorCls, rowColorCls, valColorCls) {
+    var row = mk('div', 'sig-row' + (rowColorCls ? ' ' + rowColorCls : ''));
+    var nm  = mk('span', 'sig-name'); nm.textContent = label;
+    var bw  = mk('div', 'bar-wrap');
+    var bar = mk('div', 'bar' + (barColorCls ? ' ' + barColorCls : ''));
+    bar.style.width = (barPct || 0) + '%';
+    bw.appendChild(bar);
+    var sv  = mk('span', 'sig-val' + (valColorCls ? ' ' + valColorCls : '')); sv.textContent = valueText;
+    return ap(row, nm, bw, sv);
+  }
+
+  function sectionCard(headerText, bodyNode) {
+    var card = mk('div', 'detail-card');
+    var hdr  = mk('div', 'detail-card-header'); hdr.textContent = headerText;
+    var body = mk('div', 'detail-card-body'); body.appendChild(bodyNode);
+    return ap(card, hdr, body);
+  }
+
+  function splitCard(title, stats) {
+    var c = mk('div', 'split-card');
+    var t = mk('div', 'split-title'); t.textContent = title;
+    var ss = mk('div', 'split-stats');
+    stats.forEach(function(st) {
+      if (st.val == null) return;
+      var w = mk('div', 'split-stat');
+      var l = mk('span', 'split-lbl'); l.textContent = st.label;
+      var v = mk('span', 'split-val' + (st.hi ? ' hi' : '')); v.textContent = st.val;
+      ap(w, l, v); ss.appendChild(w);
+    });
+    return ap(c, t, ss);
+  }
+
+  function colorTier(val, lo, hi) {
+    if (val == null) return '';
+    return val >= hi ? 'g' : (val >= lo ? 'a' : '');
+  }
+  function bp(val, maxVal) { return maxVal ? Math.min(100, Math.round(Math.abs(val) / maxVal * 100)) : 40; }
+
+  /* ── Build page ─────────────────────────────────────────────────────── */
+  function buildPage(p) {
+    var s = p.signals || {};
+    var root = document.getElementById('main-content');
+
+    document.title = p.player + ' — Strikeout Pick of the Day — Dingers Hotline';
+    var hdrDate = document.getElementById('hdr-date');
+    if (hdrDate) hdrDate.textContent = 'Strikeout Pick of the Day · ' + (p.matchup || '');
+
+    /* ── POTD card ── */
+    var card = mk('div', 'potd-card');
+
+    // Gold banner
+    var banner = mk('div', 'potd-banner');
+    var banLeft = mk('div', 'potd-banner-left');
+    var fireSpan = mk('span'); fireSpan.textContent = '🔥';
+    fireSpan.style.cssText = 'font-size:20px;line-height:1';
+    var banTextWrap = mk('div');
+    var banTitle = mk('div', 'potd-banner-title'); banTitle.textContent = 'Strikeout Pick of the Day';
+    var banSub   = mk('div', 'potd-banner-sub');
+    banSub.textContent = 'Model score ' + (p.score||0).toFixed(1) + ' · Rank #1 of 15 · ' + (p.stars||'');
+    ap(banTextWrap, banTitle, banSub);
+    ap(banLeft, fireSpan, banTextWrap);
+    ap(banner, banLeft);
+
+    // Body
+    var body = mk('div', 'potd-body');
+    var rankCol = mk('div', 'potd-rank-col');
+    var rankNum = mk('span', 'potd-rank-num'); rankNum.textContent = '#1';
+    ap(rankCol, rankNum, starsNode(p.stars));
+
+    var main = mk('div', 'potd-main');
+    var playerRow = mk('div', 'potd-player-row');
+    var playerName = mk('span', 'potd-player-name'); playerName.textContent = p.player;
+    var scoreBadge = mk('span', 'potd-score-badge'); scoreBadge.textContent = (p.score||0).toFixed(1);
+    var confBadge  = mk('span', 'conf-badge ' + confClass(p.confidence)); confBadge.textContent = p.confidence || 'LOW';
+    ap(playerRow, playerName, scoreBadge, confBadge);
+
+    var matchupLine = mk('div', 'potd-matchup');
+    matchupLine.textContent = p.matchup || '';
+    if (p.game_time_et) { var strong = mk('strong'); strong.textContent = ' ' + p.game_time_et; matchupLine.appendChild(strong); }
+    ap(main, playerRow, matchupLine);
+
+    if (s.venue) {
+      var venueLine = mk('div', 'potd-venue');
+      venueLine.textContent = s.venue;
+      ap(main, venueLine);
+    }
+
+    var pitcherLine = mk('div', 'potd-pitcher');
+    var pitcherTxt = (p.direction || '') + ' ' + (s.k_line != null ? s.k_line.toFixed(1) : '?') + ' K';
+    if (s.pitcher_throws) pitcherTxt += ' · Throws ' + s.pitcher_throws;
+    if (p.projected_k != null) pitcherTxt += ' · Projects ' + p.projected_k.toFixed(1) + ' K';
+    pitcherLine.textContent = pitcherTxt;
+    ap(main, pitcherLine);
+
+    // Stats chips
+    var chipsRow = mk('div', 'stats-row');
+    [
+      chip('K%',      s.k_percent        != null ? s.k_percent.toFixed(1)+'%'        : null, false),
+      chip('Whiff%',  s.whiff_percent    != null ? s.whiff_percent.toFixed(1)+'%'     : null, false),
+      chip('CSW%',    s.csw_percent      != null ? s.csw_percent.toFixed(1)+'%'       : null, false),
+      chip('K/9',     s.k_per_9_blended  != null ? s.k_per_9_blended.toFixed(1)       : null, false),
+    ].forEach(function(c) { if (c) chipsRow.appendChild(c); });
+    if (chipsRow.children.length) main.appendChild(chipsRow);
+
+    // Tags
+    var tagsRow = mk('div', 'tags-row');
+    if (s.days_rest != null) {
+      var drCls = s.days_rest >= 5 ? 'tag-green' : (s.days_rest <= 3 ? 'tag-red' : 'tag-dim');
+      tagsRow.appendChild(tagEl(s.days_rest.toFixed(0) + ' days rest', drCls));
+    }
+    if (s.opp_whiff_vs_mix != null) {
+      var owCls = s.opp_whiff_vs_mix >= 25 ? 'tag-green' : (s.opp_whiff_vs_mix <= 18 ? 'tag-red' : 'tag-dim');
+      tagsRow.appendChild(tagEl('Opp Whiff ' + s.opp_whiff_vs_mix.toFixed(1) + '%', owCls));
+    }
+    if (tagsRow.children.length) main.appendChild(tagsRow);
+
+    // Why line
+    if (p.reasoning) {
+      var whyLine = mk('div', 'why-line');
+      var whyLbl  = mk('span', 'why-label'); whyLbl.textContent = 'Why:';
+      ap(whyLine, whyLbl, ' ' + p.reasoning);
+      main.appendChild(whyLine);
+    }
+
+    ap(body, rankCol, main);
+    ap(card, banner, body);
+
+
+    root.textContent = '';
+    root.appendChild(card);
+
+    // Deep-dive link
+    var ddLink = mk('a', 'deep-dive-btn');
+    ddLink.setAttribute('href', 'k-player-card.html?player=' + p.slug);
+    ddLink.textContent = '→ Full Signal Deep Dive';
+    root.appendChild(ddLink);
+
+    /* ── Strikeout Profile ── */
+    var spGrid = mk('div', 'signal-grid');
+    function addSig(grid, lbl, val, lo, hi, maxV, fmt) {
+      if (val == null) return;
+      var t = colorTier(val, lo, hi);
+      grid.appendChild(sigRow(lbl, fmt(val), bp(val, maxV), t, t, t));
+    }
+    addSig(spGrid, 'K%',           s.k_percent,       18,    25,    35,  function(v){return v.toFixed(1)+'%'});
+    addSig(spGrid, 'Whiff%',       s.whiff_percent,   22,    28,    40,  function(v){return v.toFixed(1)+'%'});
+    addSig(spGrid, 'CSW%',         s.csw_percent,      27,    31,    35,  function(v){return v.toFixed(1)+'%'});
+    addSig(spGrid, 'K/9 (blended)',s.k_per_9_blended,   8,    10,    14,  function(v){return v.toFixed(1)});
+    if (spGrid.children.length) root.appendChild(sectionCard('Strikeout Profile', spGrid));
+
+    /* ── Recent Form & Workload ── */
+    var rfGrid = mk('div', 'signal-grid');
+    if (s.days_rest != null) {
+      var drt = s.days_rest >= 5 ? 'g' : (s.days_rest <= 3 ? 'r' : '');
+      rfGrid.appendChild(sigRow('Days Rest', s.days_rest.toFixed(0), bp(s.days_rest, 10), drt, drt, drt));
+    }
+    if (s.avg_ip_last3 != null) {
+      var ipt = s.avg_ip_last3 >= 6 ? 'g' : (s.avg_ip_last3 <= 4 ? 'r' : '');
+      rfGrid.appendChild(sigRow('IP/start (L3)', s.avg_ip_last3.toFixed(1), bp(s.avg_ip_last3, 8), ipt, ipt, ipt));
+    }
+    if (s.avg_pitches_last3 != null) {
+      rfGrid.appendChild(sigRow('Pitches/start (L3)', s.avg_pitches_last3.toFixed(0), bp(s.avg_pitches_last3, 110), '', '', ''));
+    }
+    if (p.gap != null) {
+      var gt = p.gap >= 1 ? 'g' : (p.gap <= -1 ? 'r' : '');
+      rfGrid.appendChild(sigRow('Projected K vs Line gap', (p.gap >= 0 ? '+' : '') + p.gap.toFixed(1), bp(p.gap, 5), gt, '', gt));
+    }
+    if (rfGrid.children.length) root.appendChild(sectionCard('Recent Form & Workload', rfGrid));
+
+    /* ── Matchup Context ── */
+    var mcGrid = mk('div', 'signal-grid');
+    if (s.opp_whiff_vs_mix != null) {
+      var owt = s.opp_whiff_vs_mix >= 25 ? 'g' : (s.opp_whiff_vs_mix <= 18 ? 'r' : '');
+      mcGrid.appendChild(sigRow('Opp Whiff vs Mix', s.opp_whiff_vs_mix.toFixed(1) + '%', bp(s.opp_whiff_vs_mix, 40), owt, owt, owt));
+    }
+    if (s.opp_team_k_pct != null) {
+      var otk = s.opp_team_k_pct >= 25 ? 'g' : (s.opp_team_k_pct <= 18 ? 'r' : '');
+      mcGrid.appendChild(sigRow('Opp Team K%', s.opp_team_k_pct.toFixed(1) + '%', bp(s.opp_team_k_pct, 35), otk, otk, otk));
+    }
+    if (mcGrid.children.length || p.direction) {
+      var matchupCard = sectionCard('Matchup Context', mcGrid);
+      root.appendChild(matchupCard);
+      if (p.direction) {
+        var dirNote = mk('div', 'why-line');
+        dirNote.textContent = 'Direction: ' + p.direction;
+        matchupCard.querySelector('.detail-card-body').appendChild(dirNote);
+      }
+    }
+
+  }
+
+  /* ── Fetch #1 pick and render ─────────────────────────────────────── */
+  fetch('k-player-data.json?v=' + Date.now())
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(data) {
+      var sorted = (data.players || []).slice().sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
+      var top = sorted[0];
+      if (!top) {
+        var root = document.getElementById('main-content');
+        root.textContent = '';
+        var box = mk('div', 'state-box');
+        var t = mk('div', 'state-title'); t.textContent = 'No strikeout picks yet today';
+        var sub = mk('div', 'state-sub');  sub.textContent = "Check back after the morning picks run.";
+        ap(box, t, sub); root.appendChild(box);
+        return;
+      }
+      buildPage(top);
+    })
+    .catch(function() {
+      var root = document.getElementById('main-content');
+      root.textContent = '';
+      var box = mk('div', 'state-box');
+      var t = mk('div', 'state-title'); t.textContent = 'No pick data yet';
+      var sub = mk('div', 'state-sub');  sub.textContent = "Run today's picks first to populate data.";
+      ap(box, t, sub); root.appendChild(box);
+    });
+})();
+</script>
+</body>
+</html>
