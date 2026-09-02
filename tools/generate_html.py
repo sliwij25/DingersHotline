@@ -2098,6 +2098,364 @@ renderDetail();
 </html>"""
 
 
+def generate_hit_rate_html_k(pnl_data: dict) -> str:
+    """Generate hit-rate-k.html from model_pnl_report_k() data."""
+    summary = pnl_data.get("model_pnl_summary", {})
+    daily   = pnl_data.get("daily", [])
+
+    win_pct_val = summary.get("win_pct")
+    win_rate     = f"{win_pct_val:.1f}%" if win_pct_val is not None else "—"
+    days_tracked = summary.get("days_tracked", 0)
+    total_picks  = summary.get("total_picks_with_odds", 0)
+    total_wins   = summary.get("total_wins", 0)
+    record_str   = f"{total_wins} / {total_picks}"
+
+    best_day = max(daily, key=lambda d: d.get("day_wins", 0)) if daily else None
+    if best_day:
+        bd_total = len(best_day.get("picks", []))
+        bd_wins  = best_day.get("day_wins", 0)
+        bd_rate = f"{bd_wins / bd_total * 100:.0f}%" if bd_total else "—"
+        best_day_val  = f"{bd_wins} / {bd_total}"
+        best_day_sub  = f"{best_day['date']} · {bd_rate} rate"
+    else:
+        best_day_val = "—"
+        best_day_sub = ""
+
+    avg_per_day = f"{total_picks / days_tracked:.1f}" if days_tracked else "—"
+
+    # Build lean PICKS_DATA: drop pnl fields, keep only what the calendar needs
+    picks_data = []
+    for d in daily:
+        players = [
+            {"rank": p["rank"], "player": p["player"],
+             "direction": p.get("direction", "OVER"), "k_line": p.get("k_line"),
+             "over_hit": p["over_hit"]}
+            for p in d.get("picks", [])
+        ]
+        picks_data.append({
+            "date": d["date"],
+            "picks_with_odds": len(players),
+            "wins": d.get("day_wins", sum(1 for p in players if p["over_hit"])),
+            "players": players,
+        })
+
+    # Initial month: most recent month that has data
+    if daily:
+        last_date = daily[-1]["date"]
+        init_year  = int(last_date[:4])
+        init_month = int(last_date[5:7]) - 1  # JS 0-indexed
+    else:
+        init_year, init_month = 2026, 3  # April
+
+    picks_json = _json.dumps(picks_data)
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strikeout Pick Hit Rate — Dingers Hotline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+{_TOPNAV_CSS}
+  :root {{
+    --bg:#FAFAF7;--surface:#FFFFFF;--surface2:#F3F2EE;--border:#E2DED6;
+    --border-dark:#C8C2B8;--navy:#1B2A4A;--navy-mid:#2D4070;--red:#C8102E;
+    --red-dim:#F9E5E8;--gold:#D4A017;--gold-dim:#FDF5DC;--green:#1A6B3C;
+    --green-dim:#E4F2EB;--amber:#B45309;--amber-dim:#FEF3C7;
+    --text:#1A1A1A;--text-sub:#6B6560;--text-dim:#A8A29E;
+  }}
+  *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
+  body{{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia,serif;font-size:14px;line-height:1.5;min-height:100vh}}
+  .model-stats-tile{{margin:28px 36px 0;background:var(--surface);border:1px solid var(--border);border-radius:6px;display:flex;overflow:hidden}}
+  .stats-tile-hero{{background:var(--navy);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 28px;min-width:120px;flex-shrink:0}}
+  .hero-value{{font-family:'Oswald',sans-serif;font-size:2.2rem;font-weight:700;line-height:1;letter-spacing:-.5px}}
+  .hero-label{{font-size:.6rem;text-transform:uppercase;letter-spacing:1px;opacity:.6;margin-top:4px}}
+  .stats-tile-items{{display:flex;flex:1;border-left:1px solid var(--border)}}
+  .stats-tile-item{{flex:1;display:flex;flex-direction:column;justify-content:center;padding:16px 20px;border-right:1px solid var(--border)}}
+  .stats-tile-item:last-child{{border-right:none}}
+  .sti-label{{font-size:.6rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px}}
+  .sti-value{{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--text)}}
+  .sti-sub{{font-size:.65rem;color:var(--text-sub);margin-top:2px}}
+  .page-body{{max-width:1100px;margin:0 auto;padding:0 36px 60px}}
+  .month-nav{{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}}
+  .month-nav-btn{{font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;background:var(--surface);border:1px solid var(--border);color:var(--navy);padding:8px 20px;border-radius:6px;cursor:pointer;transition:background .15s}}
+  .month-nav-btn:hover{{background:var(--surface2)}}
+  .month-nav-btn:disabled{{opacity:.35;cursor:default}}
+  .month-title{{font-family:'Oswald',sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:.04em;text-transform:uppercase;color:var(--navy)}}
+  .cal-section{{margin-bottom:16px}}
+  .cal-dow-header{{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}}
+  .cal-dow{{font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);text-align:center;padding:6px 0}}
+  .cal-grid{{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}}
+  .cal-cell{{background:var(--surface);border:1px solid var(--border);border-radius:5px;min-height:80px;padding:8px 10px;cursor:default;position:relative;transition:border-color .12s,box-shadow .12s}}
+  .cal-cell.has-data{{cursor:pointer}}
+  .cal-cell.has-data:hover{{border-color:var(--navy-mid);box-shadow:0 2px 8px rgba(27,42,74,.10)}}
+  .cal-cell.selected{{border-color:var(--navy)!important;box-shadow:0 0 0 2px rgba(27,42,74,.18)!important}}
+  .cal-cell.empty{{background:transparent;border-color:transparent;cursor:default}}
+  .cal-cell.above-avg{{background:var(--green-dim);border-color:#b2d9c3}}
+  .cal-cell.below-avg{{background:var(--amber-dim);border-color:#f5d68a}}
+  .cal-cell.no-hits{{background:var(--red-dim);border-color:#f0c0c8}}
+  .cell-date{{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;color:var(--text-sub);margin-bottom:4px}}
+  .cell-rate{{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;line-height:1.2}}
+  .cell-rate.above-avg{{color:var(--green)}}
+  .cell-rate.below-avg{{color:var(--amber)}}
+  .cell-rate.no-hits{{color:var(--red)}}
+  .month-footer{{background:var(--navy);color:#fff;border-radius:6px;padding:14px 20px;display:flex;align-items:center;gap:28px;margin-top:6px;flex-wrap:wrap}}
+  .mf-item{{display:flex;flex-direction:column}}
+  .mf-label{{font-family:'Oswald',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.55;margin-bottom:2px}}
+  .mf-val{{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700}}
+  .mf-val.strong{{color:#4ADE80}}
+  .mf-divider{{width:1px;background:rgba(255,255,255,.15);align-self:stretch}}
+  .detail-panel{{background:var(--surface);border:2px solid var(--navy);border-radius:8px;margin-bottom:32px;overflow:hidden;animation:slideDown .18s ease-out}}
+  @keyframes slideDown{{from{{opacity:0;transform:translateY(-8px)}}to{{opacity:1;transform:translateY(0)}}}}
+  .detail-header{{background:var(--navy);color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}}
+  .detail-date{{font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase}}
+  .detail-chips{{display:flex;gap:10px;align-items:center;flex-wrap:wrap}}
+  .dchip{{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px}}
+  .dchip.rate-strong{{background:rgba(74,222,128,.15);color:#4ADE80;border:1px solid rgba(74,222,128,.3)}}
+  .dchip.rate-weak{{background:rgba(248,113,113,.15);color:#F87171;border:1px solid rgba(248,113,113,.3)}}
+  .dchip.rate-mid{{background:rgba(251,191,36,.15);color:#FBBF24;border:1px solid rgba(251,191,36,.3)}}
+  .dchip.record{{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2)}}
+  .detail-close{{font-family:'Oswald',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:5px 12px;cursor:pointer;text-transform:uppercase}}
+  .detail-close:hover{{background:rgba(255,255,255,.2);color:#fff}}
+  .detail-body{{padding:20px 24px}}
+  .pick-section-label{{font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}}
+  .pick-section-label.hit{{color:var(--green)}}
+  .pick-section-label.miss{{color:var(--text-sub);margin-top:20px}}
+  .pick-table{{width:100%;border-collapse:collapse;margin-bottom:4px}}
+  .pick-table th{{font-family:'Oswald',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);text-align:left;padding:0 10px 6px 0;border-bottom:1px solid var(--border)}}
+  .pick-table td{{padding:7px 10px 7px 0;border-bottom:1px solid var(--surface2);vertical-align:middle}}
+  .pick-table tr:last-child td{{border-bottom:none}}
+  .rank-badge{{display:inline-flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;width:26px;height:22px;border-radius:4px;background:var(--surface2);color:var(--text-dim)}}
+  .rank-badge.top5{{background:var(--gold-dim);color:var(--gold)}}
+  .player-name{{font-weight:600;font-size:13px}}
+  .player-name.hit{{color:var(--green)}}
+  .player-name.miss{{color:var(--text-sub)}}
+  .detail-summary{{display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-top:20px}}
+  .ds-item{{flex:1;padding:12px 16px;border-right:1px solid var(--border)}}
+  .ds-item:last-child{{border-right:none}}
+  .ds-label{{font-size:.6rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:3px}}
+  .ds-val{{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700}}
+  .ds-val.hit{{color:var(--green)}}
+  .ds-val.rate{{color:var(--navy)}}
+  @media(max-width:700px){{
+    .page-body{{padding:0 12px 40px}}
+    .model-stats-tile{{flex-direction:column;margin:0 12px 20px}}
+    .stats-tile-items{{flex-direction:column;border-left:none;border-top:1px solid var(--border)}}
+    .stats-tile-item{{border-right:none;border-bottom:1px solid var(--border)}}
+    .stats-tile-item:last-child{{border-bottom:none}}
+    .cal-cell{{min-height:60px;padding:5px}}
+    .cell-rate{{font-size:11px}}
+    .detail-body{{padding:14px}}
+    .detail-summary{{flex-direction:column}}
+    .ds-item{{border-right:none;border-bottom:1px solid var(--border)}}
+    .ds-item:last-child{{border-bottom:none}}
+  }}
+</style>
+</head>
+<body data-page="hitrate-k">
+{_render_topnav("hitrate-k")}
+
+<div class="model-stats-tile">
+  <div class="stats-tile-hero">
+    <div class="hero-value">{_esc(win_rate)}</div>
+    <div class="hero-label">Hit Rate</div>
+  </div>
+  <div class="stats-tile-items">
+    <div class="stats-tile-item">
+      <div class="sti-label">Season Record</div>
+      <div class="sti-value">{_esc(record_str)}</div>
+      <div class="sti-sub">picks hit since season start</div>
+    </div>
+    <div class="stats-tile-item">
+      <div class="sti-label">Days Tracked</div>
+      <div class="sti-value">{days_tracked}</div>
+      <div class="sti-sub">labeled results</div>
+    </div>
+    <div class="stats-tile-item">
+      <div class="sti-label">Best Day</div>
+      <div class="sti-value" style="color:var(--green)">{_esc(best_day_val)}</div>
+      <div class="sti-sub">{_esc(best_day_sub)}</div>
+    </div>
+    <div class="stats-tile-item">
+      <div class="sti-label">Picks / Day</div>
+      <div class="sti-value">{_esc(avg_per_day)}</div>
+      <div class="sti-sub">avg picks per tracked day</div>
+    </div>
+  </div>
+</div>
+
+<div class="page-body" style="margin-top:28px">
+  <div id="calendarRoot"></div>
+  <div id="detailRoot"></div>
+</div>
+
+<script>
+const PICKS_DATA = {picks_json};
+const byDate = {{}};
+PICKS_DATA.forEach(function(d){{ byDate[d.date] = d; }});
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let currentYear = {init_year};
+let currentMonth = {init_month};
+let selectedDate = null;
+
+function hitRateClass(wins, total) {{
+  if (!total) return 'neutral';
+  if (!wins) return 'no-hits';
+  return wins / total >= 0.20 ? 'above-avg' : 'below-avg';
+}}
+
+function renderCalendar() {{
+  const root = document.getElementById('calendarRoot');
+  while (root.firstChild) root.removeChild(root.firstChild);
+  const nav = document.createElement('div'); nav.className = 'month-nav';
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'month-nav-btn'; prevBtn.textContent = '← Previous Month';
+  prevBtn.disabled = (currentYear === 2026 && currentMonth === 3);
+  prevBtn.addEventListener('click', function() {{ currentMonth--; if (currentMonth < 0) {{ currentMonth = 11; currentYear--; }} selectedDate = null; renderCalendar(); renderDetail(); }});
+  const titleEl = document.createElement('div'); titleEl.className = 'month-title';
+  titleEl.textContent = MONTHS[currentMonth] + ' ' + currentYear;
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'month-nav-btn'; nextBtn.textContent = 'Next Month →';
+  const maxDate = PICKS_DATA.length ? PICKS_DATA[PICKS_DATA.length-1].date : '2026-04-30';
+  const maxYear = parseInt(maxDate.slice(0,4)); const maxMonth = parseInt(maxDate.slice(5,7)) - 1;
+  nextBtn.disabled = (currentYear === maxYear && currentMonth === maxMonth);
+  nextBtn.addEventListener('click', function() {{ currentMonth++; if (currentMonth > 11) {{ currentMonth = 0; currentYear++; }} selectedDate = null; renderCalendar(); renderDetail(); }});
+  nav.appendChild(prevBtn); nav.appendChild(titleEl); nav.appendChild(nextBtn); root.appendChild(nav);
+  const calSection = document.createElement('div'); calSection.className = 'cal-section';
+  const dowRow = document.createElement('div'); dowRow.className = 'cal-dow-header';
+  DOW.forEach(function(d) {{ const c = document.createElement('div'); c.className = 'cal-dow'; c.textContent = d; dowRow.appendChild(c); }});
+  calSection.appendChild(dowRow);
+  const grid = document.createElement('div'); grid.className = 'cal-grid';
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  for (let i = 0; i < firstDay; i++) {{ const e = document.createElement('div'); e.className = 'cal-cell empty'; grid.appendChild(e); }}
+  let mWins = 0, mPicks = 0, mAbove = 0;
+  for (let day = 1; day <= daysInMonth; day++) {{
+    const mm = String(currentMonth+1).padStart(2,'0'), dd = String(day).padStart(2,'0');
+    const dateStr = currentYear + '-' + mm + '-' + dd;
+    const data = byDate[dateStr]; const isSel = selectedDate === dateStr;
+    const cell = document.createElement('div');
+    if (!data) {{
+      cell.className = 'cal-cell' + (isSel ? ' selected' : '');
+      const dl = document.createElement('div'); dl.className = 'cell-date'; dl.textContent = day; cell.appendChild(dl);
+    }} else {{
+      const cls = hitRateClass(data.wins, data.picks_with_odds);
+      cell.className = 'cal-cell has-data ' + cls + (isSel ? ' selected' : '');
+      mWins += data.wins; mPicks += data.picks_with_odds; if (cls === 'above-avg') mAbove++;
+      const dl = document.createElement('div'); dl.className = 'cell-date'; dl.textContent = day; cell.appendChild(dl);
+      const pct = (data.wins / data.picks_with_odds * 100).toFixed(0);
+      const rl = document.createElement('div'); rl.className = 'cell-rate ' + cls;
+      rl.textContent = data.wins + '/' + data.picks_with_odds + ' · ' + pct + '%'; cell.appendChild(rl);
+      const cap = dateStr;
+      cell.addEventListener('click', function() {{
+        selectedDate = selectedDate === cap ? null : cap;
+        renderCalendar(); renderDetail();
+        if (selectedDate) setTimeout(function() {{ document.getElementById('detailRoot').scrollIntoView({{behavior:'smooth',block:'nearest'}}); }}, 50);
+      }});
+    }}
+    grid.appendChild(cell);
+  }}
+  calSection.appendChild(grid); root.appendChild(calSection);
+  if (mPicks > 0) {{
+    const footer = document.createElement('div'); footer.className = 'month-footer';
+    function mfi(lbl, val, cls) {{
+      const g = document.createElement('div'); g.className = 'mf-item';
+      const l = document.createElement('div'); l.className = 'mf-label'; l.textContent = lbl;
+      const v = document.createElement('div'); v.className = 'mf-val' + (cls ? ' '+cls : ''); v.textContent = val;
+      g.appendChild(l); g.appendChild(v); return g;
+    }}
+    function mfd() {{ const d = document.createElement('div'); d.className = 'mf-divider'; return d; }}
+    const mr = (mWins / mPicks * 100).toFixed(1);
+    footer.appendChild(mfi('K Hits', mWins + ' / ' + mPicks, ''));
+    footer.appendChild(mfd());
+    footer.appendChild(mfi('Hit Rate', mr + '%', parseFloat(mr) >= 20 ? 'strong' : ''));
+    footer.appendChild(mfd());
+    const daysInData = Object.keys(byDate).filter(function(d){{ return d.startsWith(currentYear + '-' + String(currentMonth+1).padStart(2,'0')); }}).length;
+    footer.appendChild(mfi('Days ≥20%', mAbove + ' of ' + daysInData, ''));
+    root.appendChild(footer);
+  }}
+}}
+
+function renderDetail() {{
+  const root = document.getElementById('detailRoot');
+  while (root.firstChild) root.removeChild(root.firstChild);
+  if (!selectedDate) return;
+  const d = byDate[selectedDate]; if (!d) return;
+  const panel = document.createElement('div'); panel.className = 'detail-panel';
+  const hdr = document.createElement('div'); hdr.className = 'detail-header';
+  const dateEl = document.createElement('div'); dateEl.className = 'detail-date';
+  dateEl.textContent = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', {{weekday:'long',month:'long',day:'numeric',year:'numeric'}});
+  hdr.appendChild(dateEl);
+  const chips = document.createElement('div'); chips.className = 'detail-chips';
+  const rate = d.wins / d.picks_with_odds;
+  const rc1 = document.createElement('div');
+  rc1.className = 'dchip ' + (rate >= 0.20 ? 'rate-strong' : d.wins === 0 ? 'rate-weak' : 'rate-mid');
+  rc1.textContent = (rate * 100).toFixed(1) + '% hit rate'; chips.appendChild(rc1);
+  const rc2 = document.createElement('div'); rc2.className = 'dchip record';
+  rc2.textContent = d.wins + ' / ' + d.picks_with_odds + ' hit'; chips.appendChild(rc2);
+  hdr.appendChild(chips);
+  const closeBtn = document.createElement('button'); closeBtn.className = 'detail-close'; closeBtn.textContent = '✕ Close';
+  closeBtn.addEventListener('click', function() {{ selectedDate = null; renderCalendar(); renderDetail(); }});
+  hdr.appendChild(closeBtn); panel.appendChild(hdr);
+  const body = document.createElement('div'); body.className = 'detail-body';
+  const hit    = d.players.filter(function(p){{ return p.over_hit; }});
+  const missed = d.players.filter(function(p){{ return !p.over_hit; }});
+  function buildSection(players, isHit) {{
+    const lbl = document.createElement('div');
+    lbl.className = 'pick-section-label ' + (isHit ? 'hit' : 'miss');
+    lbl.textContent = (isHit ? '✓ HIT' : '✕ MISSED') + '  —  ' + players.length + ' player' + (players.length !== 1 ? 's' : '');
+    body.appendChild(lbl);
+    const tbl = document.createElement('table'); tbl.className = 'pick-table';
+    const thead = document.createElement('thead'); const hr = document.createElement('tr');
+    ['Rank','Player'].forEach(function(h) {{ const th = document.createElement('th'); th.textContent = h; hr.appendChild(th); }});
+    thead.appendChild(hr); tbl.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    players.forEach(function(p) {{
+      const tr = document.createElement('tr');
+      const rtd = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = 'rank-badge' + (p.rank <= 5 ? ' top5' : '');
+      badge.textContent = '#' + p.rank; rtd.appendChild(badge); tr.appendChild(rtd);
+      const ntd = document.createElement('td');
+      const ns = document.createElement('span');
+      ns.className = 'player-name ' + (isHit ? 'hit' : 'miss');
+      ns.textContent = p.player + ' — ' + p.direction + ' ' + (p.k_line !== undefined && p.k_line !== null ? p.k_line : '');
+      ntd.appendChild(ns); tr.appendChild(ntd);
+      tbody.appendChild(tr);
+    }});
+    tbl.appendChild(tbody); body.appendChild(tbl);
+  }}
+  if (hit.length)    buildSection(hit, true);
+  if (missed.length) buildSection(missed, false);
+  const summary = document.createElement('div'); summary.className = 'detail-summary';
+  function dsi(lbl, val, cls) {{
+    const item = document.createElement('div'); item.className = 'ds-item';
+    const l = document.createElement('div'); l.className = 'ds-label'; l.textContent = lbl;
+    const v = document.createElement('div'); v.className = 'ds-val' + (cls ? ' '+cls : ''); v.textContent = val;
+    item.appendChild(l); item.appendChild(v); return item;
+  }}
+  summary.appendChild(dsi('Hit',     hit.length    + ' player' + (hit.length    !== 1 ? 's' : ''), 'hit'));
+  summary.appendChild(dsi('Missed',  missed.length + ' player' + (missed.length !== 1 ? 's' : ''), ''));
+  summary.appendChild(dsi('Hit Rate', (d.wins / d.picks_with_odds * 100).toFixed(1) + '%', 'rate'));
+  body.appendChild(summary); panel.appendChild(body); root.appendChild(panel);
+}}
+
+renderCalendar();
+renderDetail();
+</script>
+<footer style="background:var(--navy);color:rgba(255,255,255,.45);padding:20px 36px;font-size:.7rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:40px">
+  {_render_nav_footer("Strikeout Hit Rate Calendar — Season 2026")}
+  <div>Must be 21+ and present in a legal sports wagering state. Gambling involves risk. Please gamble responsibly. If you or someone you know has a gambling problem, call or text <strong>1-800-GAMBLER</strong>.</div>
+</footer>
+{_TOPNAV_SCRIPT}
+</body>
+</html>"""
+
+
 def _build_k_card(rank: int, pick: dict) -> str:
     pitcher     = pick.get("pitcher", "Unknown")
     matchup     = pick.get("matchup", "")

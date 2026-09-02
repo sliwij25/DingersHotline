@@ -502,6 +502,86 @@ def model_pnl_report() -> str:
     }, indent=2)
 
 
+def model_pnl_report_k() -> str:
+    conn = get_db_conn()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT bet_date, pitcher, pinnacle_odds, k_line, direction, over_hit, rank
+        FROM (
+            SELECT bet_date, pitcher, pinnacle_odds, k_line, direction, over_hit, rank, score,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY bet_date
+                       ORDER BY rank ASC, score DESC, pitcher ASC
+                   ) AS rn
+            FROM pick_factors_k
+            WHERE over_hit IS NOT NULL AND rank IS NOT NULL
+        )
+        WHERE rn <= 15
+        ORDER BY bet_date ASC, rank ASC
+    """)
+    rows = cur.fetchall()
+    conn.close()
+
+    def _to_decimal(odds_str):
+        if not odds_str:
+            return 1 + 100.0 / 110.0  # -110 fallback
+        try:
+            odds = int(str(odds_str).replace("+", ""))
+        except ValueError:
+            return 1 + 100.0 / 110.0
+        if odds > 0:
+            return 1 + odds / 100.0
+        return 1 + 100.0 / abs(odds)
+
+    daily: dict[str, dict] = {}
+    for bet_date, pitcher, pinnacle_odds, k_line, direction, over_hit, rank in rows:
+        decimal_odds = _to_decimal(pinnacle_odds)
+        stake = 10.0
+        pnl = stake * (decimal_odds - 1) if over_hit else -stake
+        if bet_date not in daily:
+            daily[bet_date] = {"date": bet_date, "picks": []}
+        daily[bet_date]["picks"].append({
+            "rank": rank, "player": pitcher,
+            "odds": pinnacle_odds or "—", "direction": direction or "OVER",
+            "k_line": k_line, "over_hit": bool(over_hit), "pnl": pnl,
+        })
+
+    daily_rows = []
+    cumulative = 0.0
+    total_wagered = 0.0
+    total_wins = 0
+    total_picks = 0
+    for bet_date in sorted(daily.keys()):
+        d = daily[bet_date]
+        day_pnl = sum(p["pnl"] for p in d["picks"])
+        day_wins = sum(1 for p in d["picks"] if p["over_hit"])
+        cumulative += day_pnl
+        total_wagered += 10.0 * len(d["picks"])
+        total_wins += day_wins
+        total_picks += len(d["picks"])
+        daily_rows.append({
+            "date": bet_date, "picks": d["picks"],
+            "day_pnl": day_pnl, "day_wins": day_wins,
+            "cumulative_pnl": cumulative,
+        })
+
+    win_pct = (total_wins / total_picks * 100) if total_picks else 0.0
+    roi = (cumulative / total_wagered * 100) if total_wagered else 0.0
+
+    return json.dumps({
+        "model_pnl_summary": {
+            "days_tracked": len(daily_rows),
+            "total_picks_with_odds": total_picks,
+            "total_wins": total_wins,
+            "win_pct": round(win_pct, 1),
+            "total_wagered": round(total_wagered, 2),
+            "cumulative_pnl": round(cumulative, 2),
+            "roi": round(roi, 1),
+        },
+        "daily": daily_rows,
+    }, default=str)
+
+
 def yesterday_results_snapshot(yesterday: str) -> dict:
     """
     Return the top-15 picks from yesterday with homered labels.
