@@ -37,8 +37,15 @@ def git_commit_and_push(files: list[str], msg: str, retries: int = 2) -> str:
     repo = str(PROJECT_DIR)
     git = "/usr/bin/git"
 
+    # Skip files that don't exist yet (e.g. ml_weights_k.json before the K model's
+    # first retrain) — `git add` fails its entire pathspec list on one bad entry,
+    # which would otherwise block every other file from being committed.
+    existing_files = [f for f in files if (PROJECT_DIR / f).exists()]
+    if not existing_files:
+        return "nothing_to_commit"
+
     add_result = subprocess.run(
-        [git, "-C", repo, "add"] + files, capture_output=True, text=True
+        [git, "-C", repo, "add"] + existing_files, capture_output=True, text=True
     )
     if add_result.returncode != 0:
         return f"commit_failed: git add failed — {add_result.stderr.strip()}"
