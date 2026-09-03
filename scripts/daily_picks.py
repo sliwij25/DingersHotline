@@ -364,10 +364,10 @@ try:
     from agents.k_predictor import Ace
     from agents.bet_tracker import save_pick_factors_k
     ace = Ace()
-    k_picks = ace.get_picks_json(top_n=10)
+    k_picks = ace.get_picks_json(top_n=10, scratched=SCRATCHED)
 
     k_full_ranked = ace._rank_picks_python(
-        ace._gather_data().get("pitcher_signals", {}), top_n=10_000,
+        ace._gather_data().get("pitcher_signals", {}), top_n=10_000, scratched=SCRATCHED,
     )
     for rank_i, p in enumerate(k_full_ranked, 1):
         save_pick_factors_k(

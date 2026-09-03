@@ -728,9 +728,12 @@ class Ace:
         self._context = {"date": today, "pitcher_signals": pitcher_signals}
         return self._context
 
-    def _rank_picks_python(self, pitcher_signals: dict, top_n: int = 10) -> list:
+    def _rank_picks_python(self, pitcher_signals: dict, top_n: int = 10, scratched: set = None) -> list:
+        _scratched = {s.lower() for s in (scratched or [])}
         ranked = []
         for name, sig in pitcher_signals.items():
+            if name.lower() in _scratched:
+                continue
             raw_score = _score_pitcher(sig)
             ml = Ace._ml_score(sig)
             if ml is not None and Ace._ml_weights:
@@ -760,10 +763,10 @@ class Ace:
         ranked.sort(key=lambda p: abs(p["gap"]), reverse=True)
         return ranked[:top_n]
 
-    def get_picks_json(self, top_n: int = 10) -> list:
+    def get_picks_json(self, top_n: int = 10, scratched: set = None) -> list:
         """Return today's top strikeout picks as a structured list of dicts."""
         context = self._gather_data()
-        return self._rank_picks_python(context.get("pitcher_signals", {}), top_n=top_n)
+        return self._rank_picks_python(context.get("pitcher_signals", {}), top_n=top_n, scratched=scratched)
 
 
 def _tofloat(val):
