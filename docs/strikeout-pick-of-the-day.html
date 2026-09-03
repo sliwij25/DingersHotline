@@ -289,7 +289,7 @@ function toggleTnGroup(btn) {
     var s = p.signals || {};
     var root = document.getElementById('main-content');
 
-    document.title = p.player + ' — Strikeout Pick of the Day — Dingers Hotline';
+    document.title = p.pitcher + ' — Strikeout Pick of the Day — Dingers Hotline';
     var hdrDate = document.getElementById('hdr-date');
     if (hdrDate) hdrDate.textContent = 'Strikeout Pick of the Day · ' + (p.matchup || '');
 
@@ -317,7 +317,7 @@ function toggleTnGroup(btn) {
 
     var main = mk('div', 'potd-main');
     var playerRow = mk('div', 'potd-player-row');
-    var playerName = mk('span', 'potd-player-name'); playerName.textContent = p.player;
+    var playerName = mk('span', 'potd-player-name'); playerName.textContent = p.pitcher;
     var scoreBadge = mk('span', 'potd-score-badge'); scoreBadge.textContent = (p.score||0).toFixed(1);
     var confBadge  = mk('span', 'conf-badge ' + confClass(p.confidence)); confBadge.textContent = p.confidence || 'LOW';
     ap(playerRow, playerName, scoreBadge, confBadge);
