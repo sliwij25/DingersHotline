@@ -695,7 +695,28 @@ try:
         except Exception as e:
             print(f"  [Ace] Skipped K-picks HTML ({e})")
 
-        print(f"  [HTML] GitHub Pages updated → docs/index.html + docs/leaderboard.html + docs/k-leaderboard.html + docs/player-data.json + docs/hit-rate.html")
+        # Generate k-player-data.json for k-player-card.html deep-dive links
+        try:
+            from tools.generate_html import generate_k_player_data_json
+            k_player_json = generate_k_player_data_json(k_picks, TODAY)
+            with open("docs/k-player-data.json", "w") as f:
+                f.write(k_player_json)
+            print("  [Ace] docs/k-player-data.json written")
+        except Exception as e:
+            print(f"  [Ace] Skipped k-player-data.json ({e})")
+
+        # Generate strikeout hit-rate calendar page
+        try:
+            from agents.bet_tracker import model_pnl_report_k
+            from tools.generate_html import generate_hit_rate_html_k
+            pnl_data_k = json.loads(model_pnl_report_k())
+            with open("docs/k-hit-rate.html", "w") as f:
+                f.write(generate_hit_rate_html_k(pnl_data_k))
+            print("  [Ace] docs/k-hit-rate.html written")
+        except Exception as e:
+            print(f"  [Ace] Skipped k-hit-rate.html ({e})")
+
+        print(f"  [HTML] GitHub Pages updated → docs/index.html + docs/leaderboard.html + docs/k-leaderboard.html + docs/player-data.json + docs/hit-rate.html + docs/k-player-data.json + docs/k-hit-rate.html")
 except Exception as _he:
     print(f"  [HTML] Skipped: {_he}")
 
@@ -716,11 +737,12 @@ try:
             "agents/k_predictor.py", "ml/optimize_weights_k.py",
             "ml/fetch_actual_k_results.py", "ml/build_historical_k_dataset.py",
             "ml_weights_k.json", f"picks/k_picks_{TODAY}.html",
+            "docs/k-player-data.json", "docs/k-hit-rate.html",
         ]
         _commit_msg = f"Auto-update {TODAY} — picks run"
     else:
         # Cache run: only commit HTML (picks changed, P&L/chips must stay correct)
-        _git_files = ["docs/index.html", "docs/leaderboard.html", "docs/k-leaderboard.html", "docs/player-data.json", "docs/hit-rate.html", "docs/strikeouts.html", f"picks/picks_{TODAY}.html", f"picks/k_picks_{TODAY}.html"]
+        _git_files = ["docs/index.html", "docs/leaderboard.html", "docs/k-leaderboard.html", "docs/player-data.json", "docs/hit-rate.html", "docs/strikeouts.html", f"picks/picks_{TODAY}.html", f"picks/k_picks_{TODAY}.html", "docs/k-player-data.json", "docs/k-hit-rate.html"]
         _commit_msg = f"picks({TODAY}): re-run from cache — lineup update"
 
     _status = git_commit_and_push(_git_files, _commit_msg)
