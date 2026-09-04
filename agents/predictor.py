@@ -65,6 +65,7 @@ def _get_bpp_session() -> requests.Session | None:
     password = os.getenv("BALLPARKPAL_PASSWORD", "").strip()
 
     if not email or not password:
+        print("  [BPP] session: FAILED (BALLPARKPAL_EMAIL/PASSWORD not set)")
         return None
 
     if _bpp_session and (time.time() - _bpp_session_ts) < _SESSION_TTL:
@@ -73,6 +74,7 @@ def _get_bpp_session() -> requests.Session | None:
     try:
         from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
     except ImportError:
+        print("  [BPP] session: FAILED (playwright not installed — pip install playwright && playwright install chromium)")
         return None
 
     try:
@@ -92,6 +94,7 @@ def _get_bpp_session() -> requests.Session | None:
                 page.wait_for_selector('input[name="email"]', timeout=15000)
             except PWTimeout:
                 browser.close()
+                print("  [BPP] session: FAILED (login form never appeared — Cloudflare challenge timeout)")
                 return None
 
             # Fill credentials and submit
@@ -108,6 +111,7 @@ def _get_bpp_session() -> requests.Session | None:
             # Check we're not still on login/paywall
             if "Secure Checkout" in page.content() or "Login" in page.url:
                 browser.close()
+                print("  [BPP] session: FAILED (still on login/paywall page — bad credentials or site change)")
                 return None
 
             # Extract all cookies and inject into a requests.Session
@@ -121,9 +125,11 @@ def _get_bpp_session() -> requests.Session | None:
 
         _bpp_session    = session
         _bpp_session_ts = time.time()
+        print("  [BPP] session: OK")
         return session
 
-    except Exception:
+    except Exception as exc:
+        print(f"  [BPP] session: FAILED ({exc})")
         return None
 
 # ── Tool definitions ───────────────────────────────────────────────────────────
