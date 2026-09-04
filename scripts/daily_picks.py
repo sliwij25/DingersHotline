@@ -360,6 +360,7 @@ _all_ranked: list[dict] = []  # filled below; used for HTML generation
 
 # ── Strikeout model (Ace) — independent pipeline, runs after HR picks ──────────
 print("\n[Ace] Fetching today's strikeout picks...")
+k_picks = []
 try:
     from agents.k_predictor import Ace
     from agents.bet_tracker import save_pick_factors_k
@@ -763,8 +764,17 @@ if not args.use_cache and not args.no_notify:
     _top3_names = "\n".join(
         f"{i+1}. {p.get('player','?')}" for i, p in enumerate(_top)
     ) if _top else "  no picks yet"
+    _k_top = k_picks[:3] if k_picks else []
+    _k_top3_names = "\n".join(
+        f"{i+1}. {p.get('pitcher','?')}" for i, p in enumerate(_k_top)
+    ) if _k_top else "  no picks yet"
     _updated_prefix = "🔄 UPDATED — " if _is_rerun else ""
-    _caption = f"{_updated_prefix}⚾ Dingers Hotline — {TODAY}\n\nTop 3:\n{_top3_names}\n\nFull picks → dingershotline.com"
+    _caption = (
+        f"{_updated_prefix}⚾ Dingers Hotline — {TODAY}\n\n"
+        f"Top 3 HR:\n{_top3_names}\n\n"
+        f"Top 3 K:\n{_k_top3_names}\n\n"
+        f"Full picks → dingershotline.com"
+    )
     _park_warning = homer._context.get("_park_coverage_warning")
     if _park_warning:
         _caption += f"\n\n⚠️ {_park_warning}"
