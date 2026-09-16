@@ -81,7 +81,12 @@ def load_training_data() -> tuple[np.ndarray, np.ndarray, list[dict]]:
     """
     Load pick_factors rows where homered IS NOT NULL.
     Returns (X, y, raw_rows).
-    Missing feature values are imputed with the column median.
+    Missing feature values are left as NaN — LightGBM learns the optimal split
+    direction for missing values per-node natively, which beats blanket median
+    imputation here: ~92% of rows are historical backfill with no odds/platoon/h2h
+    context (those columns are NULL for the whole season), so median-filling them
+    would stamp a single fake constant across nearly the entire training set and
+    erase whatever signal those features carry on the ~8% of rows that do have them.
     """
     conn = sqlite3.connect(DB_PATH)
     try:
@@ -136,25 +141,24 @@ def load_training_data() -> tuple[np.ndarray, np.ndarray, list[dict]]:
 
     X = np.array(X_raw, dtype=float)
 
-    # Impute missing values with column median
-    for col_i in range(X.shape[1]):
-        col = X[:, col_i]
-        median = np.nanmedian(col)
-        X[np.isnan(col), col_i] = median if not np.isnan(median) else 0.0
-
     return X, np.array(y), raw_rows
 
 
 def point_biserial_correlation(X: np.ndarray, y: np.ndarray) -> list[tuple[str, float]]:
-    """Compute correlation between each feature and the binary outcome."""
+    """Compute correlation between each feature and the binary outcome.
+    NaN rows are dropped per-column (many features are only populated for the
+    live-season slice of the data) rather than imputed, so this reflects the
+    real relationship on the rows that actually have the signal."""
     from scipy import stats
     results = []
     for i, name in enumerate(FEATURE_NAMES):
         col = X[:, i]
-        if col.std() < 1e-9:
+        mask = ~np.isnan(col)
+        col, col_y = col[mask], y[mask]
+        if len(col) < 10 or col.std() < 1e-9:
             results.append((name, 0.0))
             continue
-        r, p = stats.pointbiserialr(col, y)
+        r, p = stats.pointbiserialr(col, col_y)
         results.append((name, r))
     return sorted(results, key=lambda x: abs(x[1]), reverse=True)
 
@@ -268,7 +272,7 @@ def train_and_save(X: np.ndarray, y: np.ndarray,
         "cv_auc_mean":   float(auc_scores.mean()),
         "cv_auc_std":    float(auc_scores.std()),
         "feature_order": FEATURE_NAMES,
-        "algo_version":  "4.2",
+        "algo_version":  "4.4",
     }
 
     if save:

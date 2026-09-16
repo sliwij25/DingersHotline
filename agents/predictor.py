@@ -2689,7 +2689,7 @@ class Homer:
             batter_ids = [
                 int(sig["player_id"])
                 for sig in player_signals.values()
-                if sig.get("player_id") and sig.get("lineup_confirmed")
+                if sig.get("player_id") and sig.get("status") == "confirmed"
             ]
             if batter_ids:
                 print(f"  [PitchSplits] Fetching batter pitch-type splits for {len(batter_ids)} players…")
@@ -2711,7 +2711,7 @@ class Homer:
             spray_ids = [
                 int(sig["player_id"])
                 for sig in player_signals.values()
-                if sig.get("player_id") and sig.get("lineup_confirmed")
+                if sig.get("player_id") and sig.get("status") == "confirmed"
             ]
             if spray_ids:
                 print(f"  [SprayProfile] Fetching HR spray profiles for {len(spray_ids)} players…")

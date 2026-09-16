@@ -1,10 +1,10 @@
 {
   "model_type": "lightgbm",
-  "trained_on": "2026-09-14",
+  "trained_on": "2026-09-16",
   "n_samples": 322408,
   "n_positives": 48573,
-  "cv_auc_mean": 0.6129684994778444,
-  "cv_auc_std": 0.003234760277978429,
+  "cv_auc_mean": 0.6131490746526452,
+  "cv_auc_std": 0.0032005058316045133,
   "feature_order": [
     "barrel_rate",
     "ev_avg",
@@ -36,5 +36,5 @@
     "batter_xslg_vs_breaking",
     "batter_xslg_vs_offspeed"
   ],
-  "algo_version": "4.3"
+  "algo_version": "4.4"
 }
