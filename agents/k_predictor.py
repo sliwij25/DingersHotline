@@ -464,8 +464,23 @@ def fetch_k_odds_comparison(confirmed_pitcher_names: set | None = None) -> str:
         except Exception:
             pass
 
+    def _get_events(key: str):
+        return requests.get(f"{ODDS_API_BASE}/sports/baseball_mlb/events?apiKey={key}", timeout=15)
+
     try:
-        events_resp = requests.get(f"{ODDS_API_BASE}/sports/baseball_mlb/events?apiKey={api_key}", timeout=15)
+        events_resp = _get_events(api_key)
+        if events_resp.status_code == 401:
+            backup_key = os.getenv("ODDS_API_KEY_BACKUP")
+            if backup_key:
+                print("[ODDS] Primary key quota exhausted — switching to backup key")
+                events_resp = _get_events(backup_key)
+                if events_resp.status_code == 200:
+                    api_key = backup_key  # use backup for all subsequent calls
+            if events_resp.status_code == 401:
+                return json.dumps({
+                    "status": "quota_exceeded",
+                    "message": "Both Odds API keys have exhausted their quota. Keys reset monthly.",
+                })
         events_resp.raise_for_status()
         events = events_resp.json()
     except Exception as exc:
