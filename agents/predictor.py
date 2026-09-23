@@ -4221,7 +4221,7 @@ class Homer:
                 reasons.append(f"h2h {h2h_hr}HR/{h2h_ab}AB")
             career_pk = sig.get("career_park_hr")
             if career_pk:
-                venue_short = (sig.get("venue") or "park")[:22]
+                venue_short = (sig.get("venue") or "park")[:40]
                 reasons.append(f"career {venue_short}: {career_pk}HR")
             bpp_rank = sig.get("bpp_proj_rank")
             if bpp_rank is not None and bpp_rank <= 15:
