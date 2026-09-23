@@ -1607,7 +1607,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
             f'<td class="td-rank">{display_rank}</td>'
             f'<td class="td-player">{_esc(name)}</td>'
             f'<td class="td-team">{_esc(team)}</td>'
-            f'<td class="td-hr">{so}</td>'
+            f'<td class="td-k">{so}</td>'
             f'<td class="td-stat{k_cls} col-stat">{k_pct_str}</td>'
             f'<td class="td-stat{w_cls} col-stat">{whiff_str}</td>'
             f'<td class="td-stat{k9_cls} col-stat">{k9_str}</td>'
@@ -1661,7 +1661,7 @@ def generate_strikeout_leaderboard_html(today_str: str | None = None) -> str:
   .td-rank {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); width: 36px; text-align: right; padding-right: 16px; }}
   .td-player {{ font-weight: 600; color: var(--text); min-width: 160px; }}
   .td-team {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-sub); width: 48px; }}
-  .td-hr {{ font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; color: var(--red); text-align: right; width: 52px; }}
+  .td-k {{ font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; color: var(--red); text-align: right; width: 52px; }}
   .td-stat {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; text-align: right; width: 72px; }}
 
   .cell-g {{ background: #DCF1E5; color: #155D33; }}
