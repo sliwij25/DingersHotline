@@ -464,23 +464,8 @@ def fetch_k_odds_comparison(confirmed_pitcher_names: set | None = None) -> str:
         except Exception:
             pass
 
-    def _get_events(key: str):
-        return requests.get(f"{ODDS_API_BASE}/sports/baseball_mlb/events?apiKey={key}", timeout=15)
-
     try:
-        events_resp = _get_events(api_key)
-        if events_resp.status_code == 401:
-            backup_key = os.getenv("ODDS_API_KEY_BACKUP")
-            if backup_key:
-                print("[ODDS] Primary key quota exhausted — switching to backup key")
-                events_resp = _get_events(backup_key)
-                if events_resp.status_code == 200:
-                    api_key = backup_key  # use backup for all subsequent calls
-            if events_resp.status_code == 401:
-                return json.dumps({
-                    "status": "quota_exceeded",
-                    "message": "Both Odds API keys have exhausted their quota. Keys reset monthly.",
-                })
+        events_resp = requests.get(f"{ODDS_API_BASE}/sports/baseball_mlb/events?apiKey={api_key}", timeout=15)
         events_resp.raise_for_status()
         events = events_resp.json()
     except Exception as exc:
@@ -489,16 +474,30 @@ def fetch_k_odds_comparison(confirmed_pitcher_names: set | None = None) -> str:
     if not events:
         return json.dumps({"status": "no_events", "message": "No MLB events found today."})
 
+    # The /events endpoint above doesn't consume quota, so a 401 there never
+    # fires — the real quota check happens on the per-event /odds call below.
+    # Track failover state across the loop instead of at the events call.
+    backup_key = os.getenv("ODDS_API_KEY_BACKUP")
+    switched_to_backup = False
+
+    def _fetch_odds(event_id: str, key: str):
+        return requests.get(
+            f"{ODDS_API_BASE}/sports/baseball_mlb/events/{event_id}/odds"
+            f"?apiKey={key}&regions=us,eu&markets=pitcher_strikeouts&oddsFormat=american",
+            timeout=15,
+        )
+
     all_player_odds: dict[str, dict] = {}
     for event in events[:12]:
         event_id = event.get("id")
         matchup = f"{event.get('away_team', '')} @ {event.get('home_team', '')}"
         try:
-            resp = requests.get(
-                f"{ODDS_API_BASE}/sports/baseball_mlb/events/{event_id}/odds"
-                f"?apiKey={api_key}&regions=us,eu&markets=pitcher_strikeouts&oddsFormat=american",
-                timeout=15,
-            )
+            resp = _fetch_odds(event_id, api_key)
+            if resp.status_code == 401 and not switched_to_backup and backup_key:
+                print("[ODDS] Primary key quota exhausted — switching to backup key")
+                api_key = backup_key
+                switched_to_backup = True
+                resp = _fetch_odds(event_id, api_key)
             if resp.status_code in (401, 422):
                 continue
             resp.raise_for_status()
