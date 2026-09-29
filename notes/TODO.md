@@ -21,6 +21,7 @@ Items are tracked here as features, fixes, and improvements. Priorities: 🔴 Hi
 
 | Priority | Item | Notes |
 |----------|------|-------|
+| 🟡 | **Test batting order + season HR rate as ML features (2027)** | `pick_factors` saves `batting_order`, `season_pa`, `season_hr`, `season_hr_rate` from the first 2027 run (added 2026-09-29, commit dd19173). After ~6 weeks of full slates, add them to `FEATURES` in `ml/optimize_weights.py` and compare walk-forward per-day AUC / top-20 hit rate vs v5.0 with `tools/model_lab.py`. Keep only if it beats baseline out-of-sample. Note: `batting_order` is projected from the last game when `lineup_confirmed=0`; `season_hr_rate` is noisy in April (<50 PA). |
 
 ---
 
