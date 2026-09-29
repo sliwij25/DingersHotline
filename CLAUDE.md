@@ -107,15 +107,16 @@ caches the session for 1 hour. Falls back to FanGraphs + OpenWeatherMap
 if credentials are missing or login fails.
 
 ### ML Score Blend
-`_score_player()` in predictor.py ends with an ML blend:
+`_score_player()` in predictor.py ends with an ML blend (v5, `model_type: logistic_v2`):
 ```python
-ml = Homer._ml_score(sig)
+ml = Homer._ml_score(sig)   # ML log-odds z-scored onto the heuristic's scale
 if ml is not None:
-    auc = weights.get("cv_auc_mean", 0.5)
-    ml_weight = min(0.7, max(0.0, (auc - 0.5) * 2.5))
+    ml_weight = weights["blend_weight"]          # 0.5, walk-forward validated
     score = (1.0 - ml_weight) * score + ml_weight * ml
 ```
-- `ml_weight` = 0 at AUC=0.50 (pure heuristic), 0.70 max at AUC≥0.78
+- Legacy weights without `blend_weight` fall back to `(AUC − 0.5) × 4`, capped at 0.8
+- `_ml_score()` mirrors `optimize_weights._design()` / `predict_log_odds()` — change both together
+- Evaluate any model change with `tools/model_lab.py` (walk-forward on live full slates), never shuffled CV
 - `Homer._ml_weights` and `Homer._ml_weights_loaded` are class-level caches
 - After auto-retraining, `Homer._ml_weights_loaded = False` forces reload on next pick run
 
@@ -140,9 +141,10 @@ No manual script runs are needed by the user.
 
 **Step 3 — Retrain ML weights if due** (`optimize_weights.py`)
 - Retrain conditions: first time (≥100 rows) OR (7+ days old AND 200+ new rows) OR 2000+ new rows
-- `load_training_data()` → loads `pick_factors WHERE homered IS NOT NULL`, imputes NaN with median
-- `train_and_save(X, y)` → LogisticRegression(C=0.5, class_weight="balanced") + StandardScaler
-- Cross-val AUC reported; weights saved to `ml_weights.json`
+- `load_training_data()` → loads LIVE `pick_factors` rows (`algo_version NOT LIKE 'hist%'`) with homered labeled
+- Historical `hist_*` rows are excluded from training: season-final stats = look-ahead leakage
+- `train_and_save(X, y, raw_rows=...)` → median impute + missing indicators → StandardScaler → LogisticRegression(C=0.02)
+- `cv_auc_mean` = walk-forward per-day AUC (honest, ~0.61); weights + blend constants saved to `ml_weights.json`
 - `Homer._ml_weights_loaded = False` invalidates cache so new model loads immediately
 
 ### Training data design (eliminates selection bias)
@@ -365,7 +367,7 @@ Daily script uses ~12–15 Odds API requests (one per game).
 - **Routine trigger ID:** `trig_01HWF4ucuuE1fofLn6M2GcgD` (claude.ai/code/routines)
 - **Dispatch command:** `Run ~/AIProjects/DingersHotline/scripts/run-picks.sh and show me today's top HR picks and model stats`
 - **launchd job:** `com.homerunbets.daily` — fires at 11am daily, output to `logs/daily_picks.log`
-- **Mac wake schedule:** `sudo pmset repeat wakeorpoweron MTWRFSU 10:55:00`
+- **Mac wake schedule:** `sudo pmset repeat wakeorpoweron MTWRFSU 09:30:00` (earlier buffer for ~11:05 AM CDT getaway-day games)
 
 ---
 
@@ -374,7 +376,7 @@ Daily script uses ~12–15 Odds API requests (one per game).
 See **[GRADING.md](notes/GRADING.md)** for the full star rating definitions, AUC ceiling thresholds, and rank bands.
 
 Stars combine two signals: rank within today's top 20 pool + model accuracy ceiling (AUC).
-Current max: ★★★★☆ (AUC 0.634). Reaches ★★★★★ when AUC ≥ 0.65.
+Current max: ★★★★☆ (walk-forward AUC 0.612). Reaches ★★★★★ when AUC ≥ 0.65.
 
 ---
 

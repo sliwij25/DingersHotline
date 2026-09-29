@@ -10,6 +10,13 @@ from datetime import date
 from agents.predictor import Homer, _safe_float
 
 
+@pytest.fixture(autouse=True)
+def _heuristic_only(monkeypatch):
+    """These tests pin the heuristic's pitch-mix thresholds; keep the ML blend
+    (which responds to pitch mix continuously) out of the comparison."""
+    monkeypatch.setattr(Homer, "_ml_score", classmethod(lambda cls, sig: None))
+
+
 def test_pitch_bucket_derivation():
     """Pitch bucket sums should correctly aggregate pitch-family percentages."""
     sp_data = {

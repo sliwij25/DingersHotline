@@ -1,7 +1,16 @@
 """
 optimize_weights.py
-Train LightGBM on labeled pick_factors data → save ml_weights.json + lgbm_model.txt.
-Homer's _score_player() reads these automatically once the files exist.
+Train the HR model on labeled live pick_factors rows → save ml_weights.json.
+Homer's _score_player() reads it automatically and blends it with the heuristic.
+
+Model (v5, Sept 2026 off-season rebuild): L2-regularised logistic regression on
+median-imputed features + missing-value indicators, trained on LIVE rows only.
+Historical backfill rows (algo_version 'hist_*') are excluded: they use season-final
+Statcast / pitcher HR/9, i.e. look-ahead leakage, and carry NULLs for 21 of 29
+features. Walk-forward testing on the Aug–Sep 2026 full slates showed the old
+LightGBM-on-everything recipe ranked worse than the heuristic alone (per-day
+AUC 0.589 vs 0.614); this recipe + 50/50 heuristic blend scored 0.623 and lifted
+top-20 hit rate from 17.1% to 19.5%. See notes/ALGORITHM.md and tools/model_lab.py.
 
 Run weekly (or after every ~50 new labeled days accumulate).
 
@@ -11,9 +20,8 @@ Usage:
     python optimize_weights.py --min 50     # require at least N labeled rows (default 100)
 
 Output:
-    ml_weights.json          — metadata (AUC, feature_order, model_type)
-    lgbm_model.txt           — LightGBM booster (loaded by Homer._ml_score)
-    (stdout)                 — feature importances, calibration, rank-vs-hit-rate
+    ml_weights.json          — coefficients, imputation/scaling constants, blend constants
+    (stdout)                 — coefficients, calibration, rank-vs-hit-rate
 """
 
 import argparse
@@ -29,15 +37,20 @@ import numpy as np
 os.chdir(str(Path(__file__).parent.parent))
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "bets.db")
 WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), "..", "ml_weights.json")
-LGBM_MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "lgbm_model.txt")
 
-# Features for LightGBM training.
+ALGO_VERSION   = "5.0"   # model generation; record_results.py bumps the minor on each retrain
+LOGIT_C        = 0.02    # strong L2 — walk-forward best of {0.005, 0.02, 0.2}
+BLEND_WEIGHT   = 0.5     # share of final score from ML (walk-forward: 0.2–0.8 all beat prod; 0.5 best)
+WF_TEST_DAYS   = 42      # walk-forward evaluation window (most recent full-slate days)
+WF_STEP_DAYS   = 7       # refit cadence inside the walk-forward evaluation
+
+# Model features.
 # Each entry: (column_name, transform)
 # transform: None = use raw value, "platoon" = PLATOON+→1 / platoon-→-1 / else→0
-# All contact-quality features included — LightGBM handles correlated features
-# correctly (no sign-flipping like logistic regression).
+# Correlated contact-quality features are kept: strong L2 (LOGIT_C) keeps their
+# coefficients small and stable instead of sign-flipping.
 FEATURES = [
-    # Contact quality — all restored; LightGBM splits independently without multicollinearity issues
+    # Contact quality
     ("barrel_rate",      None),    # r=0.70 predictive for HR%
     ("ev_avg",           None),    # r=0.57 predictive — avg exit velocity
     ("hard_hit_pct",     None),    # r=0.66 descriptive — EV 100+ mph
@@ -79,22 +92,19 @@ FEATURE_NAMES = [name for name, _ in FEATURES]
 
 def load_training_data() -> tuple[np.ndarray, np.ndarray, list[dict]]:
     """
-    Load pick_factors rows where homered IS NOT NULL.
-    Returns (X, y, raw_rows).
-    Missing feature values are left as NaN — LightGBM learns the optimal split
-    direction for missing values per-node natively, which beats blanket median
-    imputation here: ~92% of rows are historical backfill with no odds/platoon/h2h
-    context (those columns are NULL for the whole season), so median-filling them
-    would stamp a single fake constant across nearly the entire training set and
-    erase whatever signal those features carry on the ~8% of rows that do have them.
+    Load LIVE pick_factors rows where homered IS NOT NULL (historical 'hist_*'
+    backfill rows are excluded — see module docstring for why).
+    Returns (X, y, raw_rows). Missing values stay NaN; train_and_save() median-imputes
+    them and adds a missing-indicator column so "value unknown" can carry its own weight.
     """
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     try:
-        cols = ", ".join(name for name, _ in FEATURES)
-        rows = conn.execute(f"""
-            SELECT {cols}, homered, bet_date, player, score, rank, confidence
+        rows = conn.execute("""
+            SELECT *
             FROM pick_factors
             WHERE homered IS NOT NULL
+              AND algo_version NOT LIKE 'hist%'
             ORDER BY bet_date
         """).fetchall()
     finally:
@@ -103,24 +113,23 @@ def load_training_data() -> tuple[np.ndarray, np.ndarray, list[dict]]:
     if not rows:
         return np.array([]), np.array([]), []
 
-    n_features = len(FEATURES)
     raw_rows = []
     X_raw = []
     y = []
 
     for row in rows:
-        feat_vals = list(row[:n_features])
-        homered   = row[n_features]
-        bet_date  = row[n_features + 1]
-        player    = row[n_features + 2]
-        score     = row[n_features + 3]
-        rank_val  = row[n_features + 4]
-        conf      = row[n_features + 5]
+        signals  = dict(row)
+        homered  = signals.pop("homered")
+        bet_date = signals["bet_date"]
+        player   = signals["player"]
+        score    = signals["score"]
+        rank_val = signals["rank"]
+        conf     = signals["confidence"]
 
         # Transform features
         transformed = []
-        for i, (col, transform) in enumerate(FEATURES):
-            val = feat_vals[i]
+        for col, transform in FEATURES:
+            val = signals.get(col)
             if transform == "platoon":
                 if val == "PLATOON+":
                     transformed.append(1.0)
@@ -137,6 +146,7 @@ def load_training_data() -> tuple[np.ndarray, np.ndarray, list[dict]]:
             "player": player, "bet_date": bet_date,
             "score": score, "rank": rank_val,
             "confidence": conf, "homered": homered,
+            "signals": signals,
         })
 
     X = np.array(X_raw, dtype=float)
@@ -211,76 +221,163 @@ def confidence_calibration(raw_rows: list[dict]) -> None:
     print("  (HIGH should have the highest hit rate — if not, tiers need recalibration)")
 
 
-def train_and_save(X: np.ndarray, y: np.ndarray,
-                   save: bool = True) -> dict:
-    """
-    Train LightGBM gradient boosted tree, output feature importances.
-    Saves lgbm_model.txt (booster) and ml_weights.json (metadata).
-    Returns weights dict.
-    """
-    try:
-        import lightgbm as lgb
-        import pandas as pd
-        from sklearn.model_selection import cross_val_score, StratifiedKFold
-    except ImportError:
-        print("\n  lightgbm not installed. Run: pip install lightgbm")
-        return {}
+def _design(X: np.ndarray, medians: np.ndarray, ind_idx: list[int]) -> np.ndarray:
+    """Median-impute X and append a 0/1 missing indicator for each column in ind_idx.
+    Mirrors Homer._ml_score() exactly — change both together."""
+    miss = np.isnan(X)
+    Xi = np.where(miss, medians, X)
+    return np.hstack([Xi, miss[:, ind_idx].astype(float)])
 
-    # Wrap in DataFrame so LightGBM tracks feature names (suppresses sklearn warning)
-    X_df = pd.DataFrame(X, columns=FEATURE_NAMES)
 
-    scale_pos_weight = (len(y) - y.sum()) / max(y.sum(), 1)
+def _fit_logit(X: np.ndarray, y: np.ndarray) -> dict:
+    """Fit imputation + scaler + L2 logistic regression; return an exportable model dict."""
+    from sklearn.linear_model import LogisticRegression
 
-    lgbm_params = {
-        "objective":        "binary",
-        "metric":           "auc",
-        "n_estimators":     500,
-        "learning_rate":    0.05,
-        "num_leaves":       31,
-        "min_child_samples": 50,   # prevents overfitting on rare HR events
-        "scale_pos_weight": scale_pos_weight,
-        "random_state":     42,
-        "verbose":          -1,
+    with np.errstate(all="ignore"):
+        medians = np.nanmedian(X, axis=0)
+    medians = np.where(np.isnan(medians), 0.0, medians)
+    ind_idx = [i for i in range(X.shape[1]) if np.isnan(X[:, i]).any()]
+    D = _design(X, medians, ind_idx)
+    mean = D.mean(axis=0)
+    scale = D.std(axis=0)
+    scale[scale < 1e-9] = 1.0
+    lr = LogisticRegression(C=LOGIT_C, max_iter=5000)
+    lr.fit((D - mean) / scale, y)
+    return {
+        "medians": medians.tolist(),
+        "indicator_features": [FEATURE_NAMES[i] for i in ind_idx],
+        "scaler_mean": mean.tolist(),
+        "scaler_scale": scale.tolist(),
+        "coef": lr.coef_[0].tolist(),
+        "intercept": float(lr.intercept_[0]),
     }
 
-    model = lgb.LGBMClassifier(**lgbm_params)
 
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    auc_scores = cross_val_score(model, X_df, y, cv=cv, scoring="roc_auc")
-    print(f"\n  Cross-val AUC: {auc_scores.mean():.3f} ± {auc_scores.std():.3f}")
-    print("  (0.5 = random, 0.6+ = useful, 0.7+ = strong)")
+def predict_log_odds(model: dict, X: np.ndarray) -> np.ndarray:
+    ind_idx = [FEATURE_NAMES.index(f) for f in model["indicator_features"]]
+    D = _design(X, np.array(model["medians"]), ind_idx)
+    Z = (D - np.array(model["scaler_mean"])) / np.array(model["scaler_scale"])
+    return Z @ np.array(model["coef"]) + model["intercept"]
 
-    model.fit(X_df, y)
 
-    importances = sorted(
-        zip(FEATURE_NAMES, model.feature_importances_),
-        key=lambda x: x[1], reverse=True
-    )
+def _full_slate_mask(dates: np.ndarray, min_rows: int = 100) -> np.ndarray:
+    """Days where the whole candidate pool was saved (Aug 2026+), not just the top 20."""
+    uniq, counts = np.unique(dates, return_counts=True)
+    full = set(uniq[counts >= min_rows])
+    return np.array([d in full for d in dates])
 
-    print("\n  Feature importances (LightGBM gain — split count):")
-    print(f"  {'Feature':<22} {'Importance':>10}")
-    print("  " + "-" * 36)
-    for feat, imp in importances:
-        bar = "█" * int(imp / max(v for _, v in importances) * 20)
-        print(f"  {feat:<22} {imp:>10}  {bar}")
+
+def _heuristic_scores(raw_rows: list[dict], mask: np.ndarray) -> np.ndarray:
+    """Re-score rows with Homer's heuristic only (ML disabled) to get its scale for blending."""
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from agents.predictor import Homer
+
+    saved = Homer.__dict__["_ml_score"]
+    Homer._ml_score = classmethod(lambda cls, sig: None)
+    try:
+        out = []
+        for r, m in zip(raw_rows, mask):
+            if not m:
+                continue
+            sig = dict(r["signals"])
+            sig["status"] = "confirmed" if sig.get("lineup_confirmed") == 1 else "waiting"
+            sig.setdefault("season_hr", 10)  # not persisted; keep the pitcher-matchup gate open
+            out.append(Homer._score_player(sig))
+    finally:
+        Homer._ml_score = saved
+    return np.array(out, dtype=float)
+
+
+def walk_forward_auc(X: np.ndarray, y: np.ndarray, dates: np.ndarray) -> tuple[float, float, int]:
+    """Honest out-of-time AUC: refit every WF_STEP_DAYS on strictly-earlier data and
+    score each of the last WF_TEST_DAYS full-slate days. Returns (mean, std, n_days)."""
+    from sklearn.metrics import roc_auc_score
+
+    full_days = sorted(set(dates[_full_slate_mask(dates)]))[-WF_TEST_DAYS:]
+    aucs = []
+    for i in range(0, len(full_days), WF_STEP_DAYS):
+        chunk = full_days[i:i + WF_STEP_DAYS]
+        train = dates < chunk[0]
+        if y[train].sum() < 50:
+            continue
+        model = _fit_logit(X[train], y[train])
+        for d in chunk:
+            m = dates == d
+            if len(set(y[m])) == 2:
+                aucs.append(roc_auc_score(y[m], predict_log_odds(model, X[m])))
+    if not aucs:
+        return 0.5, 0.0, 0
+    return float(np.mean(aucs)), float(np.std(aucs)), len(aucs)
+
+
+def train_and_save(X: np.ndarray, y: np.ndarray, save: bool = True,
+                   raw_rows: list[dict] | None = None) -> dict:
+    """
+    Train the logistic HR model and save ml_weights.json.
+    raw_rows (from load_training_data) enables the walk-forward AUC and the
+    heuristic-scale blend constants; without them, AUC falls back to 0.5 and
+    Homer uses the heuristic alone.
+    Returns the weights dict.
+    """
+    try:
+        import sklearn  # noqa: F401
+    except ImportError:
+        print("\n  scikit-learn not installed. Run: pip install scikit-learn")
+        return {}
+
+    dates = np.array([r["bet_date"] for r in raw_rows]) if raw_rows else None
+
+    if dates is not None:
+        auc_mean, auc_std, n_days = walk_forward_auc(X, y, dates)
+        print(f"\n  Walk-forward AUC (per day, last {n_days} full slates): {auc_mean:.3f} ± {auc_std:.3f}")
+    else:
+        auc_mean, auc_std, n_days = 0.5, 0.0, 0
+        print("\n  No dates supplied — skipping walk-forward AUC.")
+    print("  (0.5 = random; ~0.62 is near the practical ceiling for single-game HR props)")
+
+    model = _fit_logit(X, y)
+
+    # Blend constants: map ML log-odds onto the heuristic's scale via z-scores,
+    # both measured on the full-slate days (the population Homer actually ranks).
+    blend = {}
+    if raw_rows:
+        mask = _full_slate_mask(dates)
+        if mask.sum() >= 1000:
+            lo = predict_log_odds(model, X[mask])
+            heur = _heuristic_scores(raw_rows, mask)
+            blend = {
+                "blend_weight": BLEND_WEIGHT,
+                "ml_logodds_mean": float(lo.mean()), "ml_logodds_std": float(lo.std()),
+                "heur_mean": float(heur.mean()), "heur_std": float(heur.std()),
+            }
+    if not blend:
+        print("  Not enough full-slate rows for blend constants — Homer will use the heuristic alone.")
+
+    n_feat = len(FEATURE_NAMES)
+    coeffs = dict(zip(FEATURE_NAMES, model["coef"][:n_feat]))
+    print("\n  Standardised coefficients (log-odds per 1 SD):")
+    for feat, c in sorted(coeffs.items(), key=lambda x: abs(x[1]), reverse=True):
+        print(f"  {feat:<26} {c:>+7.3f}  {'█' * int(abs(c) * 60)}")
 
     weights = {
-        "model_type":    "lightgbm",
+        "model_type":    "logistic_v2",
         "trained_on":    date.today().isoformat(),
         "n_samples":     int(len(y)),
         "n_positives":   int(y.sum()),
-        "cv_auc_mean":   float(auc_scores.mean()),
-        "cv_auc_std":    float(auc_scores.std()),
+        "cv_auc_mean":   auc_mean,
+        "cv_auc_std":    auc_std,
+        "cv_method":     f"walk-forward per-day AUC, {n_days} days",
         "feature_order": FEATURE_NAMES,
-        "algo_version":  "4.4",
+        "coefficients":  coeffs,
+        "model":         model,
+        **blend,
+        "algo_version":  ALGO_VERSION,
     }
 
     if save:
-        model.booster_.save_model(LGBM_MODEL_PATH)
         with open(WEIGHTS_PATH, "w") as f:
             json.dump(weights, f, indent=2)
-        print(f"\n  Model saved to lgbm_model.txt")
-        print(f"  Metadata saved to ml_weights.json")
+        print("\n  Model saved to ml_weights.json")
         print("  Homer will use these weights automatically on next run.")
 
     return weights
@@ -360,7 +457,7 @@ def main():
         print("\n  Showing correlations above as a guide in the meantime.")
         sys.exit(0)
 
-    weights = train_and_save(X, y, save=not args.report)
+    train_and_save(X, y, save=not args.report, raw_rows=raw_rows)
 
     print("\n" + "=" * 60)
     print("  NEXT STEPS")

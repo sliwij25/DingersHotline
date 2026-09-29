@@ -17,7 +17,7 @@ The system is **100% deterministic Python** — no AI or language model is invol
 1. Pull confirmed lineups from MLB API
 2. Fetch Statcast metrics, park factors, weather, matchup grades, and odds
 3. Score every confirmed batter using a weighted formula
-4. Blend in a machine learning model (LightGBM gradient-boosted trees trained on historical results)
+4. Blend 50/50 with a machine learning model (regularised logistic regression trained on this season's live slates)
 5. Rank and bucket players into confidence tiers
 6. Publish to the site
 
@@ -153,41 +153,59 @@ Pitchers are ranked by **absolute gap descending** (largest edge first). Confide
 
 ## ML Score Blend
 
-After the raw score is computed, it's blended with a **LightGBM model** trained on historical pick results.
+After the raw heuristic score is computed, it's blended **50/50** with a regularised
+logistic-regression model (`model_type: logistic_v2`, `ml/optimize_weights.py`):
 
 ```
-ml_weight = min(0.70, max(0.0, (AUC − 0.50) × 2.5))
-final_score = (1 − ml_weight) × raw_score + ml_weight × ml_score
+ml_z        = (model_log_odds − ml_logodds_mean) / ml_logodds_std
+ml_score    = heur_mean + heur_std × ml_z          # ML mapped onto the heuristic's scale
+final_score = (1 − blend_weight) × raw_score + blend_weight × ml_score   # blend_weight = 0.5
 ```
 
-- At **AUC = 0.50** (random): ml_weight = 0% — pure heuristic scoring
-- At **AUC = 0.612** (current): ml_weight = **28%** — model has meaningful influence
-- At **AUC ≥ 0.78**: ml_weight caps at **70%**
+The scaling constants and `blend_weight` live in `ml_weights.json`. The weight is fixed
+(walk-forward validated) instead of derived from AUC; legacy models without
+`blend_weight` still fall back to the old `(AUC − 0.5) × 4` formula.
 
-### Current Model Status
-- **AUC: 0.612** (retrained 2026-07-06 after the historical dataset rebuild — see below)
-- **Training data:** 314,000+ rows, one row per (game, actual lineup batter) for 2015–2026
-- **Retrains automatically** each morning when ≥200 new labeled rows accumulate
+### Current Model Status (v5.0, retrained 2026-09-29)
+- **Walk-forward AUC: 0.612** (ML alone, per-day, last 41 full slates, refit weekly on strictly-earlier data)
+- **Training data:** ~12,700 live rows (Apr–Sep 2026). Historical `hist_*` rows are **excluded**.
+- **Model:** median imputation + missing-value indicators → StandardScaler → LogisticRegression(C=0.02)
+- **Retrains automatically** at night via `record_results.py` (bumps `algo_version` minor)
 
-### 2026-07-06 historical dataset rebuild
-The historical training set used to be a cross-product of "every power hitter in the
-season pool" × "every sampled date," regardless of whether the player's team even played
-that day — so `park_hr_factor`, `is_home`, and `pitcher_hr_per_9` were always `None` for
-historical rows despite being real features. It was rebuilt in `ml/build_historical_dataset.py`
-to pull actual game-day lineups + starting pitchers from the MLB Stats API schedule
-endpoint (one call per game-day) and season-level pitcher HR/9, so every historical row
-now reflects a real game the batter actually played in, with real park/pitcher/home-away
-context. `pitcher_hr_per_9` is now the single most important feature by LightGBM gain.
+### 2026-09-29 off-season rebuild (v4.5 → v5.0)
+Walk-forward test on the Aug 10 – Sep 27 full slates (42 days, ~11k candidates, every
+variant trained only on data before the day it predicts; harness in `tools/model_lab.py`):
 
-Headline AUC dropped from ~0.72 (last live-committed value) to 0.612 after the rebuild.
-This is not read as a regression: the old cross-product dataset repeated each player's
-*identical* static season-aggregate feature vector across every sampled date (~60+ times),
-and 5-fold CV used `shuffle=True` — so duplicate copies of the same player's feature
-vector routinely landed in both the train and validation folds, letting the model
-memorize a player's fingerprint → average outcome rate rather than learning anything
-that generalizes to a specific day. The new dataset breaks that duplication (features
-now vary game-to-game via park/pitcher/home-away context), so 0.612 is a more honest
-day-level number, not a worse model.
+| Variant | Day AUC | Top-20 hit rate | Top-20 P&L* |
+|---|---|---|---|
+| Production v4.x (heuristic + LightGBM on hist+live) | 0.620 | 17.1% | −$1,821 |
+| LightGBM on hist+live alone (old ML recipe) | 0.589 | 15.2% | −$2,239 |
+| Heuristic alone | 0.614 | 17.7% | −$1,496 |
+| Logistic on live rows alone | 0.617 | 18.1% | −$1,208 |
+| **Heuristic + logistic, 50/50 z-blend (shipped)** | **0.623** | **19.5%** | **−$813** |
+
+\*best available book price, +350 fallback when missing; base rate 10.2%.
+Blend weights 0.2–0.8 all beat production, so 0.5 is not a knife-edge choice.
+
+Why the old recipe underperformed:
+- **Look-ahead leakage in historical rows.** `build_historical_dataset.py` stamps each game with
+  *season-final* Statcast and pitcher HR/9 — the features already contain that game's HR.
+- **Missingness fingerprint.** Hist rows (96% of training) are NULL for 21 of 29 features, so
+  the trees mostly learned "hist vs live" patterns rather than live signal.
+- **Shuffled K-fold CV** mixed dates and players, inflating the reported AUC.
+
+Things tested that did **not** help: prior-season HR-per-game rate, stacking a hist-trained
+prior, adding Pinnacle implied prob / carry / lineup flag, training on full-slate days only.
+The feature set looks saturated around AUC ~0.62 — close to the practical ceiling for
+single-game HR props — so future gains most likely come from new inputs (batting-order slot /
+expected PAs, as-of-date season HR/PA), not model tuning.
+
+### Market check (important for P&L)
+On the 2,365 Aug–Sep candidates with a Pinnacle line, Pinnacle implied 17.9% on average vs
+an actual HR rate of 13.5% — HR overs carry heavy margin. The model *does* add information
+beyond the market (logit of model vs market, p = 0.02; top-edge quintiles lost ~14% ROI vs
+~36% for the bottom), but not enough to beat vigged US books. The edge is realistic only on
+no-vig exchanges (Novig / ProphetX) or when the posted price beats Pinnacle.
 
 ### ML Features (26 total)
 Barrel rate, exit velocity avg, hard hit %, sweet spot %, xISO, xSLG, fly ball %, launch angle, HR/FB ratio, blast rate, BallparkPal matchup grade (0-10), park HR factor, EV on $10, value edge, recent form (14d), pitcher HR/9, pitcher HR vs batter's hand, pitcher barrel %, is home, platoon, head-to-head HR, career park HR, pitcher career HR/9 vs hand, pitcher FB/breaking/offspeed mix (3), batter xSLG vs fastball/breaking/offspeed (3)
@@ -218,7 +236,7 @@ Stars are assigned based on **rank within today's pool** combined with the **mod
 
 *Bucket sizes fluctuate daily — there is no fixed quota per tier. It depends on how tightly players cluster in score.*
 
-Current max is ★★★★☆ because AUC = 0.634 (just below the 0.65 threshold for 5 stars).
+Current max is ★★★★☆ because the walk-forward AUC (0.612) is below the 0.65 threshold for 5 stars. Note the v5 AUC is an honest out-of-time number, so it will read lower than the old shuffled-CV figures.
 
 ---
 

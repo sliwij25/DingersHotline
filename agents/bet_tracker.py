@@ -1086,7 +1086,10 @@ def model_performance_report() -> str:
                 days_since = (date.today() - date.fromisoformat(trained_on)).days if trained_on != "?" else "?"
 
                 auc_grade = "strong" if auc >= 0.70 else "useful" if auc >= 0.60 else "developing"
-                ml_weight_pct = min(70, max(0, (auc - 0.5) * 250))
+                if "blend_weight" in w:
+                    ml_weight_pct = w["blend_weight"] * 100
+                else:
+                    ml_weight_pct = min(80, max(0, (auc - 0.5) * 400))
 
                 add(f"  {'Trained:':<20} {trained_on}  ({days_since} days ago)")
                 add(f"  {'Training samples:':<20} {n_samples:,}")

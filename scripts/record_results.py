@@ -154,8 +154,8 @@ if retrain:
             import io as _io
             _old, sys.stdout = sys.stdout, _io.StringIO()
             try:
-                X, y, _ = load_training_data()
-                weights  = train_and_save(X, y, save=True)
+                X, y, raw_rows = load_training_data()
+                weights  = train_and_save(X, y, save=True, raw_rows=raw_rows)
             finally:
                 sys.stdout = _old
 

@@ -3384,6 +3384,25 @@ class Homer:
 
         model_type = weights.get("model_type", "logistic_regression")
 
+        if model_type == "logistic_v2":
+            # Mirrors optimize_weights._design() + predict_log_odds() — change both together.
+            # Returns ML log-odds mapped onto the heuristic's scale (z-score match), so the
+            # 50/50 blend in _score_player() mixes like with like.
+            m = weights["model"]
+            import math
+            vals = [m["medians"][i] if v != v else v for i, v in enumerate(raw_vals)]
+            vals += [1.0 if raw_vals[feature_order.index(f)] != raw_vals[feature_order.index(f)] else 0.0
+                     for f in m["indicator_features"]]
+            log_odds = m["intercept"] + sum(
+                (v - mu) / sd * c
+                for v, mu, sd, c in zip(vals, m["scaler_mean"], m["scaler_scale"], m["coef"]))
+            if "heur_std" not in weights:
+                return None
+            z = (log_odds - weights["ml_logodds_mean"]) / weights["ml_logodds_std"]
+            if not math.isfinite(z):
+                return None
+            return round(weights["heur_mean"] + weights["heur_std"] * z, 2)
+
         if model_type == "lightgbm":
             if cls._lgbm_booster is None:
                 return None
@@ -4037,16 +4056,16 @@ class Homer:
             score = status_penalty + ctx_component * ctx_scale + statcast_component
 
         # ── ML blend (active only when ml_weights.json exists) ────────────────
-        # Blends the hand-tuned heuristic score with the logistic regression score.
-        # Weight shifts toward ML as AUC improves (low AUC → trust heuristic more).
+        # v5 models (logistic_v2) carry a walk-forward-validated blend_weight (0.5) and
+        # return ML on the heuristic's scale. Legacy models fall back to the AUC formula.
         ml = Homer._ml_score(sig)
         if ml is not None:
-            weights = Homer._load_ml_weights()
-            auc = weights.get("cv_auc_mean", 0.5) if weights else 0.5
-            # ml_weight: 0 at AUC=0.5, ~56% at AUC=0.64, capped at 0.8
-            # Multiplier raised from 2.5→4.0: feature importance shows ML correctly
-            # prioritizes xISO/barrel/hard-hit over recency signals the heuristic over-weighted.
-            ml_weight = min(0.8, max(0.0, (auc - 0.5) * 4.0))
+            weights = Homer._load_ml_weights() or {}
+            if "blend_weight" in weights:
+                ml_weight = weights["blend_weight"]
+            else:
+                auc = weights.get("cv_auc_mean", 0.5)
+                ml_weight = min(0.8, max(0.0, (auc - 0.5) * 4.0))
             score = (1.0 - ml_weight) * score + ml_weight * ml
 
         return round(score, 1)
