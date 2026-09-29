@@ -170,6 +170,10 @@ _MIGRATION_COLUMNS = [
     ("game_pk",               "TEXT"),  # doubleheader support
     ("is_best_bet",           "INTEGER"),  # 1 = top-7 EV pick, 0 = also watching
     ("bpp_vs_grade",          "REAL"),  # BallparkPal 0-10 matchup grade (bpp_hr_pct is unobtainable — see predictor.py)
+    ("batting_order",         "INTEGER"),  # 1–9 lineup slot (projected from last game when lineup_confirmed=0)
+    ("season_pa",             "INTEGER"),  # season-to-date PA as of the morning run (no look-ahead)
+    ("season_hr",             "INTEGER"),  # season-to-date HR as of the morning run
+    ("season_hr_rate",        "REAL"),     # season_hr / season_pa × 100
 ]
 
 
@@ -264,8 +268,9 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
                career_park_hr, pitcher_career_hr_vs_hand,
                batter_xslg_vs_fastball, batter_xslg_vs_breaking, batter_xslg_vs_offspeed,
                game_pk, is_best_bet,
-               pitcher_fb_pct, pitcher_breaking_pct, pitcher_offspeed_pct, bpp_vs_grade)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               pitcher_fb_pct, pitcher_breaking_pct, pitcher_offspeed_pct, bpp_vs_grade,
+               batting_order, season_pa, season_hr, season_hr_rate)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(bet_date, player, game_pk) DO UPDATE SET
               rank=excluded.rank, score=excluded.score, stars=excluded.stars,
               algo_version=excluded.algo_version, confidence=excluded.confidence,
@@ -296,7 +301,9 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
               pitcher_fb_pct=excluded.pitcher_fb_pct,
               pitcher_breaking_pct=excluded.pitcher_breaking_pct,
               pitcher_offspeed_pct=excluded.pitcher_offspeed_pct,
-              bpp_vs_grade=excluded.bpp_vs_grade
+              bpp_vs_grade=excluded.bpp_vs_grade,
+              batting_order=excluded.batting_order, season_pa=excluded.season_pa,
+              season_hr=excluded.season_hr, season_hr_rate=excluded.season_hr_rate
         """, (
             bet_date, player, algo_version,
             confidence or signals.get("confidence"),
@@ -348,6 +355,11 @@ def save_pick_factors(bet_date: str, player: str, signals: dict,
             signals.get("pitcher_breaking_pct"),
             signals.get("pitcher_offspeed_pct"),
             signals.get("bpp_vs_grade"),
+            signals.get("batting_order"),
+            signals.get("pa"),
+            signals.get("season_hr"),
+            round(signals["season_hr"] / signals["pa"] * 100, 2)
+                if signals.get("pa") and signals.get("season_hr") is not None else None,
         ))
         # Backfill stars on existing rows that were saved before stars column existed
         if stars is not None:
