@@ -207,6 +207,23 @@ beyond the market (logit of model vs market, p = 0.02; top-edge quintiles lost ~
 ~36% for the bottom), but not enough to beat vigged US books. The edge is realistic only on
 no-vig exchanges (Novig / ProphetX) or when the posted price beats Pinnacle.
 
+### Candidate features being collected (2027)
+Added to `pick_factors` on 2026-09-29 to act on the finding above. Saved every run, but **not yet
+in `FEATURES`** and not used by the heuristic:
+
+| Column | Source | Why it might help |
+|---|---|---|
+| `batting_order` | lineup slot 1–9 (projected from last game when `lineup_confirmed=0`) | Leadoff gets ~4.6 PA/game vs ~3.8 for 9th — ~20% more HR chances; nothing else in the model measures opportunity |
+| `season_pa`, `season_hr` | Savant leaderboard at the morning run | Raw inputs; also let a model down-weight small samples |
+| `season_hr_rate` | `season_hr / season_pa × 100` | Actual HR outcome rate, as-of-date (no look-ahead, unlike the hist rows) |
+
+Plan (tracked in `notes/TODO.md`): after ~6 weeks of 2027 full slates, add them to `FEATURES` and
+compare walk-forward per-day AUC / top-20 hit rate vs v5.0 with `tools/model_lab.py`; keep only if
+they win out-of-sample. Expect partial overlap with the power stats (good hitters bat high) and
+with the market. When adding `season_pa`/`season_hr_rate` to `FEATURES`, note that
+`save_pick_factors()` writes them from `signals["pa"]` / a computed value rather than
+`signals.get("<col>")`, so `test_all_features_have_a_save_pick_factors_write_path` will need a tweak.
+
 ### ML Features (26 total)
 Barrel rate, exit velocity avg, hard hit %, sweet spot %, xISO, xSLG, fly ball %, launch angle, HR/FB ratio, blast rate, BallparkPal matchup grade (0-10), park HR factor, EV on $10, value edge, recent form (14d), pitcher HR/9, pitcher HR vs batter's hand, pitcher barrel %, is home, platoon, head-to-head HR, career park HR, pitcher career HR/9 vs hand, pitcher FB/breaking/offspeed mix (3), batter xSLG vs fastball/breaking/offspeed (3)
 
