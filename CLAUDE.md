@@ -156,6 +156,9 @@ No manual script runs are needed by the user.
 New columns added for ML training:
 `score, rank, homered, xiso, xslg, xhr_rate, fb_pct, launch_angle, ev_avg, sweet_spot_pct, bpp_hr_pct, park_hr_factor, lineup_confirmed`
 
+Added 2026-09-29 (collected from 2027, not yet ML features — see notes/TODO.md):
+`batting_order, season_pa, season_hr, season_hr_rate` — as-of-date values, so no look-ahead leakage.
+
 Migration is handled by `_MIGRATION_COLUMNS` in `bet_tracker.py` — safe `ALTER TABLE ADD COLUMN IF NOT EXISTS` loop.
 
 ### 19 ML features (FEATURES list in optimize_weights.py)
@@ -338,6 +341,10 @@ SQLite at `data/bets.db` with two tables:
 | is_home            | INTEGER | 1=home, 0=away                             |
 | venue_slugging     | TEXT    | SLG at today's venue type                  |
 | lineup_confirmed   | INTEGER | 1=confirmed, 0=roster fallback             |
+| batting_order      | INTEGER | 1–9 lineup slot (projected from last game if lineup_confirmed=0) |
+| season_pa          | INTEGER | Season-to-date PA as of the morning run    |
+| season_hr          | INTEGER | Season-to-date HR as of the morning run    |
+| season_hr_rate     | REAL    | season_hr / season_pa × 100                |
 
 To record a result directly via sqlite3:
 ```bash
